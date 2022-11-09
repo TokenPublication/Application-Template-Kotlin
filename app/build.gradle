@@ -5,7 +5,10 @@ plugins {
 
 android {
     compileSdk 32
-
+    // I added this for binding
+    buildFeatures {
+        viewBinding = true
+    }
     defaultConfig {
         applicationId "com.tokeninc.sardis.application_template"
         minSdk 28
@@ -40,4 +43,6 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
+
 }
