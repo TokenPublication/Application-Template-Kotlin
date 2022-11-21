@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Application Template MVVM</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="Sale_Action">Sale_Action</string>
+    <string name="Settings_Action">Settings_Action</string>
+    <string name="Refund_Action">Refund_Action</string>
+    <string name="BatchClose_Action">BatchClose_Action</string>
+    <string name="Parameter_Action">Parameter_Action</string>
+    <string name="PosTxn_Action">PosTxn_Action</string>
 </resources>
