@@ -17,6 +17,7 @@ import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBin
 import com.tokeninc.sardis.application_template.enums.PaymentTypes
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.SlipType
+import com.tokeninc.sardis.application_template.helpers.StringHelper
 import java.lang.String.valueOf
 import java.util.*
 
@@ -62,7 +63,7 @@ class DummySaleFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.tvAmount.text = StringHelper.getAmount(amount)
+        binding.tvAmount.text = StringHelper().getAmount(amount)
         prepareSpinner()
         clickButtons()
     }
@@ -206,7 +207,7 @@ class DummySaleFragment : Fragment() {
         //db helper yok o yüzden yapmadım
         //bundle.putInt("BatchNo", databaseHelper.getBatchNo())
 
-        getNotNullBundle().putString("CardNo", StringHelper.MaskTheCardNo(cardNumber))
+        getNotNullBundle().putString("CardNo", StringHelper().MaskTheCardNo(cardNumber))
 
         //bundle.putString("MID", databaseHelper.getMerchantId()); //#6 Merchant ID
         //bundle.putString("TID", databaseHelper.getTerminalId()); //#7 Terminal ID
