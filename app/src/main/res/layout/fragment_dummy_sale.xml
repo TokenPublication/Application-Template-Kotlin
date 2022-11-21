@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:orientation="vertical"
+    tools:context=".DummySaleFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sale"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="40sp" />
+
+
+    <TextView
+        android:id="@+id/tvAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textAlignment="center"
+        android:text="1000TL"
+        android:textColor="@color/white"
+        android:textSize="40sp" />
+
+
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnSale"
+        tools:layout_editor_absoluteX="16dp">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btnSale"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/button_blue"
+                android:padding="15dp"
+                android:text="Sale"
+                android:textAlignment="center"
+                android:textColor="@color/white" />
+
+        </TableRow>
+
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tvDummyResponse"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="DummyResponses"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textSize="30sp" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="16dp">
+
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:popupBackground="@android:color/white"
+                android:spinnerMode="dropdown"
+                android:textAlignment="center" />
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:paddingTop="16dp"
+            android:layout_height="wrap_content">
+            <CheckBox
+                android:id="@+id/cbCustomer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:text="Customer Slip"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:layout_weight="1"/>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:paddingTop="8dp"
+            android:layout_height="wrap_content">
+        <CheckBox
+            android:id="@+id/cbMerchant"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="Merchant Slip"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:layout_weight="1"/>
+        </TableRow>
+
+        <TableRow
+            android:paddingTop="16dp"
+            android:layout_width="0dp"
+            android:layout_height="50dp">
+            <Button
+                android:id="@+id/btnSuccess"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="SUCCESS"
+                android:background="@drawable/button_blue"
+                android:textColor="@color/white"
+                android:layout_weight="1" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:paddingTop="8dp">
+            <Button
+                android:id="@+id/btnCancel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="CANCEL"
+                android:layout_weight="1"
+                android:background="@drawable/button_blue"
+                android:textColor="@color/white" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:paddingTop="8dp">
+            <Button
+                android:id="@+id/btnError"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="ERROR"
+                android:layout_weight="1"
+                android:background="@drawable/button_blue"
+                android:textColor="@color/white" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:paddingTop="8dp">
+            <Button
+                android:id="@+id/btnunable_decline"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="UNABLE_DECLINE"
+                android:layout_weight="1"
+                android:background="@drawable/button_blue"
+                android:textColor="@color/white" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:paddingTop="8dp">
+            <Button
+                android:id="@+id/btnoffline_decline"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="OFFLINE_DECLINE"
+                android:layout_weight="1"
+                android:background="@drawable/button_blue"
+                android:textColor="@color/white" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:paddingTop="8dp">
+            <Button
+                android:id="@+id/btnonline_decline"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="ONLINE_DECLINE"
+                android:layout_weight="1"
+                android:background="@drawable/button_blue"
+                android:textColor="@color/white" />
+        </TableRow>
+
+
+    </TableLayout>
+
+
+
+</LinearLayout>

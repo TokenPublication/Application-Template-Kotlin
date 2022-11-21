@@ -1,10 +1,16 @@
 package com.tokeninc.sardis.application_template
 
 import MenuItem
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.IdRes
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import com.token.uicomponents.CustomInput.EditTextInputType
@@ -20,24 +26,60 @@ import java.lang.ref.WeakReference
 
 class MainActivity : TimeOutActivity(), InfoDialogListener {
 
-    //private List<IListMenuItem> menuItems = new ArrayList<>();
-
     //menu items is mutable list which we can add and delete
     private val menuItems = mutableListOf<IListMenuItem>()
+    private var amount: Int = 0
     private val mContext: WeakReference<Context>? = null
     private val inputList = mutableListOf<CustomInputFormat>()
 
+    @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+
+        val textFragment = TextFragment()
+        replaceFragment(R.id.container,textFragment)
+
+        when (intent.action){
+            "PosTxn_Action" ->  textFragment.setActionName("PosTxn_Action")
+            "Sale_Action" ->  startDummySaleFragment(DummySaleFragment())
+            "Settings_Action" ->  textFragment.setActionName("Settings_Action")
+            "BatchClose_Action" ->  textFragment.setActionName("BatchClose_Action")
+            "Parameter_Action" ->  textFragment.setActionName("Parameter_Action")
+            "Refund_Action" ->  textFragment.setActionName("Refund_Action")
+            else -> textFragment.setActionName("${intent.action}")
+        }
+
 
         prepareData() // Call the menu list item preparing method
 
         //showing fragment that contains list of menu items
+        /*
         val fragment = ListMenuFragment.newInstance(menuItems, "", false, null)
         addFragment(binding.container.id, fragment, false) //get id as int by .id method
+         */
 
+
+    }
+
+    fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
+        amount = intent.extras!!.getInt("Amount")
+        dummySaleFragment.setAmount(amount)
+        dummySaleFragment.set_Context(this@MainActivity)
+        dummySaleFragment.getNewBundle(bundleOf())
+        dummySaleFragment.getNewIntent(Intent())
+        replaceFragment(R.id.container,dummySaleFragment)
+    }
+
+    /**
+     * This is for dummySaleFragmen's onSaleResponseRetrieved method
+     * Because we use setResult method on Activities, we call this method in there.
+     */
+    fun dummySetResult(resultIntent: Intent){
+        setResult(Activity.RESULT_OK,resultIntent)
+        finish()
     }
 
     //custom input ekledim ama bir işe yaramıyor henüz
@@ -193,14 +235,13 @@ class MainActivity : TimeOutActivity(), InfoDialogListener {
         ft.commit()
     }
 
-    protected fun replaceFragment(@IdRes resourceId: Int, fragment: Fragment, addToBackStack: Boolean)
+    protected fun replaceFragment(@IdRes resourceId: Int, fragment: Fragment)
     {
-        val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
-        ft.replace(resourceId, fragment)
-        if (addToBackStack) {
-            ft.addToBackStack("")
+        supportFragmentManager.beginTransaction().apply {
+            replace(resourceId,fragment) //replacing fragment
+            addToBackStack(null)  //add it to fragment stack, to return back as needed
+            commit() //call signals to the FragmentManager that all operations have been added to the transaction
         }
-        ft.commit()
     }
 
     protected fun removeFragment(fragment: Fragment) {
