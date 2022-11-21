@@ -59,7 +59,16 @@
             </intent-filter>
 
         </activity>
-        <meta-data android:name="app_name" android:value="BNK_000_TMPLT" />
+        <meta-data
+            android:name="app_name"
+            android:value="BNK_000_TMPLT"/>
+        <meta-data
+            android:name="app_version"
+            android:value="1" />
+        <meta-data
+            android:name="app_model_type"
+            android:value="400TR"/>
+        />
     </application>
 
 </manifest>

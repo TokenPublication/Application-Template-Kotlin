@@ -41,28 +41,19 @@ class MainActivity : TimeOutActivity(), InfoDialogListener {
 
         val textFragment = TextFragment()
         replaceFragment(R.id.container,textFragment)
-
+        Log.w("Ne yazdiriyo","${getString(R.string.PosTxn_Action)}")
         when (intent.action){
-            "PosTxn_Action" ->  textFragment.setActionName("PosTxn_Action")
-            "Sale_Action" ->  startDummySaleFragment(DummySaleFragment())
-            "Settings_Action" ->  textFragment.setActionName("Settings_Action")
-            "BatchClose_Action" ->  textFragment.setActionName("BatchClose_Action")
-            "Parameter_Action" ->  textFragment.setActionName("Parameter_Action")
-            "Refund_Action" ->  textFragment.setActionName("Refund_Action")
+            getString(R.string.PosTxn_Action) ->  textFragment.setActionName(getString(R.string.PosTxn_Action))
+            getString(R.string.Sale_Action) ->  startDummySaleFragment(DummySaleFragment())
+            getString(R.string.Settings_Action) ->  textFragment.setActionName(getString(R.string.Settings_Action))
+            getString(R.string.BatchClose_Action) ->  textFragment.setActionName(getString(R.string.BatchClose_Action))
+            getString(R.string.Parameter_Action) ->  textFragment.setActionName(getString(R.string.Parameter_Action))
+            getString(R.string.Refund_Action) ->  textFragment.setActionName(getString(R.string.Refund_Action))
             else -> textFragment.setActionName("${intent.action}")
         }
 
-
-        prepareData() // Call the menu list item preparing method
-
-        //showing fragment that contains list of menu items
-        /*
-        val fragment = ListMenuFragment.newInstance(menuItems, "", false, null)
-        addFragment(binding.container.id, fragment, false) //get id as int by .id method
-         */
-
-
     }
+
 
     fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
         amount = intent.extras!!.getInt("Amount")
@@ -82,7 +73,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener {
         finish()
     }
 
-    //custom input ekledim ama bir işe yaramıyor henüz
+
     protected fun addCustomInputFormat(){
         inputList.add(
             CustomInputFormat(

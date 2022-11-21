@@ -1,7 +1,6 @@
 package com.tokeninc.sardis.application_template
 
 import android.R
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -18,7 +17,6 @@ import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBin
 import com.tokeninc.sardis.application_template.enums.PaymentTypes
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.SlipType
-import com.tokeninc.sardis.application_template.helpers.StringHelper
 import java.lang.String.valueOf
 import java.util.*
 

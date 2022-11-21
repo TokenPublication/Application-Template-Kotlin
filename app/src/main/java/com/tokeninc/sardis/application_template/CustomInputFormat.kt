@@ -20,7 +20,6 @@ public class CustomInputFormat(
     private val invalidMessage: String?,
     private val validator: InputValidator?
 ){
-    //önce fragment oluşturup input alacaksın sonra burayı yaparsın
     fun setText(writingData: String){
 
     }
