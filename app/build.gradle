@@ -79,4 +79,7 @@ dependencies {
 
     //apache for string utils
     implementation 'org.apache.commons:commons-text:1.9'
+
+    //Gson
+    implementation 'com.google.code.gson:gson:2.8.5'
 }

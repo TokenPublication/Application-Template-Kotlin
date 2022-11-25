@@ -7,4 +7,23 @@
     <string name="BatchClose_Action">BatchClose_Action</string>
     <string name="Parameter_Action">Parameter_Action</string>
     <string name="PosTxn_Action">PosTxn_Action</string>
+
+    <string name="pos_operations">POS Operations</string>
+    <string name="matched_refund">Matched Refund</string>
+    <string name="cash_refund">Cash Refund</string>
+    <string name="installment_refund">Installment Refund</string>
+    <string name="loyalty_refund">Loyalty Refund</string>
+
+    <string name="original_amount">Original Amount</string>
+    <string name="refund_amount">Refund Amount</string>
+    <string name="invalid_amount">Invalid Amount</string>
+    <string name="ref_no">Ref No</string>
+    <string name="ref_no_invalid_ten_digits">Ref No Invalid (10 digits)</string>
+    <string name="confirmation_code">Confirmation Code</string>
+    <string name="confirmation_code_invalid_six_digits">Confirmation Code is Invalid (6 Digits)</string>
+    <string name="tran_date">Transaction Date</string>
+    <string name="tran_date_invalid">Transaction Date is Invalid</string>
+    <string name="refund">Refund</string>
+    <string name="installment">Installment</string>
+
 </resources>

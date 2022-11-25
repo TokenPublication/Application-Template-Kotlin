@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
 import org.apache.commons.lang3.StringUtils
 
@@ -17,8 +18,7 @@ class SettingsFragment : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
-
-    //getTimeOutu mainden çağırırım gerektiğinde
+    private val mainActivity = MainActivity()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,17 +33,21 @@ class SettingsFragment : Fragment() {
         _binding = FragmentSettingsBinding.inflate(inflater,container,false)
         return binding.root
     }
-    /*
-    //iListMenuItem ne ??
+/*
+
     private fun showMenu(){
         var menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem("Setup", {
-
+            addTidMidFragment()
         }))
+        menuItems.add(MenuItem("Host Settings", {
+            addIPFragment()
+        }))
+        menuFragment = ListMenuFragment.newInstance(menuItems,"Settings",
+            true, R.drawable.token_logo)
+
     }
 
-
-    //StringUtilsin kotlin halini bul
     private fun addIPFragment(){
 
         var inputList = mutableListOf<CustomInputFormat>()
@@ -68,7 +72,7 @@ class SettingsFragment : Fragment() {
         }
         return isValid
     }
-
      */
+
 
 }

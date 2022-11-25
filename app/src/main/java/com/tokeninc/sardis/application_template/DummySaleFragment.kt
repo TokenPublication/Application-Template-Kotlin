@@ -6,31 +6,38 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.tokeninc.cardservicebinding.CardServiceBinding
+import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
 import com.tokeninc.sardis.application_template.enums.PaymentTypes
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.helpers.StringHelper
+import org.json.JSONObject
 import java.lang.String.valueOf
 import java.util.*
 
 
-class DummySaleFragment : Fragment() {
+class DummySaleFragment : Fragment(), CardServiceListener {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
-    //this is for getting context from activity classes
-    private var _context: Context? = null
+    private var _context: Context? = null //this is for getting context from activity class
     private val notNullContext get() = _context!!
     var resultIntent: Intent? = null
     var bundle: Bundle? = null
+    val mainActivity = MainActivity()
+    private var cardServiceBinding: CardServiceBinding? = null
+    private var boolReadCard = false
 
     companion object{
         var amount = 0
@@ -78,7 +85,7 @@ class DummySaleFragment : Fragment() {
     /**
      * this is for getting MainActivity's context to prevent some errors
      */
-    fun set_Context(mContext: Context?){
+    fun setContext(mContext: Context?){
         _context = mContext
     }
 
@@ -100,7 +107,10 @@ class DummySaleFragment : Fragment() {
     }
 
 
-    fun clickButtons(){
+    private fun clickButtons(){
+        binding.btnSale.setOnClickListener {
+            readCard()
+        }
         binding.btnSuccess.setOnClickListener {
             prepareDummyResponse(ResponseCode.SUCCESS)
         }
@@ -121,20 +131,13 @@ class DummySaleFragment : Fragment() {
         }
     }
 
-    /*
-    @SuppressLint("NonConstantResourceId")
-    fun onClick(view: View) {
-        when (view.id) {
-            //R.id.btnSale -> doSale()
-            binding.btnSuccess.id -> prepareDummyResponse(ResponseCode.SUCCESS)
-            binding.btnError.id -> prepareDummyResponse(ResponseCode.ERROR)
-            binding.btnCancel.id -> prepareDummyResponse(ResponseCode.CANCELLED)
-            binding.btnofflineDecline.id -> prepareDummyResponse(ResponseCode.OFFLINE_DECLINE)
-            binding.btnunableDecline.id -> prepareDummyResponse(ResponseCode.UNABLE_DECLINE)
-            binding.btnonlineDecline.id -> prepareDummyResponse(ResponseCode.ONLINE_DECLINE)
-        }
-    }
+    /**
+     * define cardServiceBinding and make boolReadCard true because we read it.
      */
+    private fun readCard(){
+        cardServiceBinding = CardServiceBinding(notNullContext as AppCompatActivity?,this )
+        boolReadCard = true
+    }
 
     public fun prepareDummyResponse (code: ResponseCode){
 
@@ -194,8 +197,6 @@ class DummySaleFragment : Fragment() {
     // below using actual data.
     public fun onSaleResponseRetrieved(price: Int, code: ResponseCode, hasSlip: Boolean,
                                        slipType: SlipType, cardNo: String, ownerName: String, paymentType: Int){
-
-        //doğru olmuş mu sor burasını
         getNotNullBundle().putInt("ResponseCode", code.ordinal)
         getNotNullBundle().putString("CardOwner", cardOwner) // Optional
         getNotNullBundle().putString("CardNumber", cardNumber) // Optional, Card No can be masked
@@ -204,7 +205,6 @@ class DummySaleFragment : Fragment() {
         getNotNullBundle().putInt("Amount2", price)
         getNotNullBundle().putBoolean("IsSlip", hasSlip)
 
-        //db helper yok o yüzden yapmadım
         //bundle.putInt("BatchNo", databaseHelper.getBatchNo())
 
         getNotNullBundle().putString("CardNo", StringHelper().MaskTheCardNo(cardNumber))
@@ -218,7 +218,7 @@ class DummySaleFragment : Fragment() {
         //bundle.putString("RefNo", String.valueOf(databaseHelper.getSaleID()))
         getNotNullBundle().putInt("PaymentType", paymentType)
 
-        /*  PrintHelper almadım
+        /*
         if (slipType == SlipType.CARDHOLDER_SLIP || slipType == SlipType.BOTH_SLIPS) {
             bundle.putString("customerSlipData", SalePrintHelper.getFormattedText(getSampleReceipt(cardNo, ownerName), SlipType.CARDHOLDER_SLIP, this, 1, 2));
             //  bundle.putByteArray("customerSlipBitmapData",PrintHelper.getBitmap(getApplicationContext()));
@@ -230,12 +230,12 @@ class DummySaleFragment : Fragment() {
          */
         //bundle.putString("ApprovalCode", getApprovalCode())
         getNotNullIntent().putExtras(getNotNullBundle())
-        MainActivity().dummySetResult(getNotNullIntent())
+        mainActivity.dummySetResult(getNotNullIntent())
 
 
     }
 
-    /* dbhelper olmadan olmaz
+    /*
     private fun getRefundInfo(response: ResponseCode): String? {
         val json = JSONObject()
         try {
@@ -253,7 +253,7 @@ class DummySaleFragment : Fragment() {
     }
 
      */
-    //deprecated bulamadım alternatifini şu anlık
+
     private fun getApprovalCode(): String? {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(notNullContext)
         var approvalCode = sharedPref.getInt("ApprovalCode", 0)
@@ -268,6 +268,42 @@ class DummySaleFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+    }
+
+    override fun onCardServiceConnected() {
+        if (boolReadCard){
+            try {
+                val obj = JSONObject()
+                obj.put("forceOnline", 1)
+                obj.put("zeroAmount", 0)
+                obj.put("fallback", 1)
+                obj.put("cardReadTypes", 6)
+                obj.put("qrPay", 1)
+                /*
+                if (cardReadType == CardReadType.ICC.value) {
+                    obj.put("showCardScreen", 0)
+                }
+                 */
+
+                Log.w("CardServiceBind/Dummy","$cardServiceBinding")
+                cardServiceBinding!!.getCard(amount, 40, obj.toString())
+                boolReadCard = false
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    override fun onCardDataReceived(cardData: String?) {
+        Log.w("DummySale","Card Data Received")
+    }
+
+    override fun onPinReceived(p0: String?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onICCTakeOut() {
+        TODO("Not yet implemented")
     }
 
 }

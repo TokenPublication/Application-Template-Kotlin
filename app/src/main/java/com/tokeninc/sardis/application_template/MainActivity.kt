@@ -13,37 +13,48 @@ import androidx.annotation.IdRes
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
+import com.google.gson.Gson
+import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
-import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialog.InfoDialogButtons
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
+import com.tokeninc.cardservicebinding.CardServiceBinding
+import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
+import com.tokeninc.sardis.application_template.enums.CardReadType
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.lang.ref.WeakReference
 
 
-class MainActivity : TimeOutActivity(), InfoDialogListener {
+class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener {
 
     //menu items is mutable list which we can add and delete
     private val menuItems = mutableListOf<IListMenuItem>()
     private var amount: Int = 0
     private val mContext: WeakReference<Context>? = null
     private val inputList = mutableListOf<CustomInputFormat>()
+    private var cardServiceBinding: CardServiceBinding? = null
+    private var card: ICCCard? = null
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
+        cardServiceBinding = CardServiceBinding(this, this)
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
 
+
+
         val textFragment = TextFragment()
         replaceFragment(R.id.container,textFragment)
-        Log.w("Ne yazdiriyo","${getString(R.string.PosTxn_Action)}")
         when (intent.action){
-            getString(R.string.PosTxn_Action) ->  textFragment.setActionName(getString(R.string.PosTxn_Action))
+            getString(R.string.PosTxn_Action) ->  replaceFragment(R.id.container,PostTxnFragment())
             getString(R.string.Sale_Action) ->  startDummySaleFragment(DummySaleFragment())
             getString(R.string.Settings_Action) ->  textFragment.setActionName(getString(R.string.Settings_Action))
             getString(R.string.BatchClose_Action) ->  textFragment.setActionName(getString(R.string.BatchClose_Action))
@@ -58,7 +69,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener {
     fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
         amount = intent.extras!!.getInt("Amount")
         dummySaleFragment.setAmount(amount)
-        dummySaleFragment.set_Context(this@MainActivity)
+        dummySaleFragment.setContext(this@MainActivity)
         dummySaleFragment.getNewBundle(bundleOf())
         dummySaleFragment.getNewIntent(Intent())
         replaceFragment(R.id.container,dummySaleFragment)
@@ -226,7 +237,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener {
         ft.commit()
     }
 
-    protected fun replaceFragment(@IdRes resourceId: Int, fragment: Fragment)
+    public fun replaceFragment(@IdRes resourceId: Int, fragment: Fragment)
     {
         supportFragmentManager.beginTransaction().apply {
             replace(resourceId,fragment) //replacing fragment
@@ -254,4 +265,104 @@ class MainActivity : TimeOutActivity(), InfoDialogListener {
         }
         //else if (arg == ***) { Do something else... }
     }
+
+    /**
+     * This function only works in installation, it calls setConfig and setCLConfig
+     */
+    private fun setEMVConfiguration () {
+        var sharedPreference = getSharedPreferences("myprefs",Context.MODE_PRIVATE)
+        var editor = sharedPreference.edit()
+        var firstTimeBoolean = sharedPreference.getBoolean("FIRST_RUN",false)
+        if (!firstTimeBoolean){
+            setConfig()
+            setCLConfig()
+            editor.putBoolean("FIRST_RUN",true)
+            editor.commit()
+        }
+    }
+
+    /**
+     * It reads
+     */
+    private fun setConfig() {
+        try {
+            val xmlStream = applicationContext.assets.open("emv_config.xml")
+            val r = BufferedReader(InputStreamReader(xmlStream))
+            val total = StringBuilder()
+            var line: String? = r.readLine()
+            while (line != null) {
+                Log.d("emv_config", "conf line: $line")
+                total.append(line).append('\n')
+                line = r.readLine()
+            }
+            val setConfigResult = cardServiceBinding!!.setEMVConfiguration(total.toString())
+            Toast.makeText(
+                applicationContext,
+                "setEMVConfiguration res=$setConfigResult",
+                Toast.LENGTH_SHORT
+            ).show()
+            Log.d("emv_config", "setEMVConfiguration: $setConfigResult")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun setCLConfig() {
+        try {
+            val xmlCLStream = applicationContext.assets.open("emv_cl_config.xml")
+            val rCL = BufferedReader(InputStreamReader(xmlCLStream))
+            val totalCL = java.lang.StringBuilder()
+            var line: String? = rCL.readLine()
+            while (line != null) {
+                Log.d("emv_config", "conf line: $line")
+                totalCL.append(line).append('\n')
+                line = rCL.readLine()
+            }
+            val setCLConfigResult: Int = cardServiceBinding!!.setEMVCLConfiguration(totalCL.toString())
+            Toast.makeText(
+                applicationContext,
+                "setEMVCLConfiguration res=$setCLConfigResult", Toast.LENGTH_SHORT
+            ).show()
+            Log.d("emv_config", "setEMVCLConfiguration: $setCLConfigResult")
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onCardServiceConnected() {
+        setEMVConfiguration()
+    }
+
+    override fun onCardDataReceived(cardData: String?) {
+        try {
+            //prepareSaleMenu()
+            val json = JSONObject(cardData)
+            val type = json.getInt("mCardReadType")
+            if (type == CardReadType.QrPay.type) {
+                //QrSale()
+                return
+            }
+            if (type == CardReadType.CLCard.type) {
+                //cardReadType = CardReadType.CLCard.value
+                card = Gson().fromJson(cardData, ICCCard::class.java)
+            } else if (type == CardReadType.ICC.type) {
+                card = Gson().fromJson(cardData, ICCCard::class.java)
+            } else if (type == CardReadType.ICC2MSR.type || type == CardReadType.MSR.type || type == CardReadType.KeyIn.type) {
+                card = Gson().fromJson(cardData, ICCCard::class.java)
+                cardServiceBinding!!.getOnlinePIN(amount, card?.cardNumber, 0x0A01, 0, 4, 8, 30)
+            }
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onPinReceived(p0: String?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onICCTakeOut() {
+        TODO("Not yet implemented")
+    }
+
+
 }

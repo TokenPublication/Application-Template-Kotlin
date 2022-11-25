@@ -46,6 +46,6 @@ class TextFragment : Fragment() {
      */
     override fun onDestroy() {
         super.onDestroy()
-        _binding = null //bidaha null yapsın destroyladığında memory leak olmasın
+        _binding = null
     }
 }
