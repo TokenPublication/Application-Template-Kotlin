@@ -25,6 +25,8 @@ import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.enums.CardReadType
+import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintHelper
+import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -40,6 +42,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     private val inputList = mutableListOf<CustomInputFormat>()
     private var cardServiceBinding: CardServiceBinding? = null
     private var card: ICCCard? = null
+    private var printService: PrintServiceBinding? = null
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,14 +52,17 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
 
+        printService = PrintServiceBinding()
+        //printService?.print(PrintHelper().PrintSuccess())
 
 
         val textFragment = TextFragment()
         replaceFragment(R.id.container,textFragment)
+        intent.setAction(getString(R.string.Settings_Action))
         when (intent.action){
             getString(R.string.PosTxn_Action) ->  replaceFragment(R.id.container,PostTxnFragment())
             getString(R.string.Sale_Action) ->  startDummySaleFragment(DummySaleFragment())
-            getString(R.string.Settings_Action) ->  textFragment.setActionName(getString(R.string.Settings_Action))
+            getString(R.string.Settings_Action) ->  replaceFragment(R.id.container,SettingsFragment())
             getString(R.string.BatchClose_Action) ->  textFragment.setActionName(getString(R.string.BatchClose_Action))
             getString(R.string.Parameter_Action) ->  textFragment.setActionName(getString(R.string.Parameter_Action))
             getString(R.string.Refund_Action) ->  textFragment.setActionName(getString(R.string.Refund_Action))

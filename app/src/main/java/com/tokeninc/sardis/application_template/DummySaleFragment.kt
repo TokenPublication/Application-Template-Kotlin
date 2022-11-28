@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.token.printerlib.IPrinterService
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
@@ -234,6 +235,8 @@ class DummySaleFragment : Fragment(), CardServiceListener {
 
 
     }
+
+    var mPrinterService: IPrinterService? = null
 
     /*
     private fun getRefundInfo(response: ResponseCode): String? {
