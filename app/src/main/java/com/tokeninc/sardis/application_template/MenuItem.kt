@@ -49,15 +49,6 @@ class MenuItem @JvmOverloads constructor(
         return msubMenuItemList
     }
 
-    /**
-     * Because it causes an error with default method I'm not implemented.
-     * In IListMenuItem it's implemented as not nullable with its variable type because it's java code
-     * but here its variable type is nullable so it gives an error
-     * I cannot change the IListMenuItem which file is read only
-     * I made a solution with hand by getting its not null version but it's not the right solution
-     * what if it is null? In sub menu on menu items it gives an error
-     *
-     */
     override fun getClickListener(): MenuItemClickListener<*> {
         return notnullListener
     }
