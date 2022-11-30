@@ -6,56 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".RefundFragment">
 
-
-    <Button
-        android:id="@+id/btnEslenikli"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:shadowColor="@color/black"
-        android:text="Eşlenikli İade"
-        android:textColor="@color/white"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/btnPesin"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="0dp" />
-
-    <Button
-        android:id="@+id/btnPesin"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:shadowColor="@color/black"
-        android:text="Peşin İade"
-        android:textColor="@color/white"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/btnTaksitli"
-        app:layout_constraintTop_toBottomOf="@+id/btnEslenikli"
-        tools:layout_editor_absoluteX="0dp" />
-
-    <Button
-        android:id="@+id/btnTaksitli"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:shadowColor="@color/black"
-        android:text="Taksitli İade"
-        android:textColor="@color/white"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/btnPuan"
-        app:layout_constraintTop_toBottomOf="@+id/btnPesin"
-        tools:layout_editor_absoluteX="-16dp" />
-
-    <Button
-        android:id="@+id/btnPuan"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_marginBottom="300dp"
-        android:shadowColor="@color/black"
-        android:text="Puan İade"
-        android:textColor="@color/white"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnTaksitli"
-        tools:layout_editor_absoluteX="0dp" />
-
     <FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"

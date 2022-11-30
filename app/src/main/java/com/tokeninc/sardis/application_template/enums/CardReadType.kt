@@ -8,5 +8,4 @@ enum class CardReadType(val type: Int) {
     KeyIn(4),
     CLCard(5),
     QrPay(6)
-
 }
