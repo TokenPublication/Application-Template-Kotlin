@@ -4,7 +4,6 @@ import MenuItem
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,8 +15,7 @@ import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
-import com.tokeninc.sardis.application_template.Database.ActivationDB
-import com.tokeninc.sardis.application_template.Database.DatabaseHelper
+import com.tokeninc.sardis.application_template.database.ActivationDB
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
 import org.apache.commons.lang3.StringUtils
 
@@ -33,9 +31,8 @@ class SettingsFragment : Fragment() {
     //this is variables is for hold data that are got from activity.
     var _context: Context? = null
     var resultIntent: Intent? = null
-    var databaseHelper: DatabaseHelper? = null
     private var isBankActivateAction = true
-    private  var DB_getAllTransactionsCount = true
+    private var actDB: ActivationDB? = null
 
     private var terminalId: String? = null
     private var merchantId: String? = null
@@ -55,7 +52,7 @@ class SettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         // _context comes from mainActivity before SettingsFragment calling
         //Log.w("Settings/OnViewCreated","DatabaseHelper çağırdı")
-        databaseHelper = ActivationDB(_context!!)
+        actDB = ActivationDB(_context!!).getInstance(_context!!) // TODO Egecan: Gereksiz yorum satırlarını kaldıralım
         // resultIntent comes from mainActivity before SettingsFragment calling
         isBankActivateAction = resultIntent != null && resultIntent!!.getAction() != null
                 && resultIntent!!.getAction() .equals("Activate_Bank")
@@ -98,15 +95,14 @@ class SettingsFragment : Fragment() {
             "Port", EditTextInputType.Number, 4, "Invalid Port!"
         ) { customInputFormat -> customInputFormat.text.length >= 2 && customInputFormat.text.toInt() > 0 })
 
-        inputList[0].text = databaseHelper!!.getIP_NO()
-        inputList[1].text = databaseHelper!!.getPort()
+        inputList[0].text = actDB!!.getHostIP() // TODO Egecan: Check not null
+        inputList[1].text = actDB!!.getHostPort()
 
         hostFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 ip_no = inputList[0].text
                 port_no = inputList[1].text
-                databaseHelper!!.updateIP_NO(ip_no)
-                databaseHelper!!.updatePort(port_no)
+                actDB!!.insertConnection(ip_no, port_no) // TODO Egecan: Check not null and show dialog then go back
                 Toast.makeText(_context,"IP: $ip_no  PORT: $port_no",Toast.LENGTH_LONG).show()
             })
 
@@ -148,15 +144,14 @@ class SettingsFragment : Fragment() {
             "Invalid Terminal No!"
         ) { input -> input.text.length == 8 })
 
-        inputList[0].text = databaseHelper!!.getMerchantId()
-        inputList[1].text = databaseHelper!!.getTerminalId()
+        inputList[0].text = actDB!!.getMerchantId()
+        inputList[1].text = actDB!!.getTerminalId() // TODO Egecan: Check not null
 
         TidMidFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 merchantId = inputList[0].text
                 terminalId = inputList[1].text
-                databaseHelper!!.updateMerchantId(merchantId)
-                databaseHelper!!.updateTerminalId(terminalId)
+                actDB!!.insertActivation(terminalId, merchantId) // TODO Egecan: Check not null and show dialog then go back
                 Toast.makeText(_context,"merc: $merchantId  term: $terminalId",Toast.LENGTH_LONG).show()
             })
 
@@ -167,7 +162,4 @@ class SettingsFragment : Fragment() {
         }
 
     }
-
-
-
 }

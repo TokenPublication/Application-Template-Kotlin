@@ -23,11 +23,9 @@ import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
-import com.tokeninc.sardis.application_template.Database.ActivationDB
-import com.tokeninc.sardis.application_template.Database.DatabaseHelper
+import com.tokeninc.sardis.application_template.database.ActivationDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.enums.CardReadType
-import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -45,14 +43,13 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     private var cardServiceBinding: CardServiceBinding? = null
     private var card: ICCCard? = null
     private var printService: PrintServiceBinding? = null
-    private var databaseHelper: DatabaseHelper? = null
+    private var actDB: ActivationDB? = null
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
-        databaseHelper = ActivationDB(this)
-        databaseHelper!!.createTables()
+        actDB = ActivationDB(this).getInstance(this) // TODO Egecan: Check not null
         cardServiceBinding = CardServiceBinding(this, this)
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
