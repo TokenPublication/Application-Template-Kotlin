@@ -11,7 +11,6 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
     private val ip = "195.87.189.169"
     private val port = "1000"
 
-    // TODO Egecan: Check for possible null issues...
 
     private fun initActivationTable(db: SQLiteDatabase) {
         tblActivation = LinkedHashMap<String, String>()
@@ -29,7 +28,7 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
     fun getInstance(context: Context?): ActivationDB? {
         if (sDatabaseHelper == null) {
             sDatabaseHelper = ActivationDB(context)
-            writableSQLite?.let { initActivationTable(it) }
+            initActivationTable(writableSQLite!!)
             sDatabaseHelper!!.initHostSettings()
         }
         return sDatabaseHelper
@@ -49,14 +48,11 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
         return DatabaseOperations.insert(DatabaseInfo.ACTTABLE, writableSQLite, values)
     }
 
-    // TODO Egecan: Check can be simplified?
-    fun initHostSettings() {
-        var count = 0
-        try {
-            count = DatabaseOperations.query(readableSQLite, "SELECT COUNT(*) FROM $" + DatabaseInfo.ACTTABLE).toInt()
+    private fun initHostSettings() {
+        val count = try {
+            DatabaseOperations.query(readableSQLite, "SELECT COUNT(*) FROM $" + DatabaseInfo.ACTTABLE).toInt()
         } catch (e:Exception) {
-            e.printStackTrace()
-            count = 0
+            0
         }
         if (count <= 0) {
             insertConnection(ip, port)

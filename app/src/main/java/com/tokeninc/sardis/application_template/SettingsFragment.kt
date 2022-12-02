@@ -95,15 +95,18 @@ class SettingsFragment : Fragment() {
             "Port", EditTextInputType.Number, 4, "Invalid Port!"
         ) { customInputFormat -> customInputFormat.text.length >= 2 && customInputFormat.text.toInt() > 0 })
 
-        inputList[0].text = actDB!!.getHostIP() // TODO Egecan: Check not null
+        inputList[0].text = actDB!!.getHostIP()
         inputList[1].text = actDB!!.getHostPort()
+        if (inputList[0].text != null && inputList[1].text!= null)
+            Toast.makeText(_context,"HostIP: ${inputList[0].text}, HostPort: ${inputList[1].text }"
+            ,Toast.LENGTH_SHORT).show()
 
         hostFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 ip_no = inputList[0].text
                 port_no = inputList[1].text
-                actDB!!.insertConnection(ip_no, port_no) // TODO Egecan: Check not null and show dialog then go back
-                Toast.makeText(_context,"IP: $ip_no  PORT: $port_no",Toast.LENGTH_LONG).show()
+                if (actDB!!.insertConnection(ip_no, port_no) )
+                    Toast.makeText(_context,"IP: $ip_no  PORT: $port_no",Toast.LENGTH_LONG).show()
             })
 
         parentFragmentManager.beginTransaction().apply {

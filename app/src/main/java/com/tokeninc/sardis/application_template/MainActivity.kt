@@ -59,7 +59,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
 
 
         val textFragment = TextFragment()
-        //intent.setAction("Settings_Action")
+        intent.setAction("Settings_Action")
         replaceFragment(R.id.container,textFragment)
         when (intent.action){
             getString(R.string.PosTxn_Action) ->  replaceFragment(R.id.container,PostTxnFragment())
