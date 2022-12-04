@@ -19,5 +19,5 @@ class ICCCard  {
     var AID2: String? = null
     var UN: String? = null
     var IAD: String? = null
-
+    //yıldızda olmayanlar null geç burada date time
 }

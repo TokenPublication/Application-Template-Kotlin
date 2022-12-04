@@ -6,57 +6,8 @@
     android:layout_height="match_parent"
     tools:context=".PostTxnFragment">
 
-    <Button
-        android:id="@+id/btnIslemler"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:shadowColor="@color/black"
-        android:text="İşlemler"
-        android:textColor="@color/white"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/btnIade"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="0dp" />
-
-    <Button
-        android:id="@+id/btnIade"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:shadowColor="@color/black"
-        android:text="İade"
-        android:textColor="@color/white"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/btnGrupKapama"
-        app:layout_constraintTop_toBottomOf="@+id/btnIslemler"
-        tools:layout_editor_absoluteX="-36dp" />
-
-    <Button
-        android:id="@+id/btnGrupKapama"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:shadowColor="@color/black"
-        android:text="Grup Kapama"
-        android:textColor="@color/white"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/BtnOrnekler"
-        app:layout_constraintTop_toBottomOf="@+id/btnIade"
-        tools:layout_editor_absoluteX="-16dp" />
-
-    <Button
-        android:id="@+id/BtnOrnekler"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_marginBottom="300dp"
-        android:shadowColor="@color/black"
-        android:text="Örnekler"
-        android:textColor="@color/white"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnGrupKapama"
-        tools:layout_editor_absoluteX="-35dp" />
-
     <FrameLayout
-        android:id="@+id/frcontainer"
+        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 

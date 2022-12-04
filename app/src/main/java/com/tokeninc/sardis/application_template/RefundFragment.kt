@@ -22,6 +22,8 @@ class RefundFragment : Fragment() {
     private var _binding: FragmentRefundBinding? = null
     private val binding get() = _binding!!
 
+    private var menuFragment: ListMenuFragment? = null
+    private var hostFragment: InputListFragment? = null
 
 
     companion object{
@@ -49,7 +51,7 @@ class RefundFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prepareData()
-        clickButtons()
+        showMenu()
     }
 
     private fun prepareData() {
@@ -71,14 +73,29 @@ class RefundFragment : Fragment() {
         } ) )
     }
 
-    private fun clickButtons(){
-        binding.btnEslenikli.setOnClickListener {
+
+    private fun showMenu(){
+        var menuItems = mutableListOf<IListMenuItem>()
+        menuItems.add(MenuItem("Eşlenikli İade", {
             showMatchedReturnFragment()
-        }
-        binding.btnTaksitli.setOnClickListener {
+        }))
+        menuItems.add(MenuItem("Peşin İade", {
+
+        }))
+        menuItems.add(MenuItem("Taksitli İade", {
             showInstallments()
+        }))
+        menuItems.add(MenuItem("Puan İade", {
+
+        }))
+        menuFragment = ListMenuFragment.newInstance(menuItems,"PostTxn",
+            true, R.drawable.token_logo)
+        parentFragmentManager.beginTransaction().apply {
+            replace(binding.container.id, menuFragment!!)
+            commit()
         }
     }
+
 
     private fun showMatchedReturnFragment() { // EŞLENİKLİ İADE
         val inputList = mutableListOf<CustomInputFormat>()

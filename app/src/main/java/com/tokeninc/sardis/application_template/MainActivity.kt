@@ -23,9 +23,9 @@ import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
+import com.tokeninc.sardis.application_template.database.ActivationDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.enums.CardReadType
-import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -43,11 +43,13 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     private var cardServiceBinding: CardServiceBinding? = null
     private var card: ICCCard? = null
     private var printService: PrintServiceBinding? = null
+    private var actDB: ActivationDB? = null
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
+        actDB = ActivationDB(this).getInstance(this) // TODO Egecan: Check not null
         cardServiceBinding = CardServiceBinding(this, this)
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
@@ -57,12 +59,12 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
 
 
         val textFragment = TextFragment()
+        intent.setAction("Settings_Action")
         replaceFragment(R.id.container,textFragment)
-        intent.setAction(getString(R.string.Settings_Action))
         when (intent.action){
             getString(R.string.PosTxn_Action) ->  replaceFragment(R.id.container,PostTxnFragment())
             getString(R.string.Sale_Action) ->  startDummySaleFragment(DummySaleFragment())
-            getString(R.string.Settings_Action) ->  replaceFragment(R.id.container,SettingsFragment())
+            getString(R.string.Settings_Action) ->  startSettingsFragment(SettingsFragment())
             getString(R.string.BatchClose_Action) ->  textFragment.setActionName(getString(R.string.BatchClose_Action))
             getString(R.string.Parameter_Action) ->  textFragment.setActionName(getString(R.string.Parameter_Action))
             getString(R.string.Refund_Action) ->  textFragment.setActionName(getString(R.string.Refund_Action))
@@ -79,6 +81,12 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         dummySaleFragment.getNewBundle(bundleOf())
         dummySaleFragment.getNewIntent(Intent())
         replaceFragment(R.id.container,dummySaleFragment)
+    }
+
+    fun startSettingsFragment(settingsFragment: SettingsFragment){
+        settingsFragment.resultIntent = Intent()
+        settingsFragment._context = this@MainActivity
+        replaceFragment(R.id.container,settingsFragment)
     }
 
     /**
