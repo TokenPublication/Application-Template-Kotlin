@@ -22,8 +22,8 @@ import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
-import com.tokeninc.sardis.application_template.database.ActivationDB
-import com.tokeninc.sardis.application_template.database.TransactionDB
+import com.tokeninc.sardis.application_template.database.activation.ActivationDB
+import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding

@@ -15,7 +15,7 @@ import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
-import com.tokeninc.sardis.application_template.database.ActivationDB
+import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
 import org.apache.commons.lang3.StringUtils
 

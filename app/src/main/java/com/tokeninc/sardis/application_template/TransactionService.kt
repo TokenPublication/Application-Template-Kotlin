@@ -2,10 +2,9 @@ package com.tokeninc.sardis.application_template
 
 import android.content.ContentValues
 import android.content.Context
-import android.util.Log
 import com.token.uicomponents.infodialog.InfoDialog
-import com.tokeninc.sardis.application_template.database.TransactionCol
-import com.tokeninc.sardis.application_template.database.TransactionDB
+import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
+import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
@@ -40,7 +39,7 @@ class TransactionService  {
                     val deferred = coroutineScope.async(Dispatchers.Main) {
                         dialog.update(InfoDialog.InfoType.Confirmed,"İşlem Tamamlandı")
                         val onlineTransactionResponse = parseResponse(card,extraContent,transactionCode)
-                        finishTransaction(context,card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,onlineTransactionResponse!!)
+                        finishTransaction(context,card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,onlineTransactionResponse!!, ResponseCode.SUCCESS)
                     }
                     transactionResponse = deferred.await()
                 }
@@ -64,56 +63,61 @@ class TransactionService  {
         TODO(); "CHECK FROM DB"
     }
 
-    private fun finishTransaction(context: Context, card: ICCCard, transactionCode: TransactionCode, extraContent: ContentValues?,
-                                  onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse):TransactionResponse{
+    private fun finishTransaction(context: Context, card: ICCCard, transactionCode: TransactionCode, extraContent: ContentValues?, onlinePin: String?,
+                                  isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse, responseCode: ResponseCode): TransactionResponse? {
 
-        extraContent!!.put(TransactionCol.Col_Uuid.name, uuid)
-        extraContent.put(TransactionCol.Col_UISTN.name, "Col_UISTN")
-        extraContent.put(TransactionCol.Col_UIGUP_SN.name, "Col_UIGUP_SN")
-        extraContent.put(TransactionCol.Col_BatchNo.name, "Col_BatchNo")
-        extraContent.put(TransactionCol.Col_ReceiptNo.name, "Col_ReceiptNo")
-        extraContent.put(TransactionCol.Col_CardReadType.name, card.mCardReadType)
-        extraContent.put(TransactionCol.Col_PAN.name, card.mCardNumber)
-        extraContent.put(TransactionCol.Col_CardSequenceNumber.name, card.CardSeqNum)
-        extraContent.put(TransactionCol.Col_TransCode.name, transactionCode.name)
-        extraContent.put(TransactionCol.Col_UIAmount.name, card.mTranAmount1)
-        extraContent.put(TransactionCol.Col_UIAmount2.name, "Col_UIAmount2")
-        extraContent.put(TransactionCol.Col_ExpDate.name, card.mExpireDate)
-        extraContent.put(TransactionCol.Col_Track2.name, card.mTrack2Data)
-        extraContent.put(TransactionCol.Col_CustName.name, card.ownerName)
-        extraContent.put(TransactionCol.Col_IsVoid.name, "Col_IsVoid")
-        extraContent.put(TransactionCol.Col_InstCnt.name, onlineTransactionResponse.insCount)
-        extraContent.put(TransactionCol.Col_UIInstAmount.name, onlineTransactionResponse.instAmount)
-        extraContent.put(TransactionCol.Col_TranDate.name, "Col_TranDate")
-        extraContent.put(TransactionCol.Col_HostLogKey.name, onlineTransactionResponse.mHostLogKey)
-        extraContent.put(TransactionCol.Col_VoidDateTime.name, "Col_VoidDateTime") //LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        extraContent.put(TransactionCol.Col_AuthCode.name, onlineTransactionResponse.mAuthCode)
-        extraContent.put(TransactionCol.Col_Aid.name, "Col_Aid")
-        extraContent.put(TransactionCol.Col_AidLabel.name, "Col_AidLabel")
-        extraContent.put(TransactionCol.Col_TextPrintCode1.name, onlineTransactionResponse.mTextPrintCode1)
-        extraContent.put(TransactionCol.Col_TextPrintCode2.name, onlineTransactionResponse.mTextPrintCode2)
-        extraContent.put(TransactionCol.Col_DisplayData.name, onlineTransactionResponse.mDisplayData)
-        extraContent.put(TransactionCol.Col_KeySequenceNumber.name, onlineTransactionResponse.mKeySequenceNumber)
-        extraContent.put(TransactionCol.Col_AC.name, card.AC)
-        extraContent.put(TransactionCol.Col_CID.name, card.CID)
-        extraContent.put(TransactionCol.Col_ATC.name, card.ATC)
-        extraContent.put(TransactionCol.Col_TVR.name, card.TVR)
-        extraContent.put(TransactionCol.Col_TSI.name, card.TSI)
-        extraContent.put(TransactionCol.Col_AIP.name, card.AIP)
-        extraContent.put(TransactionCol.Col_CVM.name, card.CVM)
-        extraContent.put(TransactionCol.Col_AID2.name, card.AID2)
-        extraContent.put(TransactionCol.Col_UN.name, card.UN)
-        extraContent.put(TransactionCol.Col_IAD.name, card.IAD)
+        val content = ContentValues()
+        // TODO: extraContent will be return data
+        content.put(TransactionCol.Col_UUID.name, uuid)
+        content.put(TransactionCol.Col_STN.name, "Col_UISTN")
+        content.put(TransactionCol.Col_GUP_SN.name, "Col_UIGUP_SN")
+        content.put(TransactionCol.Col_BatchNo.name, 1)
+        content.put(TransactionCol.Col_ReceiptNo.name, 2)
+        content.put(TransactionCol.Col_CardReadType.name, card.mCardReadType)
+        content.put(TransactionCol.Col_PAN.name, card.mCardNumber)
+        content.put(TransactionCol.Col_CardSequenceNumber.name, card.CardSeqNum)
+        content.put(TransactionCol.Col_TransCode.name, transactionCode.name)
+        content.put(TransactionCol.Col_Amount.name, card.mTranAmount1)
+        content.put(TransactionCol.Col_Amount2.name, card.mTranAmount1) // TODO: If return get return amount from extraContent
+        content.put(TransactionCol.Col_ExpDate.name, card.mExpireDate)
+        content.put(TransactionCol.Col_Track2.name, card.mTrack2Data)
+        content.put(TransactionCol.Col_CustName.name, card.ownerName)
+        content.put(TransactionCol.Col_IsVoid.name, 0)
+        content.put(TransactionCol.Col_isPinByPass.name, isPinByPass)
+        content.put(TransactionCol.Col_isOffline.name, isOffline)
+        content.put(TransactionCol.Col_InstCnt.name, onlineTransactionResponse.insCount)
+        content.put(TransactionCol.Col_InstAmount.name, onlineTransactionResponse.instAmount)
+        content.put(TransactionCol.Col_TranDate.name, "Col_TranDate")
+        content.put(TransactionCol.Col_TranDate2.name, "Col_TranDate2") //TODO: If void get void date from OnlineTransactionResponse
+        content.put(TransactionCol.Col_HostLogKey.name, onlineTransactionResponse.mHostLogKey)
+        content.put(TransactionCol.Col_VoidDateTime.name, "") //TODO Null for here, this is not Void Tran
+        content.put(TransactionCol.Col_AuthCode.name, onlineTransactionResponse.mAuthCode)
+        content.put(TransactionCol.Col_Aid.name, card.AID2)
+        content.put(TransactionCol.Col_AidLabel.name, card.AIDLabel)
+        content.put(TransactionCol.Col_TextPrintCode1.name, onlineTransactionResponse.mTextPrintCode1)
+        content.put(TransactionCol.Col_TextPrintCode2.name, onlineTransactionResponse.mTextPrintCode2)
+        content.put(TransactionCol.Col_DisplayData.name, onlineTransactionResponse.mDisplayData)
+        content.put(TransactionCol.Col_KeySequenceNumber.name, onlineTransactionResponse.mKeySequenceNumber)
+        content.put(TransactionCol.Col_AC.name, card.AC)
+        content.put(TransactionCol.Col_CID.name, card.CID)
+        content.put(TransactionCol.Col_ATC.name, card.ATC)
+        content.put(TransactionCol.Col_TVR.name, card.TVR)
+        content.put(TransactionCol.Col_TSI.name, card.TSI)
+        content.put(TransactionCol.Col_AIP.name, card.AIP)
+        content.put(TransactionCol.Col_CVM.name, card.CVM)
+        content.put(TransactionCol.Col_AID2.name, card.AID2)
+        content.put(TransactionCol.Col_UN.name, card.UN)
+        content.put(TransactionCol.Col_IAD.name, card.IAD)
 
-        if (transactionDB!!.getColumn(TransactionCol.Col_Aid.name) == null){ //farklı bir controller lazım ya da
-            transactionDB!!.insertContentVal(extraContent)
-            Log.d("Service","Insert")
+        var success = true
+        if (responseCode === ResponseCode.SUCCESS) {
+            success = transactionDB!!.insertTransaction(content)
         }
-        else{
-            transactionDB!!.updateContentVal(extraContent)
-            Log.d("Service","Update")
-        }
-        return TransactionResponse(extraContent,transactionCode)
+
+        if (success) {
+            return TransactionResponse(content, transactionCode)
+        } // TODO: Detailed response will be implemented
+
+        return null // TODO: if error DB insert, return error...
     }
-
 }

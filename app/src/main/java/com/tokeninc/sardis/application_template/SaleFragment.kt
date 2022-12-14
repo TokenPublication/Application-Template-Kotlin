@@ -1,18 +1,6 @@
 package com.tokeninc.sardis.application_template
 
-import android.content.Intent
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.token.uicomponents.ListMenuFragment.IListMenuItem
-import com.token.uicomponents.ListMenuFragment.ListMenuFragment
-import com.tokeninc.sardis.application_template.database.TransactionDB
-import com.tokeninc.sardis.application_template.databinding.FragmentSaleBinding
-import com.tokeninc.sardis.application_template.entities.ICCCard
-import com.tokeninc.sardis.application_template.entities.MSRCard
-import com.tokeninc.sardis.application_template.enums.CardReadType
 
 
 class SaleFragment : Fragment() {
