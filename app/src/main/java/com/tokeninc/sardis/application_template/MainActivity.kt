@@ -26,6 +26,7 @@ import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.helpers.printHelpers.DateUtil
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -57,7 +58,6 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         printService = PrintServiceBinding()
         //printService?.print(PrintHelper().PrintSuccess())
 
-
         val textFragment = TextFragment()
         //intent.setAction("Settings_Action")
         replaceFragment(R.id.container,textFragment)
@@ -74,7 +74,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     }
 
     fun showDialog(infoDialog: InfoDialog){
-        infoDialog.show(supportFragmentManager,"")
+        infoDialog.show(supportFragmentManager,"") //TODO isCancellable False olacak ki işyeri sahibi dokunamasın
     }
 
     private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
@@ -88,6 +88,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         dummySaleFragment.mainActivity = this
         dummySaleFragment.saleIntent = Intent("Sale_Action")
         dummySaleFragment.saleBundle = Intent("Sale_Action").extras
+        dummySaleFragment.activationDB = actDB
         dummySaleFragment.transactionDB = transactionDB
         replaceFragment(R.id.container,dummySaleFragment)
     }
@@ -103,7 +104,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      * Because we use setResult method on Activities, we call this method in there.
      */
     fun dummySetResult(resultIntent: Intent){
-        setResult(Activity.RESULT_OK,resultIntent)
+        setResult(Activity.RESULT_OK, resultIntent)
         finish()
     }
 
@@ -358,7 +359,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
 
 
     override fun onCardDataReceived(cardData: String?) {
-
+        Log.d("Main/onCardDataReceived","Girdi")
     }
 
     override fun onPinReceived(p0: String?) {

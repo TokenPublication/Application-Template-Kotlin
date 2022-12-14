@@ -22,11 +22,14 @@ import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
+import com.tokeninc.sardis.application_template.database.activation.ActivationDB
+import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.helpers.StringHelper
+import com.tokeninc.sardis.application_template.helpers.printHelpers.SalePrintHelper
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.lang.String.valueOf
@@ -43,6 +46,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     var saleIntent: Intent? = null
     var bundle: Bundle? = null
     var saleBundle: Bundle? = null
+    var activationDB: ActivationDB? = null
     var transactionDB: TransactionDB? = null
     var mainActivity: MainActivity? = null
     private var cardServiceBinding: CardServiceBinding? = null
@@ -131,7 +135,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
             prepareDummyResponse(ResponseCode.ERROR)
         }
         binding.btnCancel.setOnClickListener {
-            prepareDummyResponse(ResponseCode.CANCELLED)
+            prepareDummyResponse(ResponseCode.CANCELED)
         }
         binding.btnofflineDecline.setOnClickListener {
             prepareDummyResponse(ResponseCode.OFFLINE_DECLINE)
@@ -155,14 +159,58 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     private fun doSale(transactionCode: TransactionCode) {
         coroutine!!.mainActivity = mainActivity
         CoroutineScope(Dispatchers.Default).launch {
-            val transactionResponse = coroutine!!.doInBackground(activityContext!!,card!!,transactionCode,
+            val transactionResponse = coroutine!!.doInBackground(activityContext!!,
+                amount, card!!,transactionCode,
                 ContentValues(), null,false,null ,false)
             finishSale(transactionResponse!!)
         }
     }
 
     private fun finishSale(transactionResponse: TransactionResponse){
+        Log.d("Transaction/Response","${transactionResponse.contentVal.toString()}")
 
+
+
+        // if transactionResponse.getResponseCode == Success
+        // PrepareSaleSlip
+        // Slibe transactionResponse'un içindeki content val ve online Transaction Response parametre olarak ata
+        // SalePrint   slip type müşteri ve iş yeri    2 tane to string yapılacak
+        // örnek slip aynısını yap 2 to stringle
+        //dummySale 212 248 bak onları yap
+
+        val responseCode = transactionResponse.responseCode
+        getNotNullBundle().putInt("ResponseCode", responseCode.ordinal)
+        getNotNullBundle().putInt("PaymentStatus", 0) // #2 Payment Status
+        getNotNullBundle().putInt("Amount", amount ) // #3 Amount
+        getNotNullBundle().putInt("Amount2", amount)
+        getNotNullBundle().putBoolean("IsSlip", true)
+
+        getNotNullBundle().putInt("BatchNo", 1) // TODO Do it after implementing Batch
+        getNotNullBundle().putString("CardNo", StringHelper().MaskTheCardNo(card!!.mCardNumber!!))
+        getNotNullBundle().putString("MID", activationDB!!.getMerchantId());
+        getNotNullBundle().putString("TID", activationDB!!.getTerminalId());
+        getNotNullBundle().putInt("TxnNo",5)  // TODO Do it after implementing Batch
+        getNotNullBundle().putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
+
+        var slipType: SlipType = SlipType.NO_SLIP
+        if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
+            slipType = SlipType.NO_SLIP
+        }
+        else{
+            if (transactionResponse.responseCode == ResponseCode.SUCCESS){
+                val salePrintHelper = SalePrintHelper()
+                getNotNullBundle().putString("customerSlipData", salePrintHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
+                getNotNullBundle().putString("merchantSlipData", salePrintHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
+                //getNotNullBundle().putString("RefundInfo", getRefundInfo(response)); //TODO sonra bakılacak
+                if(transactionResponse.contentVal != null) {
+                    getNotNullBundle().putString("RefNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_HostLogKey.name))
+                    getNotNullBundle().putString("AuthNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_AuthCode.name))
+                }
+            }
+        }
+        getNotNullBundle().putInt("SlipType", slipType.value) //TODO fail receipt yap
+        getNotNullIntent().putExtras(getNotNullBundle())
+        mainActivity!!.dummySetResult(getNotNullIntent())
     }
     private fun prepareDummyResponse (code: ResponseCode){
 
@@ -172,8 +220,8 @@ class DummySaleFragment : Fragment(), CardServiceListener {
 
         //this is for slip type
         var slipType = SlipType.NO_SLIP
-        if (cbMerchant.isChecked && cbCustomer.isChecked) slipType =
-            SlipType.BOTH_SLIPS
+        if (cbMerchant.isChecked && cbCustomer.isChecked)
+            slipType = SlipType.BOTH_SLIPS
         else if (cbMerchant.isChecked)
             slipType = SlipType.MERCHANT_SLIP
         else if (cbCustomer.isChecked)
@@ -182,7 +230,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         //if code is success then it gets selected item from spinner and modifies payment type
         //with respect to its type
         val spinner = binding.spinner
-        if (code === ResponseCode.SUCCESS) {
+        if (code == ResponseCode.SUCCESS) {
             val text: String = spinner.getSelectedItem().toString()
             if (text == valueOf(PaymentTypes.TRQRCREDITCARD))
                 paymentType = PaymentTypes.TRQRCREDITCARD.type
@@ -320,6 +368,9 @@ class DummySaleFragment : Fragment(), CardServiceListener {
             val json = JSONObject(cardData)
             val type = json.getInt("mCardReadType")
             card = Gson().fromJson(cardData, ICCCard::class.java)
+            if (card!!.resultCode == CardServiceResult.ERROR.resultCode()) {
+                Log.d("Error","Girdi")
+            }
             if (card!!.resultCode == CardServiceResult.SUCCESS.resultCode()) {
                 Log.d("Success","Girdi")
                 if (type == CardReadType.QrPay.type) {

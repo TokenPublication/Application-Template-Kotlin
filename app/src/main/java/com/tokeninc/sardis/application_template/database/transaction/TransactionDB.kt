@@ -86,7 +86,7 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
     /**
      * it needs to called with parameter TransactionCol.<requestedColumnName>.name
      */
-    fun getColumn(columnName: String): String? {
+    fun getColumn(columnName: String): String? { 
         val query = "SELECT " + columnName + " FROM " + DatabaseInfo.TRANSACTIONTABLE + " LIMIT 1"
         return DatabaseOperations.query(readableSQLite, query)
     }
