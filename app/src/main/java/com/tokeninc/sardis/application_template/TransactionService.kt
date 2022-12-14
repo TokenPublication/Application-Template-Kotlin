@@ -116,6 +116,10 @@ class TransactionService  {
             success = true
         }
 
+        // TODO: TEST USE for get all transactions as content values list
+        val supportedBankIDs: List<ContentValues?> = transactionDB!!.getAllTransactions()
+        supportedBankIDs.forEach(::println)
+
         if (success) {
             return TransactionResponse(responseCode, onlineTransactionResponse, content, transactionCode)
         } // TODO: Detailed response will be implemented

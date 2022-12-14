@@ -90,4 +90,25 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         val query = "SELECT " + columnName + " FROM " + DatabaseInfo.TRANSACTIONTABLE + " LIMIT 1"
         return DatabaseOperations.query(readableSQLite, query)
     }
+
+    fun getAllTransactions(): List<ContentValues?> {
+        return selectTransaction("SELECT * FROM " + DatabaseInfo.TRANSACTIONTABLE + " ORDER BY " + TransactionCol.Col_GUP_SN.name)
+    }
+
+    private fun selectTransaction(queryStr: String): List<ContentValues> {
+        val cursor = readableSQLite!!.rawQuery(queryStr, null)
+        val rows: MutableList<ContentValues> = ArrayList()
+        if (cursor.moveToFirst()) {
+            do {
+                val contentValues = ContentValues()
+                val colNames: Array<TransactionCol> = TransactionCol.values()
+                for (colName in colNames) {
+                    addColumnValue(contentValues, cursor, colName.name)
+                }
+                rows.add(contentValues)
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return rows
+    }
 }
