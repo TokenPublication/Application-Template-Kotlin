@@ -70,7 +70,7 @@ class TransactionService  {
         // TODO: extraContent will be return data
         content.put(TransactionCol.Col_UUID.name, uuid)
         content.put(TransactionCol.Col_STN.name, "Col_UISTN")
-        content.put(TransactionCol.Col_GUP_SN.name, "Col_UIGUP_SN")
+        content.put(TransactionCol.Col_GUP_SN.name, "Col_UIGUP_SN") // TODO Unique number, will be added
         content.put(TransactionCol.Col_BatchNo.name, 1)
         content.put(TransactionCol.Col_ReceiptNo.name, 2)
         content.put(TransactionCol.Col_CardReadType.name, card.mCardReadType)
