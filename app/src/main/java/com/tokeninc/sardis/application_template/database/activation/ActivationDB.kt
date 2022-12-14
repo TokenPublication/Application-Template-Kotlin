@@ -1,8 +1,11 @@
-package com.tokeninc.sardis.application_template.database
+package com.tokeninc.sardis.application_template.database.activation
 
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import com.tokeninc.sardis.application_template.database.DatabaseHelper
+import com.tokeninc.sardis.application_template.database.DatabaseInfo
+import com.tokeninc.sardis.application_template.database.DatabaseOperations
 
 class ActivationDB(context: Context?) : DatabaseHelper(context) {
 
@@ -50,7 +53,10 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
 
     private fun initHostSettings() {
         val count = try {
-            DatabaseOperations.query(readableSQLite, "SELECT COUNT(*) FROM $" + DatabaseInfo.ACTTABLE).toInt()
+            DatabaseOperations.query(
+                readableSQLite,
+                "SELECT COUNT(*) FROM $" + DatabaseInfo.ACTTABLE
+            ).toInt()
         } catch (e:Exception) {
             0
         }

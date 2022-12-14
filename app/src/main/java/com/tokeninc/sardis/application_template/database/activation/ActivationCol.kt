@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.database
+package com.tokeninc.sardis.application_template.database.activation
 
 enum class ActivationCol {
     ColMerchantId,

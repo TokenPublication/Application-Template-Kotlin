@@ -13,7 +13,6 @@ import androidx.annotation.IdRes
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
-import com.google.gson.Gson
 import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
@@ -23,14 +22,14 @@ import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
-import com.tokeninc.sardis.application_template.database.ActivationDB
+import com.tokeninc.sardis.application_template.database.activation.ActivationDB
+import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
-import com.tokeninc.sardis.application_template.enums.CardReadType
+import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.helpers.printHelpers.DateUtil
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
-import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.lang.ref.WeakReference
 
 
 class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener {
@@ -38,18 +37,20 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     //menu items is mutable list which we can add and delete
     private val menuItems = mutableListOf<IListMenuItem>()
     private var amount: Int = 0
-    private val mContext: WeakReference<Context>? = null
     private val inputList = mutableListOf<CustomInputFormat>()
     private var cardServiceBinding: CardServiceBinding? = null
     private var card: ICCCard? = null
     private var printService: PrintServiceBinding? = null
     private var actDB: ActivationDB? = null
+    private var transactionDB: TransactionDB? = null
+    private val coroutine = TransactionService()
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
         actDB = ActivationDB(this).getInstance(this) // TODO Egecan: Check not null
+        transactionDB = TransactionDB(this).getInstance(this)
         cardServiceBinding = CardServiceBinding(this, this)
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
@@ -57,9 +58,8 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         printService = PrintServiceBinding()
         //printService?.print(PrintHelper().PrintSuccess())
 
-
         val textFragment = TextFragment()
-        intent.setAction("Settings_Action")
+        //intent.setAction("Settings_Action")
         replaceFragment(R.id.container,textFragment)
         when (intent.action){
             getString(R.string.PosTxn_Action) ->  replaceFragment(R.id.container,PostTxnFragment())
@@ -73,17 +73,27 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
 
     }
 
+    fun showDialog(infoDialog: InfoDialog){
+        infoDialog.show(supportFragmentManager,"") //TODO isCancellable False olacak ki işyeri sahibi dokunamasın
+    }
 
-    fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
+    private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
         amount = intent.extras!!.getInt("Amount")
         dummySaleFragment.setAmount(amount)
-        dummySaleFragment.setContext(this@MainActivity)
+        dummySaleFragment.activityContext = this@MainActivity
         dummySaleFragment.getNewBundle(bundleOf())
         dummySaleFragment.getNewIntent(Intent())
+        dummySaleFragment.coroutine = coroutine
+        coroutine.transactionDB = transactionDB
+        dummySaleFragment.mainActivity = this
+        dummySaleFragment.saleIntent = Intent("Sale_Action")
+        dummySaleFragment.saleBundle = Intent("Sale_Action").extras
+        dummySaleFragment.activationDB = actDB
+        dummySaleFragment.transactionDB = transactionDB
         replaceFragment(R.id.container,dummySaleFragment)
     }
 
-    fun startSettingsFragment(settingsFragment: SettingsFragment){
+    private fun startSettingsFragment(settingsFragment: SettingsFragment){
         settingsFragment.resultIntent = Intent()
         settingsFragment._context = this@MainActivity
         replaceFragment(R.id.container,settingsFragment)
@@ -94,7 +104,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      * Because we use setResult method on Activities, we call this method in there.
      */
     fun dummySetResult(resultIntent: Intent){
-        setResult(Activity.RESULT_OK,resultIntent)
+        setResult(Activity.RESULT_OK, resultIntent)
         finish()
     }
 
@@ -211,7 +221,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         menuItems.add(
             MenuItem("Connecting", { menuItem: IListMenuItem? ->
                     Toast.makeText(this, "Menu Item 2", Toast.LENGTH_LONG).show()
-                showInfoDialog(InfoDialog.InfoType.Connecting, "Connecting", true);
+                showInfoDialog(InfoDialog.InfoType.Connecting, "Connecting", true)
                 } ) )
 
         menuItems.add(
@@ -284,9 +294,9 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      * This function only works in installation, it calls setConfig and setCLConfig
      */
     private fun setEMVConfiguration () {
-        var sharedPreference = getSharedPreferences("myprefs",Context.MODE_PRIVATE)
-        var editor = sharedPreference.edit()
-        var firstTimeBoolean = sharedPreference.getBoolean("FIRST_RUN",false)
+        val sharedPreference = getSharedPreferences("myprefs",Context.MODE_PRIVATE)
+        val editor = sharedPreference.edit()
+        val firstTimeBoolean = sharedPreference.getBoolean("FIRST_RUN",false)
         if (!firstTimeBoolean){
             setConfig()
             setCLConfig()
@@ -347,27 +357,9 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         setEMVConfiguration()
     }
 
+
     override fun onCardDataReceived(cardData: String?) {
-        try {
-            //prepareSaleMenu()
-            val json = JSONObject(cardData)
-            val type = json.getInt("mCardReadType")
-            if (type == CardReadType.QrPay.type) {
-                //QrSale()
-                return
-            }
-            if (type == CardReadType.CLCard.type) {
-                //cardReadType = CardReadType.CLCard.value
-                card = Gson().fromJson(cardData, ICCCard::class.java)
-            } else if (type == CardReadType.ICC.type) {
-                card = Gson().fromJson(cardData, ICCCard::class.java)
-            } else if (type == CardReadType.ICC2MSR.type || type == CardReadType.MSR.type || type == CardReadType.KeyIn.type) {
-                card = Gson().fromJson(cardData, ICCCard::class.java)
-                cardServiceBinding!!.getOnlinePIN(amount, card?.cardNumber, 0x0A01, 0, 4, 8, 30)
-            }
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
+        Log.d("Main/onCardDataReceived","Girdi")
     }
 
     override fun onPinReceived(p0: String?) {
@@ -377,6 +369,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     override fun onICCTakeOut() {
         TODO("Not yet implemented")
     }
+
 
 
 }
