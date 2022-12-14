@@ -5,5 +5,6 @@ class DatabaseInfo {
         const val DATABASENAME: String = "APP_TEMP"
         const val DATABASEVERSION: Int = 1
         const val ACTTABLE: String = "ACTIVATION"
+        const val TRANSACTIONTABLE: String = "TRANSACTIONS"
     }
 }

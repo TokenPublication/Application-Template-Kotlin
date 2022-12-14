@@ -1,6 +1,8 @@
 package com.tokeninc.sardis.application_template
 
+import MenuItem
 import android.R
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -15,14 +17,18 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.token.printerlib.IPrinterService
+import com.google.gson.Gson
+import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
+import com.tokeninc.sardis.application_template.database.TransactionCol
+import com.tokeninc.sardis.application_template.database.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
-import com.tokeninc.sardis.application_template.enums.PaymentTypes
-import com.tokeninc.sardis.application_template.enums.ResponseCode
-import com.tokeninc.sardis.application_template.enums.SlipType
+import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.helpers.StringHelper
+import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.lang.String.valueOf
 import java.util.*
@@ -32,18 +38,27 @@ class DummySaleFragment : Fragment(), CardServiceListener {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
-    private var _context: Context? = null //this is for getting context from activity class
-    private val notNullContext get() = _context!!
+    var activityContext: Context? = null //this is for getting context from activity class
+    //private val notNullContext get() = _context!!
     var resultIntent: Intent? = null
+    var saleIntent: Intent? = null
     var bundle: Bundle? = null
-    val mainActivity = MainActivity()
+    var saleBundle: Bundle? = null
+    var transactionDB: TransactionDB? = null
+    var mainActivity: MainActivity? = null
     private var cardServiceBinding: CardServiceBinding? = null
     private var boolReadCard = false
+    var coroutine: TransactionService? = null
+
+    private var menuItemList = mutableListOf<IListMenuItem>()
+    private var card: ICCCard? = null
 
     companion object{
         var amount = 0
         var cardOwner =""
         var cardNumber = "**** ****"
+        var cardData: String? = null
+        var cardReadType = 0
         //listener for spinner
         private val listener: AdapterView.OnItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
@@ -86,9 +101,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     /**
      * this is for getting MainActivity's context to prevent some errors
      */
-    fun setContext(mContext: Context?){
-        _context = mContext
-    }
+
 
     private fun prepareSpinner(){
         val spinner = binding.spinner
@@ -102,7 +115,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         )
         //because there were an error with context, we get context from mainActivity
         val adapter: ArrayAdapter<String> =
-            ArrayAdapter<String>(notNullContext, R.layout.simple_spinner_dropdown_item, items)
+            ArrayAdapter<String>(activityContext!!, R.layout.simple_spinner_dropdown_item, items)
         spinner.adapter = adapter
         spinner.onItemSelectedListener = listener
     }
@@ -136,11 +149,23 @@ class DummySaleFragment : Fragment(), CardServiceListener {
      * define cardServiceBinding and make boolReadCard true because we read it.
      */
     private fun readCard(){
-        cardServiceBinding = CardServiceBinding(notNullContext as AppCompatActivity?,this )
+        cardServiceBinding = CardServiceBinding(activityContext!! as AppCompatActivity?,this )
         boolReadCard = true
     }
 
-    public fun prepareDummyResponse (code: ResponseCode){
+    private fun doSale(transactionCode: TransactionCode) {
+        coroutine!!.mainActivity = mainActivity
+        CoroutineScope(Dispatchers.Default).launch {
+            val transactionResponse = coroutine!!.doInBackground(activityContext!!,card!!,transactionCode,
+                ContentValues(), null,false,null ,false)
+            finishSale(transactionResponse!!)
+        }
+    }
+
+    private fun finishSale(transactionResponse: TransactionResponse){
+
+    }
+    private fun prepareDummyResponse (code: ResponseCode){
 
         var paymentType = PaymentTypes.CREDITCARD.type
         val cbMerchant = binding.cbMerchant
@@ -196,7 +221,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     }
     //TODO Data has to be returned to Payment Gateway after sale operation completed via template
     // below using actual data.
-    public fun onSaleResponseRetrieved(price: Int, code: ResponseCode, hasSlip: Boolean,
+    fun onSaleResponseRetrieved(price: Int, code: ResponseCode, hasSlip: Boolean,
                                        slipType: SlipType, cardNo: String, ownerName: String, paymentType: Int){
         getNotNullBundle().putInt("ResponseCode", code.ordinal)
         getNotNullBundle().putString("CardOwner", cardOwner) // Optional
@@ -231,34 +256,15 @@ class DummySaleFragment : Fragment(), CardServiceListener {
          */
         //bundle.putString("ApprovalCode", getApprovalCode())
         getNotNullIntent().putExtras(getNotNullBundle())
-        mainActivity.dummySetResult(getNotNullIntent())
+        mainActivity!!.dummySetResult(getNotNullIntent())
 
 
     }
 
-    var mPrinterService: IPrinterService? = null
 
-    /*
-    private fun getRefundInfo(response: ResponseCode): String? {
-        val json = JSONObject()
-        try {
-            json.put("BatchNo", databaseHelper.getBatchNo())
-            json.put("TxnNo", databaseHelper.getTxNo())
-            json.put("Amount", amount)
-            json.put("RefNo", valueOf(databaseHelper.getSaleID()))
-            json.put("MID", databaseHelper.getMerchantId())
-            json.put("TID", databaseHelper.getTerminalId())
-            json.put("CardNo", StringHelper.MaskTheCardNo(cardNumber))
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
-        return json.toString()
-    }
-
-     */
 
     private fun getApprovalCode(): String? {
-        val sharedPref = PreferenceManager.getDefaultSharedPreferences(notNullContext)
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(activityContext!!)
         var approvalCode = sharedPref.getInt("ApprovalCode", 0)
         sharedPref.edit().putInt("ApprovalCode", ++approvalCode).apply()
         return String.format(Locale.ENGLISH, "%06d", approvalCode)
@@ -282,11 +288,6 @@ class DummySaleFragment : Fragment(), CardServiceListener {
                 obj.put("fallback", 1)
                 obj.put("cardReadTypes", 6)
                 obj.put("qrPay", 1)
-                /*
-                if (cardReadType == CardReadType.ICC.value) {
-                    obj.put("showCardScreen", 0)
-                }
-                 */
 
                 Log.w("CardServiceBind/Dummy","$cardServiceBinding")
                 cardServiceBinding!!.getCard(amount, 40, obj.toString())
@@ -297,8 +298,49 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         }
     }
 
+    private fun prepareSaleMenu() {
+        Log.d("PrepareSale","Girdi")
+        menuItemList.add(MenuItem( "Sale", { menuItem ->
+            doSale(TransactionCode.SALE)
+        }))
+        menuItemList.add(MenuItem("Installment Sale", { menuItem -> }))
+        menuItemList.add(MenuItem("Loyalty Sale", { menuItem ->}))
+        menuItemList.add(MenuItem("Campaign Sale", { menuItem -> }))
+        val fragment = ListMenuFragment.newInstance(menuItemList,
+                "Sale Type", false, null)
+        parentFragmentManager.beginTransaction().apply {
+            replace(binding.container.id,fragment)
+            commit()
+        }
+    }
+
+
+
     override fun onCardDataReceived(cardData: String?) {
-        Log.w("DummySale","Card Data Received")
+        try {
+            val json = JSONObject(cardData)
+            val type = json.getInt("mCardReadType")
+            card = Gson().fromJson(cardData, ICCCard::class.java)
+            if (card!!.resultCode == CardServiceResult.SUCCESS.resultCode()) {
+                Log.d("Success","Girdi")
+                if (type == CardReadType.QrPay.type) {
+                    //QrSale()
+                    return
+                }
+                if (type == CardReadType.CLCard.type) {
+                    cardReadType = CardReadType.CLCard.type
+                    card = Gson().fromJson(cardData, ICCCard::class.java)
+                } else if (type == CardReadType.ICC.type) {
+                    card = Gson().fromJson(cardData, ICCCard::class.java)
+                } else if (type == CardReadType.ICC2MSR.type || type == CardReadType.MSR.type || type == CardReadType.KeyIn.type) {
+                    //card = Gson().fromJson(cardData, ICCCard::class.java)
+                    //cardServiceBinding!!.getOnlinePIN(amount, card?.cardNumber, 0x0A01, 0, 4, 8, 30)
+                }
+                prepareSaleMenu()
+            }
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onPinReceived(p0: String?) {

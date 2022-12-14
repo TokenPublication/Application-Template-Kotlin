@@ -1,9 +1,11 @@
-package com.tokeninc.sardis.application_template
+package com.tokeninc.sardis.application_template.entities
 
-class ICCCard  {
-    var resultCode = 0
+import com.tokeninc.sardis.application_template.enums.CardServiceResult
+
+class ICCCard {
+    var resultCode = CardServiceResult.USER_CANCELLED.resultCode()
     var mCardReadType = 0
-    var cardNumber: String? = null
+    var mCardNumber: String? = null
     var mTrack2Data: String? = null
     var mExpireDate: String? = null
     var mTranAmount1 = 0
@@ -19,5 +21,4 @@ class ICCCard  {
     var AID2: String? = null
     var UN: String? = null
     var IAD: String? = null
-    //yıldızda olmayanlar null geç burada date time
 }

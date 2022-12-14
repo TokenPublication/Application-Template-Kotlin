@@ -114,6 +114,7 @@ public class DatabaseOperations {
     }
 
     public static int update(SQLiteDatabase db, String tableName, String whereClause, ContentValues values) {
+        Log.d("DBUpdate","size: " + values.size() );
         return db.update(tableName,  values, whereClause, null);
     }
 
