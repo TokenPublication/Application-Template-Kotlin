@@ -23,6 +23,7 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
+import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
@@ -43,6 +44,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     private var printService: PrintServiceBinding? = null
     private var actDB: ActivationDB? = null
     private var transactionDB: TransactionDB? = null
+    private var batchDB: BatchDB? = null
     private val coroutine = TransactionService()
 
     @SuppressLint("SuspiciousIndentation")
@@ -51,6 +53,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         val binding = ActivityMainBinding.inflate(layoutInflater)
         actDB = ActivationDB(this).getInstance(this) // TODO Egecan: Check not null
         transactionDB = TransactionDB(this).getInstance(this)
+        batchDB = BatchDB(this).getInstance(this)
         cardServiceBinding = CardServiceBinding(this, this)
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
@@ -85,11 +88,13 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         dummySaleFragment.getNewIntent(Intent())
         dummySaleFragment.coroutine = coroutine
         coroutine.transactionDB = transactionDB
+        coroutine.batchDB = batchDB
         dummySaleFragment.mainActivity = this
         dummySaleFragment.saleIntent = Intent("Sale_Action")
         dummySaleFragment.saleBundle = Intent("Sale_Action").extras
         dummySaleFragment.activationDB = actDB
         dummySaleFragment.transactionDB = transactionDB
+        dummySaleFragment.batchDB = batchDB
         replaceFragment(R.id.container,dummySaleFragment)
     }
 

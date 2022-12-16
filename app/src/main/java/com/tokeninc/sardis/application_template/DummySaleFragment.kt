@@ -23,6 +23,7 @@ import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
+import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
@@ -36,7 +37,6 @@ import org.json.JSONObject
 import java.lang.String.valueOf
 import java.util.*
 
-
 class DummySaleFragment : Fragment(), CardServiceListener {
 
     private var _binding: FragmentDummySaleBinding? = null
@@ -49,6 +49,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     var saleBundle: Bundle? = null
     var activationDB: ActivationDB? = null
     var transactionDB: TransactionDB? = null
+    var batchDB: BatchDB? = null
     var mainActivity: MainActivity? = null
     private var cardServiceBinding: CardServiceBinding? = null
     private var boolReadCard = false
@@ -169,11 +170,11 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         getNotNullBundle().putInt("Amount", amount )
         getNotNullBundle().putInt("Amount2", amount)
         getNotNullBundle().putBoolean("IsSlip", true)
-        getNotNullBundle().putInt("BatchNo", 1) // TODO Do it after implementing Batch
+        transactionResponse.contentVal?.let { getNotNullBundle().putInt("BatchNo", it.getAsInteger(TransactionCol.Col_BatchNo.name)) }
         getNotNullBundle().putString("CardNo", StringHelper().MaskTheCardNo(card!!.mCardNumber!!))
         getNotNullBundle().putString("MID", activationDB!!.getMerchantId());
         getNotNullBundle().putString("TID", activationDB!!.getTerminalId());
-        getNotNullBundle().putInt("TxnNo",5)  // TODO Do it after implementing Batch
+        transactionResponse.contentVal?.let { getNotNullBundle().putInt("TxnNo", it.getAsInteger(TransactionCol.Col_GUP_SN.name)) }
         getNotNullBundle().putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
 
         var slipType: SlipType = SlipType.NO_SLIP

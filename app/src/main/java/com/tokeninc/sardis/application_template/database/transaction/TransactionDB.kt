@@ -15,7 +15,6 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
     override fun onCreate(db: SQLiteDatabase?) {
         if (db!= null)
             initTransactionTable(db)
-
     }
 
     override fun getTableName(): String {
@@ -35,7 +34,7 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Aid.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_AidLabel.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_AuthCode.name] = "TEXT"
-        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_BatchNo.name] = "INTEGER NOT NULL"
+        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_BatchNo.name] = "INTEGER DEFAULT 0"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_CardReadType.name] = "INTEGER"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_CustName.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_ExpDate.name] = "TEXT"
