@@ -23,6 +23,7 @@ import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
+import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
@@ -31,10 +32,10 @@ import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.SalePrintHelper
 import kotlinx.coroutines.*
+import org.json.JSONException
 import org.json.JSONObject
 import java.lang.String.valueOf
 import java.util.*
-
 
 class DummySaleFragment : Fragment(), CardServiceListener {
 
@@ -48,6 +49,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     var saleBundle: Bundle? = null
     var activationDB: ActivationDB? = null
     var transactionDB: TransactionDB? = null
+    var batchDB: BatchDB? = null
     var mainActivity: MainActivity? = null
     private var cardServiceBinding: CardServiceBinding? = null
     private var boolReadCard = false
@@ -78,11 +80,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
             }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentDummySaleBinding.inflate(inflater,container,false)
         return binding.root
     }
@@ -105,11 +103,10 @@ class DummySaleFragment : Fragment(), CardServiceListener {
      * this is for getting MainActivity's context to prevent some errors
      */
 
-
     private fun prepareSpinner(){
         val spinner = binding.spinner
         val items = mutableListOf<String>(
-            java.lang.String.valueOf(PaymentTypes.CREDITCARD),
+            valueOf(PaymentTypes.CREDITCARD),
             valueOf(PaymentTypes.TRQRCREDITCARD),
             valueOf(PaymentTypes.TRQRFAST),
             valueOf(PaymentTypes.TRQRMOBILE),
@@ -167,29 +164,17 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     }
 
     private fun finishSale(transactionResponse: TransactionResponse){
-        Log.d("Transaction/Response","${transactionResponse.contentVal.toString()}")
-
-
-
-        // if transactionResponse.getResponseCode == Success
-        // PrepareSaleSlip
-        // Slibe transactionResponse'un içindeki content val ve online Transaction Response parametre olarak ata
-        // SalePrint   slip type müşteri ve iş yeri    2 tane to string yapılacak
-        // örnek slip aynısını yap 2 to stringle
-        //dummySale 212 248 bak onları yap
-
         val responseCode = transactionResponse.responseCode
         getNotNullBundle().putInt("ResponseCode", responseCode.ordinal)
-        getNotNullBundle().putInt("PaymentStatus", 0) // #2 Payment Status
-        getNotNullBundle().putInt("Amount", amount ) // #3 Amount
+        getNotNullBundle().putInt("PaymentStatus", 0)
+        getNotNullBundle().putInt("Amount", amount )
         getNotNullBundle().putInt("Amount2", amount)
         getNotNullBundle().putBoolean("IsSlip", true)
-
-        getNotNullBundle().putInt("BatchNo", 1) // TODO Do it after implementing Batch
+        transactionResponse.contentVal?.let { getNotNullBundle().putInt("BatchNo", it.getAsInteger(TransactionCol.Col_BatchNo.name)) }
         getNotNullBundle().putString("CardNo", StringHelper().MaskTheCardNo(card!!.mCardNumber!!))
         getNotNullBundle().putString("MID", activationDB!!.getMerchantId());
         getNotNullBundle().putString("TID", activationDB!!.getTerminalId());
-        getNotNullBundle().putInt("TxnNo",5)  // TODO Do it after implementing Batch
+        transactionResponse.contentVal?.let { getNotNullBundle().putInt("TxnNo", it.getAsInteger(TransactionCol.Col_GUP_SN.name)) }
         getNotNullBundle().putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
 
         var slipType: SlipType = SlipType.NO_SLIP
@@ -201,7 +186,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
                 val salePrintHelper = SalePrintHelper()
                 getNotNullBundle().putString("customerSlipData", salePrintHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
                 getNotNullBundle().putString("merchantSlipData", salePrintHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
-                //getNotNullBundle().putString("RefundInfo", getRefundInfo(response)); //TODO sonra bakılacak
+                getNotNullBundle().putString("RefundInfo", getRefundInfo(transactionResponse));
                 if(transactionResponse.contentVal != null) {
                     getNotNullBundle().putString("RefNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_HostLogKey.name))
                     getNotNullBundle().putString("AuthNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_AuthCode.name))
@@ -212,6 +197,29 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         getNotNullIntent().putExtras(getNotNullBundle())
         mainActivity!!.dummySetResult(getNotNullIntent())
     }
+
+    private fun getRefundInfo(transactionResponse: TransactionResponse): String {
+        val json = JSONObject()
+        val transaction: ContentValues? = transactionResponse.contentVal
+        try {
+            json.put("BatchNo", 1) // TODO Do it after implementing Batch
+            json.put("TxnNo", 100) // TODO Do it after implementing Batch
+            json.put("Amount", amount)
+            json.put("RefNo", transaction?.getAsString(TransactionCol.Col_HostLogKey.name))
+            json.put("AuthCode", transaction?.getAsString(TransactionCol.Col_AuthCode.name))
+            json.put("TranDate", transaction?.getAsString(TransactionCol.Col_TranDate.name))
+            if (transaction?.getAsInteger(TransactionCol.Col_InstCnt.name) != null && transaction.getAsInteger(TransactionCol.Col_InstCnt.name) > 0) {
+                val installment = JSONObject()
+                installment.put("InstCount", transaction.getAsInteger(TransactionCol.Col_InstCnt.name))
+                installment.put("InstAmount", transaction.getAsInteger(TransactionCol.Col_InstAmount.name))
+                json.put("Installment", installment)
+            }
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+        return json.toString()
+    }
+
     private fun prepareDummyResponse (code: ResponseCode){
 
         var paymentType = PaymentTypes.CREDITCARD.type
@@ -268,8 +276,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     }
     //TODO Data has to be returned to Payment Gateway after sale operation completed via template
     // below using actual data.
-    fun onSaleResponseRetrieved(price: Int, code: ResponseCode, hasSlip: Boolean,
-                                       slipType: SlipType, cardNo: String, ownerName: String, paymentType: Int){
+    private fun onSaleResponseRetrieved(price: Int, code: ResponseCode, hasSlip: Boolean, slipType: SlipType, cardNo: String, ownerName: String, paymentType: Int){
         getNotNullBundle().putInt("ResponseCode", code.ordinal)
         getNotNullBundle().putString("CardOwner", cardOwner) // Optional
         getNotNullBundle().putString("CardNumber", cardNumber) // Optional, Card No can be masked

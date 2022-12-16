@@ -6,5 +6,6 @@ class DatabaseInfo {
         const val DATABASEVERSION: Int = 1
         const val ACTTABLE: String = "ACTIVATION"
         const val TRANSACTIONTABLE: String = "TRANSACTIONS"
+        const val BATCHTABLE: String = "BATCH"
     }
 }

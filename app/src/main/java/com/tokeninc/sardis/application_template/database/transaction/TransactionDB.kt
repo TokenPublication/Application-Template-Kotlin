@@ -15,7 +15,6 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
     override fun onCreate(db: SQLiteDatabase?) {
         if (db!= null)
             initTransactionTable(db)
-
     }
 
     override fun getTableName(): String {
@@ -35,12 +34,12 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Aid.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_AidLabel.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_AuthCode.name] = "TEXT"
-        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_BatchNo.name] = "INTEGER NOT NULL"
+        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_BatchNo.name] = "INTEGER DEFAULT 0"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_CardReadType.name] = "INTEGER"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_CustName.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_ExpDate.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_HostLogKey.name] = "TEXT"
-        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_InstCnt.name] = "TEXT"
+        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_InstCnt.name] = "INTEGER DEFAULT 0"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_IsVoid.name] = "INTEGER"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_isPinByPass.name] = "INTEGER"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_isOffline.name] = "INTEGER"
@@ -49,7 +48,7 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_TranDate.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_TranDate2.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_TransCode.name] = "TEXT"
-        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_InstAmount.name] = "TEXT"
+        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_InstAmount.name] = "INTEGER DEFAULT 0"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_UUID.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_STN.name] = "INTEGER NOT NULL"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_GUP_SN.name] = "INTEGER NOT NULL UNIQUE"
