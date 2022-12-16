@@ -23,11 +23,13 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
+import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.helpers.printHelpers.DateUtil
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
+import com.tokeninc.sardis.application_template.viewmodel.TransactionViewModel
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -44,6 +46,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     private var actDB: ActivationDB? = null
     private var transactionDB: TransactionDB? = null
     private val coroutine = TransactionService()
+    private lateinit var transactionVM: TransactionViewModel
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,18 +54,19 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         val binding = ActivityMainBinding.inflate(layoutInflater)
         actDB = ActivationDB(this).getInstance(this) // TODO Egecan: Check not null
         transactionDB = TransactionDB(this).getInstance(this)
+        transactionVM = TransactionViewModel()
         cardServiceBinding = CardServiceBinding(this, this)
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
 
         printService = PrintServiceBinding()
         //printService?.print(PrintHelper().PrintSuccess())
-
+        Log.d("TransactionCol","${TransactionCol.Col_PAN.name}")
         val textFragment = TextFragment()
         //intent.setAction("Settings_Action")
         replaceFragment(R.id.container,textFragment)
         when (intent.action){
-            getString(R.string.PosTxn_Action) ->  replaceFragment(R.id.container,PostTxnFragment())
+            getString(R.string.PosTxn_Action) ->  startPostTxnFragment(PostTxnFragment())
             getString(R.string.Sale_Action) ->  startDummySaleFragment(DummySaleFragment())
             getString(R.string.Settings_Action) ->  startSettingsFragment(SettingsFragment())
             getString(R.string.BatchClose_Action) ->  textFragment.setActionName(getString(R.string.BatchClose_Action))
@@ -70,11 +74,22 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
             getString(R.string.Refund_Action) ->  textFragment.setActionName(getString(R.string.Refund_Action))
             else -> textFragment.setActionName("${intent.action}")
         }
-
+        //TODO: Mainde başlattığın fragmentlar geri gittiğinde arkada Activity.Main çıkıyor, çıkmasın
     }
 
     fun showDialog(infoDialog: InfoDialog){
         infoDialog.show(supportFragmentManager,"") //TODO isCancellable False olacak ki işyeri sahibi dokunamasın
+    }
+
+    private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
+        postTxnFragment.mainActivity = this
+        replaceFragment(R.id.container,postTxnFragment)
+    }
+
+    fun startVoidFragment(voidFragment: VoidFragment){
+        transactionVM.transactionDB = transactionDB!!
+        voidFragment.viewModel = transactionVM
+        replaceFragment(R.id.container,voidFragment)
     }
 
     private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
@@ -357,7 +372,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         setEMVConfiguration()
     }
 
-
+    //TODO: dummysaledakini buraya taşı
     override fun onCardDataReceived(cardData: String?) {
         Log.d("Main/onCardDataReceived","Girdi")
     }

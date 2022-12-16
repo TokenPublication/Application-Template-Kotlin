@@ -12,6 +12,7 @@ android {
     // I added this for binding
     buildFeatures {
         viewBinding = true
+        dataBinding true
     }
     defaultConfig {
         applicationId "com.tokeninc.sardis.application_template"

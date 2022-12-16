@@ -44,6 +44,8 @@
     <string name="invalid_merchant_no">Invalid Merchant No!</string>
     <string name="terminal_no">Terminal No</string>
     <string name="invalid_terminal_no">Invalid Terminal No!</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 
 </resources>

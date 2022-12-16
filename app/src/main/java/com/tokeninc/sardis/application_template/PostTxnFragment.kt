@@ -19,7 +19,7 @@ class PostTxnFragment : Fragment() {
 
     private var menuFragment: ListMenuFragment? = null
     private var hostFragment: InputListFragment? = null
-
+    var mainActivity: MainActivity? = null
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -37,8 +37,8 @@ class PostTxnFragment : Fragment() {
 
     private fun showMenu(){
         var menuItems = mutableListOf<IListMenuItem>()
-        menuItems.add(MenuItem("İşlemler", {
-
+        menuItems.add(MenuItem("İptal", {
+            mainActivity!!.startVoidFragment(VoidFragment())
         }))
         menuItems.add(MenuItem("İade", {
             addFragment(RefundFragment())

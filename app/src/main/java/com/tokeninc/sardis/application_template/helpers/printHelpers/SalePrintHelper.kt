@@ -17,8 +17,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class SalePrintHelper: BasePrintHelper() {
-    //TODO  MASKCARDNUMBER yap, YKB slibi aynısı, application conxtext currentDevice'a göre slip
-
 
     fun getFormattedText(slipType: SlipType, contentValues: ContentValues, onlineTransactionResponse: OnlineTransactionResponse,
                          context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
