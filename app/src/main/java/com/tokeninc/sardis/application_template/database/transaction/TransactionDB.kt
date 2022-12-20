@@ -91,6 +91,10 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         return DatabaseOperations.query(readableSQLite, query)
     }
 
+    fun getTransactionsByCardNo(cardNo: String): List<ContentValues?> {
+        return selectTransaction("SELECT * FROM " + DatabaseInfo.TRANSACTIONTABLE + " WHERE " + TransactionCol.Col_PAN.name + "='" + cardNo + "' AND " + TransactionCol.Col_IsVoid.name + " <> '1' ORDER BY " + TransactionCol.Col_GUP_SN.name + " DESC")
+    }
+
     fun getAllTransactions(): List<ContentValues?> {
         return selectTransaction("SELECT * FROM " + DatabaseInfo.TRANSACTIONTABLE + " ORDER BY " + TransactionCol.Col_GUP_SN.name)
     }
