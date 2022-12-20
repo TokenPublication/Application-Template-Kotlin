@@ -15,13 +15,10 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.google.gson.Gson
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.cardservicebinding.CardServiceBinding
-import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
@@ -31,12 +28,11 @@ import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.SalePrintHelper
 import kotlinx.coroutines.*
-import org.json.JSONObject
 import java.lang.String.valueOf
 import java.util.*
 
 
-class DummySaleFragment : Fragment(), CardServiceListener {
+class DummySaleFragment : Fragment() {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
@@ -49,8 +45,6 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     var activationDB: ActivationDB? = null
     var transactionDB: TransactionDB? = null
     var mainActivity: MainActivity? = null
-    private var cardServiceBinding: CardServiceBinding? = null
-    private var boolReadCard = false
     var transactionService: TransactionService? = null
 
     private var menuItemList = mutableListOf<IListMenuItem>()
@@ -60,7 +54,6 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         var amount = 0
         var cardOwner =""
         var cardNumber = "**** ****"
-        var cardData: String? = null
         var cardReadType = 0
         //listener for spinner
         private val listener: AdapterView.OnItemSelectedListener =
@@ -101,9 +94,6 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         amount = mAmount
     }
 
-    /**
-     * this is for getting MainActivity's context to prevent some errors
-     */
 
 
     private fun prepareSpinner(){
@@ -126,7 +116,8 @@ class DummySaleFragment : Fragment(), CardServiceListener {
 
     private fun clickButtons(){
         binding.btnSale.setOnClickListener {
-            readCard()
+            mainActivity!!.isSale = true
+            mainActivity!!.readCard()
         }
         binding.btnSuccess.setOnClickListener {
             prepareDummyResponse(ResponseCode.SUCCESS)
@@ -148,13 +139,6 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         }
     }
 
-    /**
-     * define cardServiceBinding and make boolReadCard true because we read it.
-     */
-    private fun readCard(){
-        cardServiceBinding = CardServiceBinding(activityContext!! as AppCompatActivity?,this )
-        boolReadCard = true
-    }
 
     private fun doSale(transactionCode: TransactionCode) {
         transactionService!!.mainActivity = mainActivity
@@ -326,26 +310,10 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         _binding = null
     }
 
-    override fun onCardServiceConnected() {
-        if (boolReadCard){
-            try {
-                val obj = JSONObject()
-                obj.put("forceOnline", 1)
-                obj.put("zeroAmount", 0)
-                obj.put("fallback", 1)
-                obj.put("cardReadTypes", 6)
-                obj.put("qrPay", 1)
 
-                Log.w("CardServiceBind/Dummy","$cardServiceBinding")
-                cardServiceBinding!!.getCard(amount, 40, obj.toString())
-                boolReadCard = false
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    private fun prepareSaleMenu() {
+    fun prepareSaleMenu(mCard: ICCCard?) {
+        card = mCard
+        mainActivity!!.isSale = false
         Log.d("PrepareSale","Girdi")
         menuItemList.add(MenuItem( "Sale", { menuItem ->
             doSale(TransactionCode.SALE)
@@ -355,50 +323,9 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         menuItemList.add(MenuItem("Campaign Sale", { menuItem -> }))
         val fragment = ListMenuFragment.newInstance(menuItemList,
                 "Sale Type", false, null)
-        parentFragmentManager.beginTransaction().apply {
-            replace(binding.container.id,fragment)
-            commit()
-        }
+        mainActivity!!.replaceFragment(fragment)
     }
 
 
-
-    override fun onCardDataReceived(cardData: String?) {
-        try {
-            val json = JSONObject(cardData)
-            val type = json.getInt("mCardReadType")
-            card = Gson().fromJson(cardData, ICCCard::class.java)
-            if (card!!.resultCode == CardServiceResult.ERROR.resultCode()) {
-                Log.d("Error","Girdi")
-            }
-            if (card!!.resultCode == CardServiceResult.SUCCESS.resultCode()) {
-                Log.d("Success","Girdi")
-                if (type == CardReadType.QrPay.type) {
-                    //QrSale()
-                    return
-                }
-                if (type == CardReadType.CLCard.type) {
-                    cardReadType = CardReadType.CLCard.type
-                    card = Gson().fromJson(cardData, ICCCard::class.java)
-                } else if (type == CardReadType.ICC.type) {
-                    card = Gson().fromJson(cardData, ICCCard::class.java)
-                } else if (type == CardReadType.ICC2MSR.type || type == CardReadType.MSR.type || type == CardReadType.KeyIn.type) {
-                    //card = Gson().fromJson(cardData, ICCCard::class.java)
-                    //cardServiceBinding!!.getOnlinePIN(amount, card?.cardNumber, 0x0A01, 0, 4, 8, 30)
-                }
-                prepareSaleMenu()
-            }
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    override fun onPinReceived(p0: String?) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onICCTakeOut() {
-        TODO("Not yet implemented")
-    }
 
 }

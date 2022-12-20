@@ -24,6 +24,7 @@ class RefundFragment : Fragment() {
 
     private var menuFragment: ListMenuFragment? = null
     private var hostFragment: InputListFragment? = null
+    var mainActivity: MainActivity? = null
 
 
     companion object{
@@ -90,21 +91,18 @@ class RefundFragment : Fragment() {
         }))
         menuFragment = ListMenuFragment.newInstance(menuItems,"PostTxn",
             true, R.drawable.token_logo)
-        parentFragmentManager.beginTransaction().apply {
-            replace(binding.container.id, menuFragment!!)
-            commit()
-        }
+        mainActivity!!.replaceFragment(menuFragment as Fragment)
     }
 
 
     private fun showMatchedReturnFragment() { // EŞLENİKLİ İADE
         val inputList = mutableListOf<CustomInputFormat>()
 
-         inputOrgAmount = com.token.uicomponents.CustomInput.CustomInputFormat(
-            getString(R.string.original_amount),
+         inputOrgAmount = CustomInputFormat(
+            "Original Amount",//getString(R.string.original_amount),
             EditTextInputType.Amount,
             null,
-            getString(R.string.invalid_amount),
+            "Invalid Amount",//getString(R.string.invalid_amount),
         InputValidator { input: CustomInputFormat ->
             val amount = if (input.text.isEmpty()) 0 else input.text.toInt()
             amount > 0
@@ -112,23 +110,23 @@ class RefundFragment : Fragment() {
         inputList.add(inputOrgAmount!!)
 
         inputRetAmount = CustomInputFormat(
-            getString(R.string.refund_amount),
+            "Refund Amount" ,//getString(R.string.refund_amount),
             EditTextInputType.Amount,
             null,
-            getString(R.string.invalid_amount)
-        ,InputValidator {
+            "Invalid Amount",//getString(R.string.invalid_amount)
+        InputValidator {
             val amount = if (it.text.isEmpty()) 0 else it.text.toInt()
             val original =
                 if (inputOrgAmount!!.text.isEmpty()) 0 else inputOrgAmount!!.text.toInt()
-            amount > 0 && amount <= original
+            amount in 1..original
         } )
         inputList.add(inputRetAmount!!)
 
         inputRefNo = CustomInputFormat(
-            getString(R.string.ref_no),
+            "Ref No",//getString(R.string.ref_no),
             EditTextInputType.Number,
             10,
-            getString(R.string.ref_no_invalid_ten_digits)
+            "Ref No Invalid (10 digits)"//getString(R.string.ref_no_invalid_ten_digits)
         ) { customInputFormat: CustomInputFormat ->
             !isCurrentDay(inputTranDate!!.text) || isCurrentDay(
                 inputTranDate!!.text
@@ -137,17 +135,17 @@ class RefundFragment : Fragment() {
         inputList.add(inputRefNo!!)
 
         inputAuthCode = CustomInputFormat(
-            getString(R.string.confirmation_code),
+            "Confirmation Code",//getString(R.string.confirmation_code),
             EditTextInputType.Number,
             6,
-            getString(R.string.confirmation_code_invalid_six_digits)
+            "Confirmation Code is Invalid (6 Digits)"//getString(R.string.confirmation_code_invalid_six_digits)
         ) { customInputFormat: CustomInputFormat -> customInputFormat.text.length == 6 }
         inputList.add(inputAuthCode!!)
 
-        inputTranDate = CustomInputFormat(getString(R.string.tran_date),
+        inputTranDate = CustomInputFormat("Transaction Date",//getString(R.string.tran_date),
             EditTextInputType.Date,
             null,
-            getString(R.string.tran_date_invalid),
+            "Transaction Date is Invalid",//getString(R.string.tran_date_invalid),
             label@
             InputValidator { customInputFormat: CustomInputFormat ->
                 try {
@@ -166,18 +164,14 @@ class RefundFragment : Fragment() {
         inputList.add(inputTranDate!!)
 
         val fragment = InputListFragment.newInstance(
-            inputList, getString(R.string.refund)
+            inputList, "Refund"//getString(R.string.refund)
         ) { list: MutableList<String> ->
             data = list
             amount = list[1].toInt()
             //readCard()
         }
 
-        parentFragmentManager.beginTransaction().apply {
-            replace(binding.container.id,fragment)
-            addToBackStack(null)
-            commit()
-        }
+        mainActivity!!.replaceFragment(fragment)
     }
 
     private fun showInstallments() { // TAKSİTLİ İADE
@@ -196,11 +190,7 @@ class RefundFragment : Fragment() {
             getString(R.string.installment_refund),
             true,
             R.drawable.token_logo)
-        parentFragmentManager.beginTransaction().apply {
-            replace(binding.container.id, instFragment!!)
-            addToBackStack(null)
-            commit()
-        }
+       mainActivity!!.replaceFragment(instFragment as Fragment)
     }
 
     /*

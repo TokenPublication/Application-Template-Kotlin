@@ -10,9 +10,11 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.IdRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
+import com.google.gson.Gson
 import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
@@ -27,7 +29,11 @@ import com.tokeninc.sardis.application_template.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.enums.CardReadType
+import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -44,6 +50,11 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     private var actDB: ActivationDB? = null
     var transactionDB: TransactionDB? = null
     val transactionService = TransactionService()
+    private val postTxnFragment = PostTxnFragment()
+    private val dummySaleFragment = DummySaleFragment()
+    var isVoid = false  //if readCard is for void operation it returns true from voidFragment
+    var isSale = false  //if readCard is for sale operation it returns true from dummySaleFragment
+    private var boolReadCard = false
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,8 +73,8 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         //intent.setAction("Settings_Action")
         replaceFragment(textFragment)
         when (intent.action){
-            getString(R.string.PosTxn_Action) ->  startPostTxnFragment(PostTxnFragment())
-            getString(R.string.Sale_Action) ->  startDummySaleFragment(DummySaleFragment())
+            getString(R.string.PosTxn_Action) ->  startPostTxnFragment(postTxnFragment)
+            getString(R.string.Sale_Action) ->  startDummySaleFragment(dummySaleFragment)
             getString(R.string.Settings_Action) ->  startSettingsFragment(SettingsFragment())
             getString(R.string.BatchClose_Action) ->  textFragment.setActionName(getString(R.string.BatchClose_Action))
             getString(R.string.Parameter_Action) ->  textFragment.setActionName(getString(R.string.Parameter_Action))
@@ -357,13 +368,89 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         }
     }
 
+
+    fun readCard() {
+        if (isVoid){
+            val obj = JSONObject()
+            try {
+                obj.put("forceOnline", 0)
+                obj.put("zeroAmount", 1)
+                obj.put("showAmount", 0)
+                obj.put("partialEMV", 1)
+                // TODO Developer: Check from Allowed Operations Parameter
+                val isManEntryAllowed = true
+                val isCVVAskedOnMoto = true
+                val isFallbackAllowed = true
+                val isQrAllowed = true
+                obj.put("keyIn", if (isManEntryAllowed) 1 else 0)
+                obj.put("askCVV", if (isCVVAskedOnMoto) 1 else 0)
+                obj.put("fallback", if (isFallbackAllowed) 1 else 0)
+                obj.put("qrPay", if (isQrAllowed) 1 else 0)
+            } catch (e: JSONException) {
+                e.printStackTrace()
+            }
+            val cardServiceBinding = CardServiceBinding(this ,this )
+            cardServiceBinding.getCard(0, 30, obj.toString())
+        }
+        if (isSale){
+            cardServiceBinding = CardServiceBinding(this,this )
+            boolReadCard = true
+        }
+    }
+
+
     override fun onCardServiceConnected() {
         setEMVConfiguration()
+        if (isSale){
+            if (boolReadCard){ //TODO CHECK BARIS burada 2 controller oldu gibi birini silebiliriz bence
+                try {
+                    val obj = JSONObject()
+                    obj.put("forceOnline", 1)
+                    obj.put("zeroAmount", 0)
+                    obj.put("fallback", 1)
+                    obj.put("cardReadTypes", 6)
+                    obj.put("qrPay", 1)
+
+                    Log.w("CardServiceBind/Dummy","$cardServiceBinding")
+                    cardServiceBinding!!.getCard(DummySaleFragment.amount, 40, obj.toString())
+                    boolReadCard = false
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 
     //TODO: dummysaledakini buraya taşı
     override fun onCardDataReceived(cardData: String?) {
-        Log.d("Main/onCardDataReceived","Girdi")
+        try {
+            val json = JSONObject(cardData)
+            val type = json.getInt("mCardReadType")
+            card = Gson().fromJson(cardData, ICCCard::class.java)
+            if (card!!.resultCode == CardServiceResult.ERROR.resultCode()) {
+            }
+            if (card!!.resultCode == CardServiceResult.SUCCESS.resultCode()) {
+                if (type == CardReadType.QrPay.type) {
+                    //QrSale()
+                    return
+                }
+                if (type == CardReadType.CLCard.type) {
+                    DummySaleFragment.cardReadType = CardReadType.CLCard.type
+                    card = Gson().fromJson(cardData, ICCCard::class.java)
+                } else if (type == CardReadType.ICC.type) {
+                    card = Gson().fromJson(cardData, ICCCard::class.java)
+                } else if (type == CardReadType.ICC2MSR.type || type == CardReadType.MSR.type || type == CardReadType.KeyIn.type) {
+                    //card = Gson().fromJson(cardData, ICCCard::class.java)
+                    //cardServiceBinding!!.getOnlinePIN(amount, card?.cardNumber, 0x0A01, 0, 4, 8, 30)
+                }
+                if (isSale)
+                    dummySaleFragment.prepareSaleMenu(card)
+                if (isVoid)
+                    postTxnFragment.cardNumberReceived(card)
+            }
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onPinReceived(p0: String?) {
@@ -373,7 +460,6 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     override fun onICCTakeOut() {
         TODO("Not yet implemented")
     }
-
 
 
 }
