@@ -34,7 +34,7 @@ class VoidFragment : Fragment() {
             binding.adapter = adapter
             adapter.notifyDataSetChanged() //gerekli mi bilmiyorum
         }
-
+        //gradle push
         return binding.root
     }
 
