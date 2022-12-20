@@ -7,15 +7,16 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tokeninc.sardis.application_template.adapters.TransactionAdapter
-import com.tokeninc.sardis.application_template.databinding.FragmentVoidBinding
+import com.tokeninc.sardis.application_template.databinding.ListTransactionBinding
 import com.tokeninc.sardis.application_template.viewmodel.TransactionViewModel
 
 
-class VoidFragment : Fragment() {
+class TransactionList : Fragment() {
 
     private lateinit var adapter: TransactionAdapter
-    private lateinit var binding: FragmentVoidBinding
+    private lateinit var binding: ListTransactionBinding
     var viewModel: TransactionViewModel? = null
+    var postTxnFragment: PostTxnFragment? = null
 
 
     override fun onCreateView(
@@ -24,17 +25,16 @@ class VoidFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
-        binding =FragmentVoidBinding.inflate(inflater,container,false)
+        binding =ListTransactionBinding.inflate(inflater,container,false)
         val recyclerView = binding.recyclerViewTransactions
         recyclerView.layoutManager =LinearLayoutManager(requireContext())
 
-        viewModel!!.createLiveData() //in here list = getAllTransactions()
+        viewModel!!.createLiveData() //in here list = getTransactionsByCardNo(cardNo)
         viewModel!!.list.observe(viewLifecycleOwner) {
             adapter = TransactionAdapter(it.toMutableList())
+            adapter.postTxnFragment = postTxnFragment
             binding.adapter = adapter
-            adapter.notifyDataSetChanged() //gerekli mi bilmiyorum
         }
-        //gradle push
         return binding.root
     }
 

@@ -1,10 +1,13 @@
 package com.tokeninc.sardis.application_template.adapters
 
 import android.content.ContentValues
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.tokeninc.sardis.application_template.MainActivity
+import com.tokeninc.sardis.application_template.PostTxnFragment
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding
@@ -14,22 +17,29 @@ class TransactionAdapter(private val transactionList: MutableList<ContentValues?
 
     inner class TransactionViewHolder(val binding: TransactionItemsBinding): RecyclerView.ViewHolder(binding.root)
 
+    var postTxnFragment: PostTxnFragment? = null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding: TransactionItemsBinding = DataBindingUtil.inflate(inflater, R.layout.transaction_items, parent,false)
         return TransactionViewHolder(binding)
     }
 //basınca ilgili content valueyu loga yazsın
+    //TransactionService gibi VoidService başlasın
+    //transactionService'e gideceksin yine ama transactionCode void dönsün
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
         val transaction = transactionList[position]
         val hb = holder.binding
         hb.textCardNo.text = StringHelper().MaskTheCardNo(transaction!!.getAsString(TransactionCol.Col_PAN.name))
-        hb.textDate.text = transaction!!.getAsString(TransactionCol.Col_TranDate.name)
-        hb.textAmount.text = StringHelper().getAmount(transaction!!.getAsString(TransactionCol.Col_Amount.name).toInt())
-        hb.textApprovalCode.text = transaction!!.getAsString(TransactionCol.Col_TransCode.name)
+        hb.textDate.text = transaction.getAsString(TransactionCol.Col_TranDate.name)
+        hb.textAmount.text = StringHelper().getAmount(transaction.getAsString(TransactionCol.Col_Amount.name).toInt())
+        hb.textApprovalCode.text = transaction.getAsString(TransactionCol.Col_TransCode.name)
         //TODO: Doğru mu approval code?
-        hb.tvSN.text = transaction!!.getAsString(TransactionCol.Col_AuthCode.name)
-
+        hb.tvSN.text = transaction.getAsString(TransactionCol.Col_AuthCode.name)
+        holder.itemView.setOnClickListener {
+            postTxnFragment!!.voidOperation(transaction)
+            Log.d("RecyclerView/onClick","ContentVal: ${transaction.toString()} ")
+        }
     }
 
     override fun getItemCount(): Int {

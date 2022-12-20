@@ -27,9 +27,7 @@ import com.tokeninc.sardis.application_template.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
-import com.tokeninc.sardis.application_template.helpers.printHelpers.DateUtil
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
-import com.tokeninc.sardis.application_template.viewmodel.TransactionViewModel
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -44,9 +42,8 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     private var card: ICCCard? = null
     private var printService: PrintServiceBinding? = null
     private var actDB: ActivationDB? = null
-    private var transactionDB: TransactionDB? = null
-    private val coroutine = TransactionService()
-    private lateinit var transactionVM: TransactionViewModel
+    var transactionDB: TransactionDB? = null
+    val transactionService = TransactionService()
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,7 +51,6 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         val binding = ActivityMainBinding.inflate(layoutInflater)
         actDB = ActivationDB(this).getInstance(this) // TODO Egecan: Check not null
         transactionDB = TransactionDB(this).getInstance(this)
-        transactionVM = TransactionViewModel()
         cardServiceBinding = CardServiceBinding(this, this)
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
@@ -64,7 +60,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         Log.d("TransactionCol","${TransactionCol.Col_PAN.name}")
         val textFragment = TextFragment()
         //intent.setAction("Settings_Action")
-        replaceFragment(R.id.container,textFragment)
+        replaceFragment(textFragment)
         when (intent.action){
             getString(R.string.PosTxn_Action) ->  startPostTxnFragment(PostTxnFragment())
             getString(R.string.Sale_Action) ->  startDummySaleFragment(DummySaleFragment())
@@ -83,13 +79,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
 
     private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
         postTxnFragment.mainActivity = this
-        replaceFragment(R.id.container,postTxnFragment)
-    }
-
-    fun startVoidFragment(voidFragment: VoidFragment){
-        transactionVM.transactionDB = transactionDB!!
-        voidFragment.viewModel = transactionVM
-        replaceFragment(R.id.container,voidFragment)
+        replaceFragment(postTxnFragment)
     }
 
     private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
@@ -98,20 +88,20 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         dummySaleFragment.activityContext = this@MainActivity
         dummySaleFragment.getNewBundle(bundleOf())
         dummySaleFragment.getNewIntent(Intent())
-        dummySaleFragment.coroutine = coroutine
-        coroutine.transactionDB = transactionDB
+        dummySaleFragment.transactionService = transactionService
+        transactionService.transactionDB = transactionDB
         dummySaleFragment.mainActivity = this
         dummySaleFragment.saleIntent = Intent("Sale_Action")
         dummySaleFragment.saleBundle = Intent("Sale_Action").extras
         dummySaleFragment.activationDB = actDB
         dummySaleFragment.transactionDB = transactionDB
-        replaceFragment(R.id.container,dummySaleFragment)
+        replaceFragment(dummySaleFragment)
     }
 
     private fun startSettingsFragment(settingsFragment: SettingsFragment){
         settingsFragment.resultIntent = Intent()
         settingsFragment._context = this@MainActivity
-        replaceFragment(R.id.container,settingsFragment)
+        replaceFragment(settingsFragment)
     }
 
     /**
@@ -276,11 +266,10 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         ft.commit()
     }
 
-    public fun replaceFragment(@IdRes resourceId: Int, fragment: Fragment)
+    fun replaceFragment( fragment: Fragment)
     {
         supportFragmentManager.beginTransaction().apply {
-            replace(resourceId,fragment) //replacing fragment
-            addToBackStack(null)  //add it to fragment stack, to return back as needed
+            replace(R.id.container,fragment) //replacing fragment
             commit() //call signals to the FragmentManager that all operations have been added to the transaction
         }
     }

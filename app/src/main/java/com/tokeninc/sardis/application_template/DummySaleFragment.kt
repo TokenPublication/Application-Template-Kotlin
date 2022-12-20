@@ -51,7 +51,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     var mainActivity: MainActivity? = null
     private var cardServiceBinding: CardServiceBinding? = null
     private var boolReadCard = false
-    var coroutine: TransactionService? = null
+    var transactionService: TransactionService? = null
 
     private var menuItemList = mutableListOf<IListMenuItem>()
     private var card: ICCCard? = null
@@ -157,9 +157,9 @@ class DummySaleFragment : Fragment(), CardServiceListener {
     }
 
     private fun doSale(transactionCode: TransactionCode) {
-        coroutine!!.mainActivity = mainActivity
+        transactionService!!.mainActivity = mainActivity
         CoroutineScope(Dispatchers.Default).launch {
-            val transactionResponse = coroutine!!.doInBackground(activityContext!!,
+            val transactionResponse = transactionService!!.doInBackground(activityContext!!,
                 amount, card!!,transactionCode,
                 ContentValues(), null,false,null ,false)
             finishSale(transactionResponse!!)
@@ -186,7 +186,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         getNotNullBundle().putBoolean("IsSlip", true)
 
         getNotNullBundle().putInt("BatchNo", 1) // TODO Do it after implementing Batch
-        getNotNullBundle().putString("CardNo", StringHelper().MaskTheCardNo(card!!.mCardNumber!!))
+        getNotNullBundle().putString("CardNo", StringHelper().maskCardNumber(card!!.mCardNumber!!))
         getNotNullBundle().putString("MID", activationDB!!.getMerchantId());
         getNotNullBundle().putString("TID", activationDB!!.getTerminalId());
         getNotNullBundle().putInt("TxnNo",5)  // TODO Do it after implementing Batch
@@ -280,7 +280,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
 
         //bundle.putInt("BatchNo", databaseHelper.getBatchNo())
 
-        getNotNullBundle().putString("CardNo", StringHelper().MaskTheCardNo(cardNumber))
+        getNotNullBundle().putString("CardNo", StringHelper().maskCardNumber(cardNumber))
 
         //bundle.putString("MID", databaseHelper.getMerchantId()); //#6 Merchant ID
         //bundle.putString("TID", databaseHelper.getTerminalId()); //#7 Terminal ID

@@ -55,7 +55,7 @@ class SalePrintHelper: BasePrintHelper() {
         }
 
         styledText.newLine()
-        styledText.addTextToLine(stringHelper.MaskTheCardNo(contentValues.getAsString(TransactionCol.Col_PAN.name)), PrinterDefinitions.Alignment.Center)
+        styledText.addTextToLine(stringHelper.maskCardNumber(contentValues.getAsString(TransactionCol.Col_PAN.name)), PrinterDefinitions.Alignment.Center)
         styledText.newLine()
         if (contentValues.get(TransactionCol.Col_CustName.name) != null){
             styledText.addTextToLine(contentValues.getAsString(TransactionCol.Col_CustName.name), PrinterDefinitions.Alignment.Center)

@@ -23,7 +23,11 @@ class TransactionService  {
                                onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean):TransactionResponse? {
         this.context = context
         var transactionResponse: TransactionResponse? = null
-        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",true)
+        val dialog = if (transactionCode == TransactionCode.SALE)
+            InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
+        else
+            InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",true)
+
         coroutineScope.launch(Dispatchers.Main){
             mainActivity!!.showDialog(dialog)
         }
@@ -111,14 +115,15 @@ class TransactionService  {
         content.put(TransactionCol.Col_IAD.name, card.IAD)
 
         var success = true
-        if (responseCode == ResponseCode.SUCCESS) {
-            success = transactionDB!!.insertTransaction(content)
+        // TODO BARIS  VOID ise Insert etmeyecek!
+        if (responseCode == ResponseCode.SUCCESS && transactionCode == TransactionCode.SALE) {
+            success = transactionDB!!.insertTransaction(content) //TODO yeni insertleri ekleyemedi bak
             success = true
         }
 
         // TODO: TEST USE for get all transactions as content values list
-        val supportedBankIDs: List<ContentValues?> = transactionDB!!.getAllTransactions()
-        supportedBankIDs.forEach(::println)
+        val allTransactions: List<ContentValues?> = transactionDB!!.getAllTransactions()
+        allTransactions.forEach(::println)
 
         if (success) {
             return TransactionResponse(responseCode, onlineTransactionResponse, content, transactionCode)
