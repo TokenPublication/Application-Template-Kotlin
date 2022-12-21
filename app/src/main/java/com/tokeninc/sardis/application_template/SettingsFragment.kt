@@ -24,7 +24,7 @@ class SettingsFragment : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
-    private val mainActivity = MainActivity()
+    var mainActivity: MainActivity? = null
     private var menuFragment: ListMenuFragment? = null
     private var hostFragment: InputListFragment? = null
     private  var TidMidFragment:InputListFragment? = null
@@ -77,10 +77,7 @@ class SettingsFragment : Fragment() {
         }))
         menuFragment = ListMenuFragment.newInstance(menuItems,"Settings",
             true, R.drawable.token_logo)
-        parentFragmentManager.beginTransaction().apply {
-            replace(binding.container.id, menuFragment!!)
-            commit()
-        }
+        mainActivity!!.replaceFragment(menuFragment as Fragment)
     }
 
     private fun addIPFragment(){
@@ -109,11 +106,7 @@ class SettingsFragment : Fragment() {
                     Toast.makeText(_context,"IP: $ip_no  PORT: $port_no",Toast.LENGTH_LONG).show()
             })
 
-        parentFragmentManager.beginTransaction().apply {
-            replace(binding.container.id, hostFragment!!)
-            addToBackStack("")
-            commit()
-        }
+        mainActivity!!.replaceFragment(hostFragment as Fragment)
     }
 
     private fun validate(customInputFormat: com.token.uicomponents.CustomInput.CustomInputFormat): Boolean {
@@ -158,11 +151,7 @@ class SettingsFragment : Fragment() {
                 Toast.makeText(_context,"merc: $merchantId  term: $terminalId",Toast.LENGTH_LONG).show()
             })
 
-        parentFragmentManager.beginTransaction().apply {
-            replace(binding.container.id, TidMidFragment!!)
-            addToBackStack("")
-            commit()
-        }
+        mainActivity!!.replaceFragment(TidMidFragment as Fragment)
 
     }
 }

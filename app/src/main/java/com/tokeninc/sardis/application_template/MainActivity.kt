@@ -54,6 +54,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     private val dummySaleFragment = DummySaleFragment()
     var isVoid = false  //if readCard is for void operation it returns true from voidFragment
     var isSale = false  //if readCard is for sale operation it returns true from dummySaleFragment
+    var isRefund = false
     private var boolReadCard = false
 
     @SuppressLint("SuspiciousIndentation")
@@ -111,6 +112,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
 
     private fun startSettingsFragment(settingsFragment: SettingsFragment){
         settingsFragment.resultIntent = Intent()
+        settingsFragment.mainActivity = this
         settingsFragment._context = this@MainActivity
         replaceFragment(settingsFragment)
     }
@@ -267,13 +269,11 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      * add fragment method is for simplifying adding fragments
      * with this method you won't waste your time with supporfragment manager methods.
      */
-    protected fun addFragment(@IdRes resourceId: Int, fragment: Fragment, addToBackStack: Boolean)
+    fun addFragment(fragment: Fragment)
     {
         val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
-        ft.add(resourceId, fragment)
-        if (addToBackStack) {
-            ft.addToBackStack("")
-        }
+        ft.add(R.id.container, fragment)
+        ft.addToBackStack("")
         ft.commit()
     }
 

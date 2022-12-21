@@ -2,6 +2,7 @@ package com.tokeninc.sardis.application_template
 
 import MenuItem
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,12 +28,13 @@ class RefundFragment : Fragment() {
     var mainActivity: MainActivity? = null
 
 
+
     companion object{
-        private var inputTranDate: CustomInputFormat? = null
-        private var inputOrgAmount: CustomInputFormat? = null
-        private var inputRetAmount: CustomInputFormat? = null
-        private var inputRefNo: CustomInputFormat? = null
-        private var inputAuthCode: CustomInputFormat? = null
+        lateinit var inputTranDate: CustomInputFormat
+        lateinit var inputOrgAmount: CustomInputFormat
+        lateinit var inputRetAmount: CustomInputFormat
+        lateinit var inputRefNo: CustomInputFormat
+        lateinit var inputAuthCode: CustomInputFormat
         private var menuItems = mutableListOf<IListMenuItem>()
         private var amount = 0
         private var installmentCount = 0
@@ -55,21 +57,28 @@ class RefundFragment : Fragment() {
         showMenu()
     }
 
+    /**
+     * this function needs for getting string from activity otherwise it causes an error because we update UI in mainActivity
+     */
+    private fun getStrings(resID: Int): String{
+        return mainActivity!!.getString(resID)
+    }
+
     private fun prepareData() {
         menuItems.add(
-            MenuItem( getString(R.string.matched_refund) , { menuItem: IListMenuItem? ->
+            MenuItem( getStrings(R.string.matched_refund) , { menuItem: IListMenuItem? ->
                 showMatchedReturnFragment()
         } ) )
         menuItems.add(
-            MenuItem(getString(R.string.cash_refund), { menuItem: IListMenuItem? ->
+            MenuItem(getStrings(R.string.cash_refund), { menuItem: IListMenuItem? ->
             //showReturnFragment()
         } ) )
         menuItems.add(
-            MenuItem(getString(R.string.installment_refund), { iListMenuItem ->
+            MenuItem(getStrings(R.string.installment_refund), { iListMenuItem ->
             showInstallments()
         }) )
         menuItems.add(
-            MenuItem(getString(R.string.loyalty_refund), { iListMenuItem ->
+            MenuItem(getStrings(R.string.loyalty_refund), { iListMenuItem ->
             //showReturnFragment()
         } ) )
     }
@@ -81,13 +90,13 @@ class RefundFragment : Fragment() {
             showMatchedReturnFragment()
         }))
         menuItems.add(MenuItem("Peşin İade", {
-
+            showReturnFragment()
         }))
         menuItems.add(MenuItem("Taksitli İade", {
             showInstallments()
         }))
         menuItems.add(MenuItem("Puan İade", {
-
+            showReturnFragment()
         }))
         menuFragment = ListMenuFragment.newInstance(menuItems,"PostTxn",
             true, R.drawable.token_logo)
@@ -99,53 +108,53 @@ class RefundFragment : Fragment() {
         val inputList = mutableListOf<CustomInputFormat>()
 
          inputOrgAmount = CustomInputFormat(
-            "Original Amount",//getString(R.string.original_amount),
+            getStrings(R.string.original_amount),
             EditTextInputType.Amount,
             null,
-            "Invalid Amount",//getString(R.string.invalid_amount),
+            getStrings(R.string.invalid_amount),
         InputValidator { input: CustomInputFormat ->
             val amount = if (input.text.isEmpty()) 0 else input.text.toInt()
             amount > 0
         } )
-        inputList.add(inputOrgAmount!!)
+        inputList.add(inputOrgAmount)
 
         inputRetAmount = CustomInputFormat(
-            "Refund Amount" ,//getString(R.string.refund_amount),
+            getStrings(R.string.refund_amount),
             EditTextInputType.Amount,
             null,
-            "Invalid Amount",//getString(R.string.invalid_amount)
+            getStrings(R.string.invalid_amount),
         InputValidator {
             val amount = if (it.text.isEmpty()) 0 else it.text.toInt()
             val original =
-                if (inputOrgAmount!!.text.isEmpty()) 0 else inputOrgAmount!!.text.toInt()
+                if (inputOrgAmount.text.isEmpty()) 0 else inputOrgAmount.text.toInt()
             amount in 1..original
         } )
-        inputList.add(inputRetAmount!!)
+        inputList.add(inputRetAmount)
 
         inputRefNo = CustomInputFormat(
-            "Ref No",//getString(R.string.ref_no),
+            getStrings(R.string.ref_no),
             EditTextInputType.Number,
             10,
-            "Ref No Invalid (10 digits)"//getString(R.string.ref_no_invalid_ten_digits)
+            getStrings(R.string.ref_no_invalid_ten_digits)
         ) { customInputFormat: CustomInputFormat ->
-            !isCurrentDay(inputTranDate!!.text) || isCurrentDay(
-                inputTranDate!!.text
+            !isCurrentDay(inputTranDate.text) || isCurrentDay(
+                inputTranDate.text
             ) && customInputFormat.text.length == 10
         }
-        inputList.add(inputRefNo!!)
+        inputList.add(inputRefNo)
 
         inputAuthCode = CustomInputFormat(
-            "Confirmation Code",//getString(R.string.confirmation_code),
+            getStrings(R.string.confirmation_code),
             EditTextInputType.Number,
             6,
-            "Confirmation Code is Invalid (6 Digits)"//getString(R.string.confirmation_code_invalid_six_digits)
+            getStrings(R.string.confirmation_code_invalid_six_digits)
         ) { customInputFormat: CustomInputFormat -> customInputFormat.text.length == 6 }
-        inputList.add(inputAuthCode!!)
+        inputList.add(inputAuthCode)
 
-        inputTranDate = CustomInputFormat("Transaction Date",//getString(R.string.tran_date),
+        inputTranDate = CustomInputFormat(getStrings(R.string.tran_date),
             EditTextInputType.Date,
             null,
-            "Transaction Date is Invalid",//getString(R.string.tran_date_invalid),
+            getStrings(R.string.tran_date_invalid),
             label@
             InputValidator { customInputFormat: CustomInputFormat ->
                 try {
@@ -161,17 +170,47 @@ class RefundFragment : Fragment() {
                 false
             }
         )
-        inputList.add(inputTranDate!!)
+        inputList.add(inputTranDate)
 
         val fragment = InputListFragment.newInstance(
-            inputList, "Refund"//getString(R.string.refund)
+            inputList, getStrings(R.string.refund)
         ) { list: MutableList<String> ->
+            Log.d("Refund/Eşlenikli","$list")
             data = list
             amount = list[1].toInt()
+            mainActivity!!.isRefund = true
             //readCard()
+            mainActivity!!.isRefund = false
         }
 
-        mainActivity!!.replaceFragment(fragment)
+        mainActivity!!.addFragment(fragment)
+    }
+
+    private fun showReturnFragment(){ // İADE
+        val inputList: MutableList<CustomInputFormat> = mutableListOf()
+        inputList.add(CustomInputFormat(
+            getStrings(R.string.refund_amount),
+            EditTextInputType.Amount,
+            null,
+            getStrings(R.string.invalid_amount)
+        ) { input: CustomInputFormat ->
+            val ListAmount = if (input.text.isEmpty()) 0 else input.text.toInt()
+            try {
+                amount = ListAmount
+            } catch (n: NumberFormatException) {
+                n.printStackTrace()
+            }
+            ListAmount > 0
+        })
+        val fragment = InputListFragment.newInstance(
+            inputList, getStrings(R.string.refund)
+        ){ list: List<String?>? ->
+            Log.d("Refund/İade","$list")
+            mainActivity!!.isRefund = true
+            //readCard()
+            mainActivity!!.isRefund = false
+        }
+        mainActivity!!.addFragment(fragment)
     }
 
     private fun showInstallments() { // TAKSİTLİ İADE
@@ -182,22 +221,19 @@ class RefundFragment : Fragment() {
         val maxInst = 12
         val menuItems = mutableListOf<IListMenuItem>()
         for (i in 2..maxInst) {
-            val menuItem = MenuItem(i.toString() + " " + getString(R.string.installment), listener)
+            val menuItem = MenuItem(i.toString() + " " + getStrings(R.string.installment), listener)
             menuItems.add(menuItem)
         }
         instFragment = ListMenuFragment.newInstance(
             menuItems,
-            getString(R.string.installment_refund),
+            getStrings(R.string.installment_refund),
             true,
             R.drawable.token_logo)
-       mainActivity!!.replaceFragment(instFragment as Fragment)
+       mainActivity!!.addFragment(instFragment as Fragment)
     }
 
-    /*
-    fun showReturnFragment() { // İADE
-    }
-     */
 
+    //intenti salesa yap satışta ama burada iade de var iptal de o yüzden yemez
     /* Card Service binding var
     private fun readCard() {
         try {
