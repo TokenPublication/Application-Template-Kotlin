@@ -32,30 +32,39 @@ import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.CardReadType
 import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.sql.Ref
 
 
 class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener {
 
     //menu items is mutable list which we can add and delete
     private val menuItems = mutableListOf<IListMenuItem>()
-    private var amount: Int = 0
+    var amount: Int = 0
     private val inputList = mutableListOf<CustomInputFormat>()
     private var cardServiceBinding: CardServiceBinding? = null
     private var card: ICCCard? = null
     private var printService: PrintServiceBinding? = null
-    private var actDB: ActivationDB? = null
+    var actDB: ActivationDB? = null
     var transactionDB: TransactionDB? = null
-    val transactionService = TransactionService()
+    private val transactionService = TransactionService()
     private val postTxnFragment = PostTxnFragment()
     private val dummySaleFragment = DummySaleFragment()
+    private val settingsFragment = SettingsFragment()
+    private val refundFragment = RefundFragment()
     var isVoid = false  //if readCard is for void operation it returns true from voidFragment
     var isSale = false  //if readCard is for sale operation it returns true from dummySaleFragment
-    var isRefund = false
-    private var boolReadCard = false
+    var isRefund = false //TODO TransactionCode a göre yap
+    var isMatchedRefund = false //bunlara göre transactionCode yazdıracaksın.
+    var isCashRefund = false
+    var isInstallmentRefund = false
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,47 +73,56 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         actDB = ActivationDB(this).getInstance(this) // TODO Egecan: Check not null
         transactionDB = TransactionDB(this).getInstance(this)
         cardServiceBinding = CardServiceBinding(this, this)
+        startTransactionService()
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
 
         printService = PrintServiceBinding()
         //printService?.print(PrintHelper().PrintSuccess())
-        Log.d("TransactionCol","${TransactionCol.Col_PAN.name}")
         val textFragment = TextFragment()
-        //intent.setAction("Settings_Action")
         replaceFragment(textFragment)
+        //startSettingsFragment(settingsFragment)  //TODO açıldığında burası gelecek ama sonra işlem yapabilecek şekilde ayarla
+
+
         when (intent.action){
             getString(R.string.PosTxn_Action) ->  startPostTxnFragment(postTxnFragment)
             getString(R.string.Sale_Action) ->  startDummySaleFragment(dummySaleFragment)
-            getString(R.string.Settings_Action) ->  startSettingsFragment(SettingsFragment())
+            getString(R.string.Settings_Action) ->  startSettingsFragment(settingsFragment)
             getString(R.string.BatchClose_Action) ->  textFragment.setActionName(getString(R.string.BatchClose_Action))
             getString(R.string.Parameter_Action) ->  textFragment.setActionName(getString(R.string.Parameter_Action))
             getString(R.string.Refund_Action) ->  textFragment.setActionName(getString(R.string.Refund_Action))
             else -> textFragment.setActionName("${intent.action}")
         }
-        //TODO: Mainde başlattığın fragmentlar geri gittiğinde arkada Activity.Main çıkıyor, çıkmasın
     }
 
     fun showDialog(infoDialog: InfoDialog){
-        infoDialog.show(supportFragmentManager,"") //TODO isCancellable False olacak ki işyeri sahibi dokunamasın
+        infoDialog.show(supportFragmentManager,"")
     }
 
     private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
         postTxnFragment.mainActivity = this
+        postTxnFragment.transactionService = transactionService
+        postTxnFragment.refundFragment = refundFragment
         replaceFragment(postTxnFragment)
     }
 
+    private fun startTransactionService(){
+        transactionService.mainActivity = this
+        transactionService.transactionDB = transactionDB
+    }
+
+
     private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
         amount = intent.extras!!.getInt("Amount")
-        dummySaleFragment.setAmount(amount)
+        dummySaleFragment.amount = amount
         dummySaleFragment.activityContext = this@MainActivity
         dummySaleFragment.getNewBundle(bundleOf())
         dummySaleFragment.getNewIntent(Intent())
         dummySaleFragment.transactionService = transactionService
         transactionService.transactionDB = transactionDB
         dummySaleFragment.mainActivity = this
-        dummySaleFragment.saleIntent = Intent("Sale_Action")
-        dummySaleFragment.saleBundle = Intent("Sale_Action").extras
+        dummySaleFragment.saleIntent = Intent(getString(R.string.Sale_Action))
+        dummySaleFragment.saleBundle = Intent(getString(R.string.Sale_Action)).extras
         dummySaleFragment.activationDB = actDB
         dummySaleFragment.transactionDB = transactionDB
         replaceFragment(dummySaleFragment)
@@ -113,6 +131,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     private fun startSettingsFragment(settingsFragment: SettingsFragment){
         settingsFragment.resultIntent = Intent()
         settingsFragment.mainActivity = this
+        settingsFragment.actDB = actDB
         settingsFragment._context = this@MainActivity
         replaceFragment(settingsFragment)
     }
@@ -150,7 +169,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
             null, null, null))
 
         val input = CustomInputFormat("IP", EditTextInputType.IpAddress, null, null, null)
-        input.setText("123.456.789.1")
+        input.text = "123.456.789.1"
 
     }
 
@@ -159,7 +178,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      * Dialog will be dismissed automatically when user taps on to confirm/cancel button.
      * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, String, InfoDialog.InfoDialogButtons, int, InfoDialogListener)}
      */
-    protected fun showConfirmationDialog(
+    private fun showConfirmationDialog(
         type: InfoDialog.InfoType,
         title: String,
         info: String,
@@ -178,7 +197,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, boolean)}
      * Dialog can dismissed by calling .dismiss() method of the fragment instance returned from this method.
      */
-    protected fun showInfoDialog(
+    private fun showInfoDialog(
         type: InfoDialog.InfoType,
         text: String,
         isCancelable: Boolean
@@ -194,7 +213,6 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      */
     fun prepareData() {
         val subList1 = mutableListOf<IListMenuItem>()// Creating a mutable list for your sub menu items
-
         /* Your Sub List Items*/
         /* Your Sub List Items*/
         // adding some menu items to sublist
@@ -272,8 +290,8 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     fun addFragment(fragment: Fragment)
     {
         val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
-        ft.add(R.id.container, fragment)
-        ft.addToBackStack("")
+        ft.replace(R.id.container, fragment)
+        ft.addToBackStack(null)
         ft.commit()
     }
 
@@ -370,58 +388,38 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
 
 
     fun readCard() {
-        if (isVoid){
-            val obj = JSONObject()
-            try {
-                obj.put("forceOnline", 0)
-                obj.put("zeroAmount", 1)
-                obj.put("showAmount", 0)
-                obj.put("partialEMV", 1)
-                // TODO Developer: Check from Allowed Operations Parameter
-                val isManEntryAllowed = true
-                val isCVVAskedOnMoto = true
-                val isFallbackAllowed = true
-                val isQrAllowed = true
-                obj.put("keyIn", if (isManEntryAllowed) 1 else 0)
-                obj.put("askCVV", if (isCVVAskedOnMoto) 1 else 0)
-                obj.put("fallback", if (isFallbackAllowed) 1 else 0)
-                obj.put("qrPay", if (isQrAllowed) 1 else 0)
-            } catch (e: JSONException) {
-                e.printStackTrace()
-            }
-            val cardServiceBinding = CardServiceBinding(this ,this )
-            cardServiceBinding.getCard(0, 30, obj.toString())
+        val obj = JSONObject()
+        try {
+            obj.put("forceOnline", 0)
+            obj.put("zeroAmount", 1)
+            obj.put("showAmount", if (isVoid) 0 else 1)
+            obj.put("partialEMV", 1)
+            // TODO Developer: Check from Allowed Operations Parameter
+            val isManEntryAllowed = true
+            val isCVVAskedOnMoto = true
+            val isFallbackAllowed = true
+            val isQrAllowed = true
+            obj.put("keyIn", if (isManEntryAllowed) 1 else 0)
+            obj.put("askCVV", if (isCVVAskedOnMoto) 1 else 0)
+            obj.put("fallback", if (isFallbackAllowed) 1 else 0)
+            obj.put("qrPay", if (isQrAllowed) 1 else 0)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
-        if (isSale){
-            cardServiceBinding = CardServiceBinding(this,this )
-            boolReadCard = true
+        cardServiceBinding = CardServiceBinding(this ,this )
+        runBlocking(Dispatchers.IO) {
+            GlobalScope.launch(Dispatchers.IO){
+                cardServiceBinding!!.getCard(amount, 30, obj.toString())
+            }.join()
         }
+
     }
 
 
     override fun onCardServiceConnected() {
         setEMVConfiguration()
-        if (isSale){
-            if (boolReadCard){ //TODO CHECK BARIS burada 2 controller oldu gibi birini silebiliriz bence
-                try {
-                    val obj = JSONObject()
-                    obj.put("forceOnline", 1)
-                    obj.put("zeroAmount", 0)
-                    obj.put("fallback", 1)
-                    obj.put("cardReadTypes", 6)
-                    obj.put("qrPay", 1)
-
-                    Log.w("CardServiceBind/Dummy","$cardServiceBinding")
-                    cardServiceBinding!!.getCard(DummySaleFragment.amount, 40, obj.toString())
-                    boolReadCard = false
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
     }
 
-    //TODO: dummysaledakini buraya taşı
     override fun onCardDataReceived(cardData: String?) {
         try {
             val json = JSONObject(cardData)
@@ -435,7 +433,6 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
                     return
                 }
                 if (type == CardReadType.CLCard.type) {
-                    DummySaleFragment.cardReadType = CardReadType.CLCard.type
                     card = Gson().fromJson(cardData, ICCCard::class.java)
                 } else if (type == CardReadType.ICC.type) {
                     card = Gson().fromJson(cardData, ICCCard::class.java)
@@ -445,8 +442,10 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
                 }
                 if (isSale)
                     dummySaleFragment.prepareSaleMenu(card)
-                if (isVoid)
+                else if (isVoid)
                     postTxnFragment.cardNumberReceived(card)
+                else if (isRefund)
+                    refundFragment.afterReadCard(card,isMatchedRefund,isInstallmentRefund,isCashRefund)
             }
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
@@ -460,6 +459,5 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     override fun onICCTakeOut() {
         TODO("Not yet implemented")
     }
-
 
 }

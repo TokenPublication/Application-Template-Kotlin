@@ -1,7 +1,6 @@
 package com.tokeninc.sardis.application_template
 
 import MenuItem
-import android.R
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -18,7 +17,6 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
-import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
@@ -26,7 +24,7 @@ import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBin
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.helpers.StringHelper
-import com.tokeninc.sardis.application_template.helpers.printHelpers.SalePrintHelper
+import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintService
 import kotlinx.coroutines.*
 import java.lang.String.valueOf
 import java.util.*
@@ -38,9 +36,9 @@ class DummySaleFragment : Fragment() {
     private val binding get() = _binding!!
     var activityContext: Context? = null //this is for getting context from activity class
     //private val notNullContext get() = _context!!
-    var resultIntent: Intent? = null
+    private var resultIntent: Intent? = null
     var saleIntent: Intent? = null
-    var bundle: Bundle? = null
+    private var bundle: Bundle? = null
     var saleBundle: Bundle? = null
     var activationDB: ActivationDB? = null
     var transactionDB: TransactionDB? = null
@@ -49,12 +47,11 @@ class DummySaleFragment : Fragment() {
 
     private var menuItemList = mutableListOf<IListMenuItem>()
     private var card: ICCCard? = null
+    var amount = 0
 
     companion object{
-        var amount = 0
         var cardOwner =""
         var cardNumber = "**** ****"
-        var cardReadType = 0
         //listener for spinner
         private val listener: AdapterView.OnItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
@@ -75,7 +72,7 @@ class DummySaleFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentDummySaleBinding.inflate(inflater,container,false)
         return binding.root
     }
@@ -87,19 +84,10 @@ class DummySaleFragment : Fragment() {
         clickButtons()
     }
 
-    /**
-     * this is for getting amount from MainActivity by benefitting intents
-     */
-    fun setAmount(mAmount: Int){
-        amount = mAmount
-    }
-
-
-
     private fun prepareSpinner(){
         val spinner = binding.spinner
         val items = mutableListOf<String>(
-            java.lang.String.valueOf(PaymentTypes.CREDITCARD),
+            valueOf(PaymentTypes.CREDITCARD),
             valueOf(PaymentTypes.TRQRCREDITCARD),
             valueOf(PaymentTypes.TRQRFAST),
             valueOf(PaymentTypes.TRQRMOBILE),
@@ -108,7 +96,7 @@ class DummySaleFragment : Fragment() {
         )
         //because there were an error with context, we get context from mainActivity
         val adapter: ArrayAdapter<String> =
-            ArrayAdapter<String>(activityContext!!, R.layout.simple_spinner_dropdown_item, items)
+            ArrayAdapter<String>(activityContext!!, android.R.layout.simple_spinner_dropdown_item, items)
         spinner.adapter = adapter
         spinner.onItemSelectedListener = listener
     }
@@ -140,61 +128,54 @@ class DummySaleFragment : Fragment() {
     }
 
 
-    private fun doSale(transactionCode: TransactionCode) {
+    private fun doSale() {
         transactionService!!.mainActivity = mainActivity
         CoroutineScope(Dispatchers.Default).launch {
             val transactionResponse = transactionService!!.doInBackground(activityContext!!,
-                amount, card!!,transactionCode,
+                amount, card!!,TransactionCode.SALE,
                 ContentValues(), null,false,null ,false)
             finishSale(transactionResponse!!)
         }
     }
 
     private fun finishSale(transactionResponse: TransactionResponse){
-        Log.d("Transaction/Response","${transactionResponse.contentVal.toString()}")
-
-
-
-        // if transactionResponse.getResponseCode == Success
-        // PrepareSaleSlip
-        // Slibe transactionResponse'un içindeki content val ve online Transaction Response parametre olarak ata
-        // SalePrint   slip type müşteri ve iş yeri    2 tane to string yapılacak
-        // örnek slip aynısını yap 2 to stringle
-        //dummySale 212 248 bak onları yap
+        Log.d("Transaction/Response","${transactionResponse.contentVal}")
 
         val responseCode = transactionResponse.responseCode
-        getNotNullBundle().putInt("ResponseCode", responseCode.ordinal)
-        getNotNullBundle().putInt("PaymentStatus", 0) // #2 Payment Status
-        getNotNullBundle().putInt("Amount", amount ) // #3 Amount
-        getNotNullBundle().putInt("Amount2", amount)
-        getNotNullBundle().putBoolean("IsSlip", true)
+        if (responseCode == ResponseCode.SUCCESS){
+            getNotNullBundle().putInt("ResponseCode", responseCode.ordinal)
+            getNotNullBundle().putInt("PaymentStatus", 0) // #2 Payment Status
+            getNotNullBundle().putInt("Amount", amount ) // #3 Amount
+            getNotNullBundle().putInt("Amount2", amount)
+            getNotNullBundle().putBoolean("IsSlip", true)
 
-        getNotNullBundle().putInt("BatchNo", 1) // TODO Do it after implementing Batch
-        getNotNullBundle().putString("CardNo", StringHelper().maskCardNumber(card!!.mCardNumber!!))
-        getNotNullBundle().putString("MID", activationDB!!.getMerchantId());
-        getNotNullBundle().putString("TID", activationDB!!.getTerminalId());
-        getNotNullBundle().putInt("TxnNo",5)  // TODO Do it after implementing Batch
-        getNotNullBundle().putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
+            getNotNullBundle().putInt("BatchNo", 1) // TODO Do it after implementing Batch
+            getNotNullBundle().putString("CardNo", StringHelper().maskCardNumber(card!!.mCardNumber!!))
+            getNotNullBundle().putString("MID", activationDB!!.getMerchantId());
+            getNotNullBundle().putString("TID", activationDB!!.getTerminalId());
+            getNotNullBundle().putInt("TxnNo",5)  // TODO Do it after implementing Batch
+            getNotNullBundle().putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
 
-        var slipType: SlipType = SlipType.NO_SLIP
-        if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
-            slipType = SlipType.NO_SLIP
-        }
-        else{
-            if (transactionResponse.responseCode == ResponseCode.SUCCESS){
-                val salePrintHelper = SalePrintHelper()
-                getNotNullBundle().putString("customerSlipData", salePrintHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
-                getNotNullBundle().putString("merchantSlipData", salePrintHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
-                //getNotNullBundle().putString("RefundInfo", getRefundInfo(response)); //TODO sonra bakılacak
-                if(transactionResponse.contentVal != null) {
-                    getNotNullBundle().putString("RefNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_HostLogKey.name))
-                    getNotNullBundle().putString("AuthNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_AuthCode.name))
+            var slipType: SlipType = SlipType.NO_SLIP
+            if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
+                slipType = SlipType.NO_SLIP
+            }
+            else{
+                if (transactionResponse.responseCode == ResponseCode.SUCCESS){
+                    val printHelper = PrintService()
+                    getNotNullBundle().putString("customerSlipData", printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, activityContext!!,1, 1,false))
+                    getNotNullBundle().putString("merchantSlipData", printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, activityContext!!,1, 1,false))
+                    //getNotNullBundle().putString("RefundInfo", getRefundInfo(response)); //TODO sonra bakılacak
+                    if(transactionResponse.contentVal != null) {
+                        getNotNullBundle().putString("RefNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_HostLogKey.name))
+                        getNotNullBundle().putString("AuthNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_AuthCode.name))
+                    }
                 }
             }
+            getNotNullBundle().putInt("SlipType", slipType.value) //TODO fail receipt yap
+            getNotNullIntent().putExtras(getNotNullBundle())
+            mainActivity!!.dummySetResult(getNotNullIntent())
         }
-        getNotNullBundle().putInt("SlipType", slipType.value) //TODO fail receipt yap
-        getNotNullIntent().putExtras(getNotNullBundle())
-        mainActivity!!.dummySetResult(getNotNullIntent())
     }
     private fun prepareDummyResponse (code: ResponseCode){
 
@@ -202,7 +183,7 @@ class DummySaleFragment : Fragment() {
         val cbMerchant = binding.cbMerchant
         val cbCustomer = binding.cbCustomer
 
-        //this is for slip type
+        //this is for slip type //TODO buraya bakmıyor olabilir
         var slipType = SlipType.NO_SLIP
         if (cbMerchant.isChecked && cbCustomer.isChecked)
             slipType = SlipType.BOTH_SLIPS
@@ -237,14 +218,14 @@ class DummySaleFragment : Fragment() {
      * Because we operate in fragment, its bundle and intents aren't be same as activities
      * Therefore we get those objects from activity.
      */
-    public fun getNewBundle(mBundle: Bundle){
+    fun getNewBundle(mBundle: Bundle){
         bundle = mBundle
     }
     private fun getNotNullBundle(): Bundle{
         return bundle!!
     }
 
-    public fun getNewIntent(mIntent: Intent){
+    fun getNewIntent(mIntent: Intent){
         resultIntent = mIntent
     }
     private fun getNotNullIntent(): Intent{
@@ -310,19 +291,21 @@ class DummySaleFragment : Fragment() {
         _binding = null
     }
 
+    private fun getStrings(resID: Int): String{
+        return mainActivity!!.getString(resID)
+    }
 
     fun prepareSaleMenu(mCard: ICCCard?) {
         card = mCard
         mainActivity!!.isSale = false
-        Log.d("PrepareSale","Girdi")
-        menuItemList.add(MenuItem( "Sale", { menuItem ->
-            doSale(TransactionCode.SALE)
+        menuItemList.add(MenuItem( getStrings(R.string.sale), {
+            doSale()
         }))
-        menuItemList.add(MenuItem("Installment Sale", { menuItem -> }))
-        menuItemList.add(MenuItem("Loyalty Sale", { menuItem ->}))
-        menuItemList.add(MenuItem("Campaign Sale", { menuItem -> }))
+        menuItemList.add(MenuItem(getStrings(R.string.Installment_sale), { }))
+        menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))
+        menuItemList.add(MenuItem(getStrings(R.string.campaign_sale), { }))
         val fragment = ListMenuFragment.newInstance(menuItemList,
-                "Sale Type", false, null)
+            getStrings(R.string.sale_type), false, null)
         mainActivity!!.replaceFragment(fragment)
     }
 

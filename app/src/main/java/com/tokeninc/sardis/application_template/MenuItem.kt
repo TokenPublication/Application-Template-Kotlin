@@ -37,8 +37,6 @@ class MenuItem @JvmOverloads constructor(
     ): this(title, null,subMenuItemList ,authenticator) {
     }
 
-
-    private var arg: Any? = null
     private val notnullListener get() = mListener!!
 
     override fun getName(): String {

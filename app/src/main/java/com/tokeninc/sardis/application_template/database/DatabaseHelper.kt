@@ -82,7 +82,7 @@ abstract class DatabaseHelper(@Nullable context: Context?) : SQLiteOpenHelper(co
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // TODO Egecan: Check for onUpgrade later...
+        db.version = newVersion
     }
 
     override fun onDowngrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {

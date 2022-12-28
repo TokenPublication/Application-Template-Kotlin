@@ -7,25 +7,20 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.google.gson.Gson
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
-import com.tokeninc.cardservicebinding.CardServiceBinding
-import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
-import com.tokeninc.sardis.application_template.enums.*
-import com.tokeninc.sardis.application_template.helpers.StringHelper
-import com.tokeninc.sardis.application_template.helpers.printHelpers.SalePrintHelper
+import com.tokeninc.sardis.application_template.enums.SlipType
+import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
+import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintService
 import com.tokeninc.sardis.application_template.viewmodel.TransactionViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.json.JSONException
-import org.json.JSONObject
 
 
 class PostTxnFragment : Fragment() {
@@ -35,6 +30,10 @@ class PostTxnFragment : Fragment() {
 
     private var menuFragment: ListMenuFragment? = null
     var mainActivity: MainActivity? = null
+    var transactionService: TransactionService? = null
+    var refundFragment: RefundFragment? = null
+    private var printService = PrintServiceBinding()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View {
         _binding = FragmentPostTxnBinding.inflate(inflater,container,false)
         return binding.root
@@ -45,29 +44,34 @@ class PostTxnFragment : Fragment() {
         showMenu()
     }
 
+    private fun getStrings(resID: Int): String{
+        return mainActivity!!.getString(resID)
+    }
 
     private fun showMenu(){
         var menuItems = mutableListOf<IListMenuItem>()
-        menuItems.add(MenuItem("İptal", {
+        menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
             mainActivity!!.isVoid = true
             mainActivity!!.readCard()
-            //mainActivity!!.startVoidFragment(VoidFragment())
-            // TODO ReadCard
         }))
-        menuItems.add(MenuItem("İade", {
-            val refundFragment = RefundFragment()
-            refundFragment.mainActivity = mainActivity
-            mainActivity!!.replaceFragment(refundFragment)
+        menuItems.add(MenuItem(getStrings(R.string.refund), {
+            startRefundFragment()
+            mainActivity!!.replaceFragment(refundFragment!!)
         }))
-        menuItems.add(MenuItem("Grup Kapama", {
+        menuItems.add(MenuItem(getStrings(R.string.batch_close), {
 
         }))
-        menuItems.add(MenuItem("Örnekler", {
+        menuItems.add(MenuItem(getStrings(R.string.examples), {
 
         }))
         menuFragment = ListMenuFragment.newInstance(menuItems,"PostTxn",
             true, R.drawable.token_logo)
         mainActivity!!.replaceFragment(menuFragment as Fragment)
+    }
+
+    private fun startRefundFragment(){
+        refundFragment!!.mainActivity = mainActivity
+        refundFragment!!.transactionService = transactionService
     }
 
     fun cardNumberReceived(mCard: ICCCard?){
@@ -84,18 +88,25 @@ class PostTxnFragment : Fragment() {
     }
 
     fun voidOperation(transaction: ContentValues?){
-        val transactionService = mainActivity!!.transactionService
-        transactionService.mainActivity = mainActivity //TODO buralar çok çirkin oldu
-        transactionService.transactionDB = mainActivity!!.transactionDB
         CoroutineScope(Dispatchers.Default).launch {
-            val transactionResponse = transactionService.doInBackground(mainActivity!!, transaction!!.getAsString(TransactionCol.Col_Amount.name).toInt(),
-                card!!,TransactionCode.VOID,null,null,false,null,false)
-            finishSale(transactionResponse!!)
+            val transactionResponse = transactionService!!.doInBackground(mainActivity!!, transaction!!.getAsString(TransactionCol.Col_Amount.name).toInt(),
+                card!!,TransactionCode.VOID,
+                ContentValues(),null,false,null,false)
+            finishVoid(transactionResponse!!)
         }
     }
 
-    private fun finishSale(transactionResponse: TransactionResponse){
-        Log.d("TransactionResponse/PostTxn","${transactionResponse.contentVal.toString()}")
+
+
+
+    private fun finishVoid(transactionResponse: TransactionResponse) {
+        Log.d("TransactionResponse/PostTxn", transactionResponse.contentVal.toString())
+        val printService = PrintService()
+        val customerSlip = printService.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, ContentValues(), transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity!!,1, 1,false)
+        val merchantSlip = printService.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, ContentValues(), transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity!!,1, 1,false)
+        this.printService.print(customerSlip)
+        this.printService.print(merchantSlip)
+        mainActivity!!.finish()
 
         /**  //TODO BARIS
         val responseCode = transactionResponse.responseCode
@@ -114,24 +125,24 @@ class PostTxnFragment : Fragment() {
 
         var slipType: SlipType = SlipType.NO_SLIP
         if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
-            slipType = SlipType.NO_SLIP
+        slipType = SlipType.NO_SLIP
         }
         else{
-            if (transactionResponse.responseCode == ResponseCode.SUCCESS){
-                val salePrintHelper = SalePrintHelper()
-                getNotNullBundle().putString("customerSlipData", salePrintHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
-                getNotNullBundle().putString("merchantSlipData", salePrintHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
-                //getNotNullBundle().putString("RefundInfo", getRefundInfo(response)); //TODO sonra bakılacak
-                if(transactionResponse.contentVal != null) {
-                    getNotNullBundle().putString("RefNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_HostLogKey.name))
-                    getNotNullBundle().putString("AuthNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_AuthCode.name))
-                }
-            }
+        if (transactionResponse.responseCode == ResponseCode.SUCCESS){
+        val salePrintHelper = SalePrintHelper()
+        getNotNullBundle().putString("customerSlipData", salePrintHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
+        getNotNullBundle().putString("merchantSlipData", salePrintHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
+        //getNotNullBundle().putString("RefundInfo", getRefundInfo(response)); //TODO sonra bakılacak
+        if(transactionResponse.contentVal != null) {
+        getNotNullBundle().putString("RefNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_HostLogKey.name))
+        getNotNullBundle().putString("AuthNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_AuthCode.name))
+        }
+        }
         }
         getNotNullBundle().putInt("SlipType", slipType.value) //TODO fail receipt yap
         getNotNullIntent().putExtras(getNotNullBundle())
         mainActivity!!.dummySetResult(getNotNullIntent())
-        */
+         */
     }
 
 

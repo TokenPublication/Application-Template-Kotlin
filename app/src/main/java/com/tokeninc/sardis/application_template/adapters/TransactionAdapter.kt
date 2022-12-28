@@ -24,9 +24,7 @@ class TransactionAdapter(private val transactionList: MutableList<ContentValues?
         val binding: TransactionItemsBinding = DataBindingUtil.inflate(inflater, R.layout.transaction_items, parent,false)
         return TransactionViewHolder(binding)
     }
-//basınca ilgili content valueyu loga yazsın
-    //TransactionService gibi VoidService başlasın
-    //transactionService'e gideceksin yine ama transactionCode void dönsün
+
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
         val transaction = transactionList[position]
         val hb = holder.binding
@@ -34,7 +32,6 @@ class TransactionAdapter(private val transactionList: MutableList<ContentValues?
         hb.textDate.text = transaction.getAsString(TransactionCol.Col_TranDate.name)
         hb.textAmount.text = StringHelper().getAmount(transaction.getAsString(TransactionCol.Col_Amount.name).toInt())
         hb.textApprovalCode.text = transaction.getAsString(TransactionCol.Col_TransCode.name)
-        //TODO: Doğru mu approval code?
         hb.tvSN.text = transaction.getAsString(TransactionCol.Col_AuthCode.name)
         holder.itemView.setOnClickListener {
             postTxnFragment!!.voidOperation(transaction)

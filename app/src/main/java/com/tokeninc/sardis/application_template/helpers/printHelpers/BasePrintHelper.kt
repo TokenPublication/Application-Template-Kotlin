@@ -1,7 +1,10 @@
 package com.tokeninc.sardis.application_template.helpers.printHelpers
 
+import android.content.Context
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
+import com.tokeninc.sardis.application_template.MainActivity
+import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.SampleReceipt
 
 open class BasePrintHelper {
@@ -32,21 +35,23 @@ open class BasePrintHelper {
         addText(styledText, text, alignment, fontSize, 0f)
     }
 
-    fun printSlipHeader(styledText: StyledString, receipt: SampleReceipt) {
+    fun printSlipHeader(styledText: StyledString, mainActivity: MainActivity) {
         styledText.setLineSpacing(0.5f)
         styledText.setFontSize(12)
         styledText.setFontFace(PrinterDefinitions.Font_E.SourceSansPro)
-        styledText.addTextToLine(receipt.merchantName, PrinterDefinitions.Alignment.Center)
+        styledText.addTextToLine(mainActivity.getString(R.string.merchant_name), PrinterDefinitions.Alignment.Center)
+        styledText.newLine()
+        styledText.newLine()
         styledText.newLine()
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.addTextToLine("İŞYERİ NO:", PrinterDefinitions.Alignment.Left)
         styledText.setFontFace(PrinterDefinitions.Font_E.SourceSansPro)
-        styledText.addTextToLine(receipt.merchantID, PrinterDefinitions.Alignment.Right)
+        styledText.addTextToLine(mainActivity.actDB!!.getMerchantId(), PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.addTextToLine("TERMİNAL NO:", PrinterDefinitions.Alignment.Left)
         styledText.setFontFace(PrinterDefinitions.Font_E.SourceSansPro)
-        styledText.addTextToLine(receipt.posID, PrinterDefinitions.Alignment.Right)
+        styledText.addTextToLine(mainActivity.actDB!!.getTerminalId(), PrinterDefinitions.Alignment.Right)
     }
 
 }

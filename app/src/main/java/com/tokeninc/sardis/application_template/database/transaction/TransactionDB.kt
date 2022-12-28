@@ -9,6 +9,7 @@ import com.tokeninc.sardis.application_template.database.DatabaseOperations
 
 class TransactionDB(context: Context?) : DatabaseHelper(context) {
 
+    //TODO bence sadece ilk installationdaki satışları kaydediyor
     private var tblTransaction: Map<String, String>? = null
     private var sDatabaseHelper: TransactionDB? = null
 
