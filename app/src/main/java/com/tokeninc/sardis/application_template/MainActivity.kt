@@ -10,9 +10,11 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.IdRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
+import com.google.gson.Gson
 import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
@@ -23,29 +25,46 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
-import com.tokeninc.sardis.application_template.database.batch.BatchDB
+import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
-import com.tokeninc.sardis.application_template.helpers.printHelpers.DateUtil
+import com.tokeninc.sardis.application_template.enums.CardReadType
+import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.sql.Ref
 
 
 class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener {
 
     //menu items is mutable list which we can add and delete
     private val menuItems = mutableListOf<IListMenuItem>()
-    private var amount: Int = 0
+    var amount: Int = 0
     private val inputList = mutableListOf<CustomInputFormat>()
     private var cardServiceBinding: CardServiceBinding? = null
     private var card: ICCCard? = null
     private var printService: PrintServiceBinding? = null
-    private var actDB: ActivationDB? = null
-    private var transactionDB: TransactionDB? = null
-    private var batchDB: BatchDB? = null
-    private val coroutine = TransactionService()
+    var actDB: ActivationDB? = null
+    var transactionDB: TransactionDB? = null
+    private val transactionService = TransactionService()
+    private val postTxnFragment = PostTxnFragment()
+    private val dummySaleFragment = DummySaleFragment()
+    private val settingsFragment = SettingsFragment()
+    private val refundFragment = RefundFragment()
+    var isVoid = false  //if readCard is for void operation it returns true from voidFragment
+    var isSale = false  //if readCard is for sale operation it returns true from dummySaleFragment
+    var isRefund = false //TODO TransactionCode a göre yap
+    var isMatchedRefund = false //bunlara göre transactionCode yazdıracaksın.
+    var isCashRefund = false
+    var isInstallmentRefund = false
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,53 +74,67 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         transactionDB = TransactionDB(this).getInstance(this)
         batchDB = BatchDB(this).getInstance(this)
         cardServiceBinding = CardServiceBinding(this, this)
+        startTransactionService()
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
 
         printService = PrintServiceBinding()
         //printService?.print(PrintHelper().PrintSuccess())
-
         val textFragment = TextFragment()
-        //intent.setAction("Settings_Action")
-        replaceFragment(R.id.container,textFragment)
+        replaceFragment(textFragment)
+        //startSettingsFragment(settingsFragment)  //TODO açıldığında burası gelecek ama sonra işlem yapabilecek şekilde ayarla
+
+
         when (intent.action){
-            getString(R.string.PosTxn_Action) ->  replaceFragment(R.id.container,PostTxnFragment())
-            getString(R.string.Sale_Action) ->  startDummySaleFragment(DummySaleFragment())
-            getString(R.string.Settings_Action) ->  startSettingsFragment(SettingsFragment())
+            getString(R.string.PosTxn_Action) ->  startPostTxnFragment(postTxnFragment)
+            getString(R.string.Sale_Action) ->  startDummySaleFragment(dummySaleFragment)
+            getString(R.string.Settings_Action) ->  startSettingsFragment(settingsFragment)
             getString(R.string.BatchClose_Action) ->  textFragment.setActionName(getString(R.string.BatchClose_Action))
             getString(R.string.Parameter_Action) ->  textFragment.setActionName(getString(R.string.Parameter_Action))
             getString(R.string.Refund_Action) ->  textFragment.setActionName(getString(R.string.Refund_Action))
             else -> textFragment.setActionName("${intent.action}")
         }
-
     }
 
     fun showDialog(infoDialog: InfoDialog){
-        infoDialog.show(supportFragmentManager,"") //TODO isCancellable False olacak ki işyeri sahibi dokunamasın
+        infoDialog.show(supportFragmentManager,"")
     }
+
+    private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
+        postTxnFragment.mainActivity = this
+        postTxnFragment.transactionService = transactionService
+        postTxnFragment.refundFragment = refundFragment
+        replaceFragment(postTxnFragment)
+    }
+
+    private fun startTransactionService(){
+        transactionService.mainActivity = this
+        transactionService.transactionDB = transactionDB
+    }
+
 
     private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
         amount = intent.extras!!.getInt("Amount")
-        dummySaleFragment.setAmount(amount)
+        dummySaleFragment.amount = amount
         dummySaleFragment.activityContext = this@MainActivity
         dummySaleFragment.getNewBundle(bundleOf())
         dummySaleFragment.getNewIntent(Intent())
-        dummySaleFragment.coroutine = coroutine
-        coroutine.transactionDB = transactionDB
-        coroutine.batchDB = batchDB
+        dummySaleFragment.transactionService = transactionService
+        transactionService.transactionDB = transactionDB
         dummySaleFragment.mainActivity = this
-        dummySaleFragment.saleIntent = Intent("Sale_Action")
-        dummySaleFragment.saleBundle = Intent("Sale_Action").extras
+        dummySaleFragment.saleIntent = Intent(getString(R.string.Sale_Action))
+        dummySaleFragment.saleBundle = Intent(getString(R.string.Sale_Action)).extras
         dummySaleFragment.activationDB = actDB
         dummySaleFragment.transactionDB = transactionDB
-        dummySaleFragment.batchDB = batchDB
-        replaceFragment(R.id.container,dummySaleFragment)
+        replaceFragment(dummySaleFragment)
     }
 
     private fun startSettingsFragment(settingsFragment: SettingsFragment){
         settingsFragment.resultIntent = Intent()
+        settingsFragment.mainActivity = this
+        settingsFragment.actDB = actDB
         settingsFragment._context = this@MainActivity
-        replaceFragment(R.id.container,settingsFragment)
+        replaceFragment(settingsFragment)
     }
 
     /**
@@ -137,7 +170,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
             null, null, null))
 
         val input = CustomInputFormat("IP", EditTextInputType.IpAddress, null, null, null)
-        input.setText("123.456.789.1")
+        input.text = "123.456.789.1"
 
     }
 
@@ -146,7 +179,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      * Dialog will be dismissed automatically when user taps on to confirm/cancel button.
      * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, String, InfoDialog.InfoDialogButtons, int, InfoDialogListener)}
      */
-    protected fun showConfirmationDialog(
+    private fun showConfirmationDialog(
         type: InfoDialog.InfoType,
         title: String,
         info: String,
@@ -165,7 +198,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, boolean)}
      * Dialog can dismissed by calling .dismiss() method of the fragment instance returned from this method.
      */
-    protected fun showInfoDialog(
+    private fun showInfoDialog(
         type: InfoDialog.InfoType,
         text: String,
         isCancelable: Boolean
@@ -181,7 +214,6 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      */
     fun prepareData() {
         val subList1 = mutableListOf<IListMenuItem>()// Creating a mutable list for your sub menu items
-
         /* Your Sub List Items*/
         /* Your Sub List Items*/
         // adding some menu items to sublist
@@ -256,21 +288,18 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
      * add fragment method is for simplifying adding fragments
      * with this method you won't waste your time with supporfragment manager methods.
      */
-    protected fun addFragment(@IdRes resourceId: Int, fragment: Fragment, addToBackStack: Boolean)
+    fun addFragment(fragment: Fragment)
     {
         val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
-        ft.add(resourceId, fragment)
-        if (addToBackStack) {
-            ft.addToBackStack("")
-        }
+        ft.replace(R.id.container, fragment)
+        ft.addToBackStack(null)
         ft.commit()
     }
 
-    public fun replaceFragment(@IdRes resourceId: Int, fragment: Fragment)
+    fun replaceFragment( fragment: Fragment)
     {
         supportFragmentManager.beginTransaction().apply {
-            replace(resourceId,fragment) //replacing fragment
-            addToBackStack(null)  //add it to fragment stack, to return back as needed
+            replace(R.id.container,fragment) //replacing fragment
             commit() //call signals to the FragmentManager that all operations have been added to the transaction
         }
     }
@@ -358,13 +387,70 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         }
     }
 
+
+    fun readCard() {
+        val obj = JSONObject()
+        try {
+            obj.put("forceOnline", 0)
+            obj.put("zeroAmount", 1)
+            obj.put("showAmount", if (isVoid) 0 else 1)
+            obj.put("partialEMV", 1)
+            // TODO Developer: Check from Allowed Operations Parameter
+            val isManEntryAllowed = true
+            val isCVVAskedOnMoto = true
+            val isFallbackAllowed = true
+            val isQrAllowed = true
+            obj.put("keyIn", if (isManEntryAllowed) 1 else 0)
+            obj.put("askCVV", if (isCVVAskedOnMoto) 1 else 0)
+            obj.put("fallback", if (isFallbackAllowed) 1 else 0)
+            obj.put("qrPay", if (isQrAllowed) 1 else 0)
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+        cardServiceBinding = CardServiceBinding(this ,this )
+        runBlocking(Dispatchers.IO) {
+            GlobalScope.launch(Dispatchers.IO){
+                cardServiceBinding!!.getCard(amount, 30, obj.toString())
+            }.join()
+        }
+
+    }
+
+
     override fun onCardServiceConnected() {
         setEMVConfiguration()
     }
 
-
     override fun onCardDataReceived(cardData: String?) {
-        Log.d("Main/onCardDataReceived","Girdi")
+        try {
+            val json = JSONObject(cardData)
+            val type = json.getInt("mCardReadType")
+            card = Gson().fromJson(cardData, ICCCard::class.java)
+            if (card!!.resultCode == CardServiceResult.ERROR.resultCode()) {
+            }
+            if (card!!.resultCode == CardServiceResult.SUCCESS.resultCode()) {
+                if (type == CardReadType.QrPay.type) {
+                    //QrSale()
+                    return
+                }
+                if (type == CardReadType.CLCard.type) {
+                    card = Gson().fromJson(cardData, ICCCard::class.java)
+                } else if (type == CardReadType.ICC.type) {
+                    card = Gson().fromJson(cardData, ICCCard::class.java)
+                } else if (type == CardReadType.ICC2MSR.type || type == CardReadType.MSR.type || type == CardReadType.KeyIn.type) {
+                    //card = Gson().fromJson(cardData, ICCCard::class.java)
+                    //cardServiceBinding!!.getOnlinePIN(amount, card?.cardNumber, 0x0A01, 0, 4, 8, 30)
+                }
+                if (isSale)
+                    dummySaleFragment.prepareSaleMenu(card)
+                else if (isVoid)
+                    postTxnFragment.cardNumberReceived(card)
+                else if (isRefund)
+                    refundFragment.afterReadCard(card,isMatchedRefund,isInstallmentRefund,isCashRefund)
+            }
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onPinReceived(p0: String?) {
@@ -374,7 +460,5 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     override fun onICCTakeOut() {
         TODO("Not yet implemented")
     }
-
-
 
 }

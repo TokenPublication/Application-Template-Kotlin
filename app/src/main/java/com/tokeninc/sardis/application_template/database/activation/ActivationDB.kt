@@ -47,7 +47,7 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
         val values = ContentValues()
         values.put(ActivationCol.ColIPNo.name, IP)
         values.put(ActivationCol.ColPortNo.name, port)
-        DatabaseOperations.deleteAllRecords(DatabaseInfo.ACTTABLE, writableSQLite)
+        DatabaseOperations.deleteAllRecords(DatabaseInfo.ACTTABLE, writableSQLite) //TODO BARIS anlık kaydediyor sonra siliniyor
         return DatabaseOperations.insert(DatabaseInfo.ACTTABLE, writableSQLite, values)
     }
 

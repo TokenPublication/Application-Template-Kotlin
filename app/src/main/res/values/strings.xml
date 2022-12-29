@@ -8,11 +8,25 @@
     <string name="Parameter_Action">Parameter_Action</string>
     <string name="PosTxn_Action">PosTxn_Action</string>
 
+
+    <string name="amount">Amount</string>
+    <string name="waiting">Waiting for a Response</string>
+    <string name="approved">Approved</string>
+
+    <string name="transactions">Transactions</string>
+    <string name="reports">Reports</string>
+    <string name="void_transaction">Void</string>
+    <string name="insert_card">Please Insert Card</string>
+    <string name="button">Button</string>
+
     <string name="pos_operations">POS Operations</string>
     <string name="matched_refund">Matched Refund</string>
     <string name="cash_refund">Cash Refund</string>
     <string name="installment_refund">Installment Refund</string>
     <string name="loyalty_refund">Loyalty Refund</string>
+
+
+    <string name="merchant_name">Token Financial Technologies</string>
 
     <string name="original_amount">Original Amount</string>
     <string name="refund_amount">Refund Amount</string>
@@ -26,11 +40,21 @@
     <string name="refund">Refund</string>
     <string name="installment">Installment</string>
 
+    <string name="connecting">Connecting</string>
+    <string name="trans_successful">Transaction Successful</string>
+    <string name="printing_the_receipt">Printing the receipt</string>
+
     <string name="sale">Sale</string>
     <string name="Installment_sale">Installment Sale</string>
     <string name="loyalty_sale">Loyalty Sale</string>
     <string name="campaign_sale">Campaign Sale</string>
     <string name="sale_type">Sale Type</string>
+
+    <string name="examples">Examples</string>
+    <string name="batch_close">Batch Close</string>
+    <string name="success">Success</string>
+
+
 
     <string name="setup">Setup</string>
     <string name="host_settings">Host Settings</string>
@@ -45,5 +69,11 @@
     <string name="terminal_no">Terminal No</string>
     <string name="invalid_terminal_no">Invalid Terminal No!</string>
 
+    <string name="starting_activation">Starting Activation…</string>
+    <string name="parameter_loading">Parameter Loading</string>
+    <string name="member_act_completed">Member activation: Completed</string>
+    <string name="rkl_loading">RKL Loading</string>
+    <string name="rkl_loaded">RKL Loaded</string>
+    <string name="key_block_loading">Key Block Loading</string>
 
 </resources>

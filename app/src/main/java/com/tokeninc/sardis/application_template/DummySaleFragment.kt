@@ -1,7 +1,6 @@
 package com.tokeninc.sardis.application_template
 
 import MenuItem
-import android.R
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -15,13 +14,9 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.google.gson.Gson
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
-import com.tokeninc.cardservicebinding.CardServiceBinding
-import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
@@ -30,40 +25,35 @@ import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBin
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.helpers.StringHelper
-import com.tokeninc.sardis.application_template.helpers.printHelpers.SalePrintHelper
+import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintService
 import kotlinx.coroutines.*
-import org.json.JSONException
-import org.json.JSONObject
 import java.lang.String.valueOf
 import java.util.*
 
-class DummySaleFragment : Fragment(), CardServiceListener {
+
+class DummySaleFragment : Fragment() {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
     var activityContext: Context? = null //this is for getting context from activity class
     //private val notNullContext get() = _context!!
-    var resultIntent: Intent? = null
+    private var resultIntent: Intent? = null
     var saleIntent: Intent? = null
-    var bundle: Bundle? = null
+    private var bundle: Bundle? = null
     var saleBundle: Bundle? = null
     var activationDB: ActivationDB? = null
     var transactionDB: TransactionDB? = null
     var batchDB: BatchDB? = null
     var mainActivity: MainActivity? = null
-    private var cardServiceBinding: CardServiceBinding? = null
-    private var boolReadCard = false
-    var coroutine: TransactionService? = null
+    var transactionService: TransactionService? = null
 
     private var menuItemList = mutableListOf<IListMenuItem>()
     private var card: ICCCard? = null
+    var amount = 0
 
     companion object{
-        var amount = 0
         var cardOwner =""
         var cardNumber = "**** ****"
-        var cardData: String? = null
-        var cardReadType = 0
         //listener for spinner
         private val listener: AdapterView.OnItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
@@ -80,7 +70,11 @@ class DummySaleFragment : Fragment(), CardServiceListener {
             }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentDummySaleBinding.inflate(inflater,container,false)
         return binding.root
     }
@@ -91,17 +85,6 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         prepareSpinner()
         clickButtons()
     }
-
-    /**
-     * this is for getting amount from MainActivity by benefitting intents
-     */
-    fun setAmount(mAmount: Int){
-        amount = mAmount
-    }
-
-    /**
-     * this is for getting MainActivity's context to prevent some errors
-     */
 
     private fun prepareSpinner(){
         val spinner = binding.spinner
@@ -115,7 +98,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         )
         //because there were an error with context, we get context from mainActivity
         val adapter: ArrayAdapter<String> =
-            ArrayAdapter<String>(activityContext!!, R.layout.simple_spinner_dropdown_item, items)
+            ArrayAdapter<String>(activityContext!!, android.R.layout.simple_spinner_dropdown_item, items)
         spinner.adapter = adapter
         spinner.onItemSelectedListener = listener
     }
@@ -123,7 +106,8 @@ class DummySaleFragment : Fragment(), CardServiceListener {
 
     private fun clickButtons(){
         binding.btnSale.setOnClickListener {
-            readCard()
+            mainActivity!!.isSale = true
+            mainActivity!!.readCard()
         }
         binding.btnSuccess.setOnClickListener {
             prepareDummyResponse(ResponseCode.SUCCESS)
@@ -145,57 +129,55 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         }
     }
 
-    /**
-     * define cardServiceBinding and make boolReadCard true because we read it.
-     */
-    private fun readCard(){
-        cardServiceBinding = CardServiceBinding(activityContext!! as AppCompatActivity?,this )
-        boolReadCard = true
-    }
 
-    private fun doSale(transactionCode: TransactionCode) {
-        coroutine!!.mainActivity = mainActivity
+    private fun doSale() {
+        transactionService!!.mainActivity = mainActivity
         CoroutineScope(Dispatchers.Default).launch {
-            val transactionResponse = coroutine!!.doInBackground(activityContext!!,
-                amount, card!!,transactionCode,
+            val transactionResponse = transactionService!!.doInBackground(activityContext!!,
+                amount, card!!,TransactionCode.SALE,
                 ContentValues(), null,false,null ,false)
             finishSale(transactionResponse!!)
         }
     }
 
     private fun finishSale(transactionResponse: TransactionResponse){
-        val responseCode = transactionResponse.responseCode
-        getNotNullBundle().putInt("ResponseCode", responseCode.ordinal)
-        getNotNullBundle().putInt("PaymentStatus", 0)
-        getNotNullBundle().putInt("Amount", amount )
-        getNotNullBundle().putInt("Amount2", amount)
-        getNotNullBundle().putBoolean("IsSlip", true)
-        transactionResponse.contentVal?.let { getNotNullBundle().putInt("BatchNo", it.getAsInteger(TransactionCol.Col_BatchNo.name)) }
-        getNotNullBundle().putString("CardNo", StringHelper().MaskTheCardNo(card!!.mCardNumber!!))
-        getNotNullBundle().putString("MID", activationDB!!.getMerchantId());
-        getNotNullBundle().putString("TID", activationDB!!.getTerminalId());
-        transactionResponse.contentVal?.let { getNotNullBundle().putInt("TxnNo", it.getAsInteger(TransactionCol.Col_GUP_SN.name)) }
-        getNotNullBundle().putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
+        Log.d("Transaction/Response","${transactionResponse.contentVal}")
 
-        var slipType: SlipType = SlipType.NO_SLIP
-        if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
-            slipType = SlipType.NO_SLIP
-        }
-        else{
-            if (transactionResponse.responseCode == ResponseCode.SUCCESS){
-                val salePrintHelper = SalePrintHelper()
-                getNotNullBundle().putString("customerSlipData", salePrintHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
-                getNotNullBundle().putString("merchantSlipData", salePrintHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
-                getNotNullBundle().putString("RefundInfo", getRefundInfo(transactionResponse));
-                if(transactionResponse.contentVal != null) {
-                    getNotNullBundle().putString("RefNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_HostLogKey.name))
-                    getNotNullBundle().putString("AuthNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_AuthCode.name))
+        val responseCode = transactionResponse.responseCode
+        if (responseCode == ResponseCode.SUCCESS){
+            getNotNullBundle().putInt("ResponseCode", responseCode.ordinal)
+            getNotNullBundle().putInt("PaymentStatus", 0) // #2 Payment Status
+            getNotNullBundle().putInt("Amount", amount ) // #3 Amount
+            getNotNullBundle().putInt("Amount2", amount)
+            getNotNullBundle().putBoolean("IsSlip", true)
+
+            getNotNullBundle().putInt("BatchNo", 1) // TODO Do it after implementing Batch
+            getNotNullBundle().putString("CardNo", StringHelper().maskCardNumber(card!!.mCardNumber!!))
+            getNotNullBundle().putString("MID", activationDB!!.getMerchantId());
+            getNotNullBundle().putString("TID", activationDB!!.getTerminalId());
+            getNotNullBundle().putInt("TxnNo",5)  // TODO Do it after implementing Batch
+            getNotNullBundle().putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
+
+            var slipType: SlipType = SlipType.NO_SLIP
+            if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
+                slipType = SlipType.NO_SLIP
+            }
+            else{
+                if (transactionResponse.responseCode == ResponseCode.SUCCESS){
+                    val printHelper = PrintService()
+                    getNotNullBundle().putString("customerSlipData", printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, activityContext!!,1, 1,false))
+                    getNotNullBundle().putString("merchantSlipData", printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, activityContext!!,1, 1,false))
+                    //getNotNullBundle().putString("RefundInfo", getRefundInfo(response)); //TODO sonra bakılacak
+                    if(transactionResponse.contentVal != null) {
+                        getNotNullBundle().putString("RefNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_HostLogKey.name))
+                        getNotNullBundle().putString("AuthNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_AuthCode.name))
+                    }
                 }
             }
+            getNotNullBundle().putInt("SlipType", slipType.value) //TODO fail receipt yap
+            getNotNullIntent().putExtras(getNotNullBundle())
+            mainActivity!!.dummySetResult(getNotNullIntent())
         }
-        getNotNullBundle().putInt("SlipType", slipType.value) //TODO fail receipt yap
-        getNotNullIntent().putExtras(getNotNullBundle())
-        mainActivity!!.dummySetResult(getNotNullIntent())
     }
 
     private fun getRefundInfo(transactionResponse: TransactionResponse): String {
@@ -226,7 +208,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         val cbMerchant = binding.cbMerchant
         val cbCustomer = binding.cbCustomer
 
-        //this is for slip type
+        //this is for slip type //TODO buraya bakmıyor olabilir
         var slipType = SlipType.NO_SLIP
         if (cbMerchant.isChecked && cbCustomer.isChecked)
             slipType = SlipType.BOTH_SLIPS
@@ -261,14 +243,14 @@ class DummySaleFragment : Fragment(), CardServiceListener {
      * Because we operate in fragment, its bundle and intents aren't be same as activities
      * Therefore we get those objects from activity.
      */
-    public fun getNewBundle(mBundle: Bundle){
+    fun getNewBundle(mBundle: Bundle){
         bundle = mBundle
     }
     private fun getNotNullBundle(): Bundle{
         return bundle!!
     }
 
-    public fun getNewIntent(mIntent: Intent){
+    fun getNewIntent(mIntent: Intent){
         resultIntent = mIntent
     }
     private fun getNotNullIntent(): Intent{
@@ -287,7 +269,7 @@ class DummySaleFragment : Fragment(), CardServiceListener {
 
         //bundle.putInt("BatchNo", databaseHelper.getBatchNo())
 
-        getNotNullBundle().putString("CardNo", StringHelper().MaskTheCardNo(cardNumber))
+        getNotNullBundle().putString("CardNo", StringHelper().maskCardNumber(cardNumber))
 
         //bundle.putString("MID", databaseHelper.getMerchantId()); //#6 Merchant ID
         //bundle.putString("TID", databaseHelper.getTerminalId()); //#7 Terminal ID
@@ -333,79 +315,24 @@ class DummySaleFragment : Fragment(), CardServiceListener {
         _binding = null
     }
 
-    override fun onCardServiceConnected() {
-        if (boolReadCard){
-            try {
-                val obj = JSONObject()
-                obj.put("forceOnline", 1)
-                obj.put("zeroAmount", 0)
-                obj.put("fallback", 1)
-                obj.put("cardReadTypes", 6)
-                obj.put("qrPay", 1)
-
-                Log.w("CardServiceBind/Dummy","$cardServiceBinding")
-                cardServiceBinding!!.getCard(amount, 40, obj.toString())
-                boolReadCard = false
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
+    private fun getStrings(resID: Int): String{
+        return mainActivity!!.getString(resID)
     }
 
-    private fun prepareSaleMenu() {
-        Log.d("PrepareSale","Girdi")
-        menuItemList.add(MenuItem( "Sale", { menuItem ->
-            doSale(TransactionCode.SALE)
+    fun prepareSaleMenu(mCard: ICCCard?) {
+        card = mCard
+        mainActivity!!.isSale = false
+        menuItemList.add(MenuItem( getStrings(R.string.sale), {
+            doSale()
         }))
-        menuItemList.add(MenuItem("Installment Sale", { menuItem -> }))
-        menuItemList.add(MenuItem("Loyalty Sale", { menuItem ->}))
-        menuItemList.add(MenuItem("Campaign Sale", { menuItem -> }))
+        menuItemList.add(MenuItem(getStrings(R.string.Installment_sale), { }))
+        menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))
+        menuItemList.add(MenuItem(getStrings(R.string.campaign_sale), { }))
         val fragment = ListMenuFragment.newInstance(menuItemList,
-                "Sale Type", false, null)
-        parentFragmentManager.beginTransaction().apply {
-            replace(binding.container.id,fragment)
-            commit()
-        }
+            getStrings(R.string.sale_type), false, null)
+        mainActivity!!.replaceFragment(fragment)
     }
 
 
-
-    override fun onCardDataReceived(cardData: String?) {
-        try {
-            val json = JSONObject(cardData)
-            val type = json.getInt("mCardReadType")
-            card = Gson().fromJson(cardData, ICCCard::class.java)
-            if (card!!.resultCode == CardServiceResult.ERROR.resultCode()) {
-                Log.d("Error","Girdi")
-            }
-            if (card!!.resultCode == CardServiceResult.SUCCESS.resultCode()) {
-                Log.d("Success","Girdi")
-                if (type == CardReadType.QrPay.type) {
-                    //QrSale()
-                    return
-                }
-                if (type == CardReadType.CLCard.type) {
-                    cardReadType = CardReadType.CLCard.type
-                    card = Gson().fromJson(cardData, ICCCard::class.java)
-                } else if (type == CardReadType.ICC.type) {
-                    card = Gson().fromJson(cardData, ICCCard::class.java)
-                } else if (type == CardReadType.ICC2MSR.type || type == CardReadType.MSR.type || type == CardReadType.KeyIn.type) {
-                    //card = Gson().fromJson(cardData, ICCCard::class.java)
-                    //cardServiceBinding!!.getOnlinePIN(amount, card?.cardNumber, 0x0A01, 0, 4, 8, 30)
-                }
-                prepareSaleMenu()
-            }
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    override fun onPinReceived(p0: String?) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onICCTakeOut() {
-        TODO("Not yet implemented")
-    }
 
 }

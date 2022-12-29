@@ -9,6 +9,7 @@ import com.tokeninc.sardis.application_template.database.DatabaseOperations
 
 class TransactionDB(context: Context?) : DatabaseHelper(context) {
 
+    //TODO bence sadece ilk installationdaki satışları kaydediyor
     private var tblTransaction: Map<String, String>? = null
     private var sDatabaseHelper: TransactionDB? = null
 
@@ -88,6 +89,10 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
     fun getColumn(columnName: String): String? { 
         val query = "SELECT " + columnName + " FROM " + DatabaseInfo.TRANSACTIONTABLE + " LIMIT 1"
         return DatabaseOperations.query(readableSQLite, query)
+    }
+
+    fun getTransactionsByCardNo(cardNo: String): List<ContentValues?> {
+        return selectTransaction("SELECT * FROM " + DatabaseInfo.TRANSACTIONTABLE + " WHERE " + TransactionCol.Col_PAN.name + "='" + cardNo + "' AND " + TransactionCol.Col_IsVoid.name + " <> '1' ORDER BY " + TransactionCol.Col_GUP_SN.name + " DESC")
     }
 
     fun getAllTransactions(): List<ContentValues?> {

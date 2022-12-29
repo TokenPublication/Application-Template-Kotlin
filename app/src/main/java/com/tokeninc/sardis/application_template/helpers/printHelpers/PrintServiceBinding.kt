@@ -16,10 +16,8 @@ class PrintServiceBinding() {
             method = Class.forName("android.os.ServiceManager")
                 .getMethod("getService", String::class.java)
             val binder = method.invoke(null, "PrinterService") as IBinder
-            if (binder != null) {
-                printerService = IPrinterService.Stub.asInterface(binder)
-                executeRunnable()
-            }
+            printerService = IPrinterService.Stub.asInterface(binder)
+            executeRunnable()
         } catch (e: Exception) {
             e.printStackTrace()
         }

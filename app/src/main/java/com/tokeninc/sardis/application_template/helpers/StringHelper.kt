@@ -29,10 +29,10 @@ class StringHelper {
 
     public fun maskCardNumber(cardNo: String): String? {
         // 1234 **** **** 7890
-        val prefix = cardNo.substring(0, 4)
+        //val prefix = cardNo.substring(0, 4)
         val suffix = cardNo.substring(cardNo.length - 4)
-        val masked = StringBuilder(prefix)
-        for (i in 4 until cardNo.length - 4) {
+        val masked = StringBuilder("")
+        for (i in 0 until cardNo.length - 4) {
             masked.append("*")
         }
         masked.append(suffix)
@@ -50,9 +50,9 @@ class StringHelper {
         // CREATE A MASKED CARD NO
         // First 6 and Last 4 digit is visible, others are masked with '*' Card No can be 16,17,18 Digits...
         // 123456******0987
-        val CardNoFirstSix = cardNo.substring(0, 6)
+        val CardNoFirstFour = cardNo.substring(0, 4)
         val CardNoLastFour = cardNo.substring(cardNo.length - 4)
-        val masked = StringBuilder(CardNoFirstSix)
+        val masked = StringBuilder(CardNoFirstFour)
         for (i in 4 .. cardNo.length - 5) {
             masked.append("*")
         }
