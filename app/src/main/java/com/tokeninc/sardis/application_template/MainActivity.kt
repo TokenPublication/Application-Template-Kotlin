@@ -72,6 +72,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         val binding = ActivityMainBinding.inflate(layoutInflater)
         actDB = ActivationDB(this).getInstance(this) // TODO Egecan: Check not null
         transactionDB = TransactionDB(this).getInstance(this)
+        batchDB = BatchDB(this).getInstance(this)
         cardServiceBinding = CardServiceBinding(this, this)
         startTransactionService()
         setContentView(binding.root)

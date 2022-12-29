@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
+import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
@@ -42,6 +43,7 @@ class DummySaleFragment : Fragment() {
     var saleBundle: Bundle? = null
     var activationDB: ActivationDB? = null
     var transactionDB: TransactionDB? = null
+    var batchDB: BatchDB? = null
     var mainActivity: MainActivity? = null
     var transactionService: TransactionService? = null
 
@@ -177,6 +179,29 @@ class DummySaleFragment : Fragment() {
             mainActivity!!.dummySetResult(getNotNullIntent())
         }
     }
+
+    private fun getRefundInfo(transactionResponse: TransactionResponse): String {
+        val json = JSONObject()
+        val transaction: ContentValues? = transactionResponse.contentVal
+        try {
+            json.put("BatchNo", 1) // TODO Do it after implementing Batch
+            json.put("TxnNo", 100) // TODO Do it after implementing Batch
+            json.put("Amount", amount)
+            json.put("RefNo", transaction?.getAsString(TransactionCol.Col_HostLogKey.name))
+            json.put("AuthCode", transaction?.getAsString(TransactionCol.Col_AuthCode.name))
+            json.put("TranDate", transaction?.getAsString(TransactionCol.Col_TranDate.name))
+            if (transaction?.getAsInteger(TransactionCol.Col_InstCnt.name) != null && transaction.getAsInteger(TransactionCol.Col_InstCnt.name) > 0) {
+                val installment = JSONObject()
+                installment.put("InstCount", transaction.getAsInteger(TransactionCol.Col_InstCnt.name))
+                installment.put("InstAmount", transaction.getAsInteger(TransactionCol.Col_InstAmount.name))
+                json.put("Installment", installment)
+            }
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+        return json.toString()
+    }
+
     private fun prepareDummyResponse (code: ResponseCode){
 
         var paymentType = PaymentTypes.CREDITCARD.type
@@ -233,8 +258,7 @@ class DummySaleFragment : Fragment() {
     }
     //TODO Data has to be returned to Payment Gateway after sale operation completed via template
     // below using actual data.
-    fun onSaleResponseRetrieved(price: Int, code: ResponseCode, hasSlip: Boolean,
-                                       slipType: SlipType, cardNo: String, ownerName: String, paymentType: Int){
+    private fun onSaleResponseRetrieved(price: Int, code: ResponseCode, hasSlip: Boolean, slipType: SlipType, cardNo: String, ownerName: String, paymentType: Int){
         getNotNullBundle().putInt("ResponseCode", code.ordinal)
         getNotNullBundle().putString("CardOwner", cardOwner) // Optional
         getNotNullBundle().putString("CardNumber", cardNumber) // Optional, Card No can be masked

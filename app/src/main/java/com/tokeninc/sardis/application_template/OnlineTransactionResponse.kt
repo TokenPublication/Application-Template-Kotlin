@@ -10,6 +10,7 @@ class OnlineTransactionResponse {
     var mHostLogKey: String? = null
     var mDisplayData: String? = null
     var mKeySequenceNumber: String? = null
-    var insCount: String? = null
+    var insCount: Int? = null
     var instAmount: Int? = null
+    var dateTime: String? = null
 }

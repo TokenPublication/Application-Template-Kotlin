@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.util.Log
 import com.token.uicomponents.infodialog.InfoDialog
+import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.entities.ICCCard
@@ -19,6 +20,7 @@ class TransactionService  {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     var mainActivity: MainActivity? = null
     var transactionDB: TransactionDB? = null
+    var batchDB: BatchDB? = null
 
     suspend fun doInBackground(context: Context, amount: Int, card: ICCCard, transactionCode: TransactionCode, extraContent: ContentValues,
                                onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean):TransactionResponse? {
@@ -66,10 +68,10 @@ class TransactionService  {
         onlineTransactionResponse.mHostLogKey = "12345678"
         onlineTransactionResponse.mDisplayData = "Display Data"
         onlineTransactionResponse.mKeySequenceNumber = "3"
-        onlineTransactionResponse.insCount = "123"
+        onlineTransactionResponse.insCount = 0
         onlineTransactionResponse.instAmount = 0
+        onlineTransactionResponse.dateTime = "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}"
         return onlineTransactionResponse
-        TODO(); "CHECK FROM DB"
     }
 
     private fun finishTransaction(context: Context, amount: Int, card: ICCCard, transactionCode: TransactionCode, extraContent: ContentValues?, onlinePin: String?,
@@ -77,10 +79,10 @@ class TransactionService  {
 
         val content = ContentValues()
         content.put(TransactionCol.Col_UUID.name, uuid)
-        content.put(TransactionCol.Col_STN.name, 1)
-        content.put(TransactionCol.Col_GUP_SN.name, (0..10000).random()) // TODO Unique number, will be added from batch. Random for test use
-        content.put(TransactionCol.Col_BatchNo.name, 1)
-        content.put(TransactionCol.Col_ReceiptNo.name, 2)
+        content.put(TransactionCol.Col_STN.name, batchDB?.getSTN())
+        content.put(TransactionCol.Col_GUP_SN.name, batchDB?.updateSTN())
+        content.put(TransactionCol.Col_BatchNo.name, batchDB?.getBatchNo())
+        content.put(TransactionCol.Col_ReceiptNo.name, 2) // TODO Check Receipt NO 1000TR
         content.put(TransactionCol.Col_CardReadType.name, card.mCardReadType)
         content.put(TransactionCol.Col_PAN.name, card.mCardNumber)
         content.put(TransactionCol.Col_CardSequenceNumber.name, card.CardSeqNum)
