@@ -8,7 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import androidx.lifecycle.ViewModelProvider
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
@@ -17,7 +17,8 @@ import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintService
-import com.tokeninc.sardis.application_template.viewmodel.TransactionViewModel
+import com.tokeninc.sardis.application_template.viewmodels.PostTxnViewModel
+import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,9 +34,12 @@ class PostTxnFragment : Fragment() {
     var transactionService: TransactionService? = null
     var refundFragment: RefundFragment? = null
     private var printService = PrintServiceBinding()
+    private lateinit var viewModel: PostTxnViewModel
+    var transactionViewModel: TransactionViewModel? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View {
         _binding = FragmentPostTxnBinding.inflate(inflater,container,false)
+        viewModel = ViewModelProvider(this)[PostTxnViewModel::class.java]
         return binding.root
     }
 
@@ -49,7 +53,7 @@ class PostTxnFragment : Fragment() {
     }
 
     private fun showMenu(){
-        var menuItems = mutableListOf<IListMenuItem>()
+        var menuItems = viewModel.list
         menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
             mainActivity!!.isVoid = true
             mainActivity!!.readCard()
@@ -71,18 +75,18 @@ class PostTxnFragment : Fragment() {
 
     private fun startRefundFragment(){
         refundFragment!!.mainActivity = mainActivity
+        transactionService!!.mainActivity = mainActivity
+        transactionService!!.batchDB = mainActivity!!.batchDB
         refundFragment!!.transactionService = transactionService
     }
 
     fun cardNumberReceived(mCard: ICCCard?){
         card = mCard
         val cardNumber = card!!.mCardNumber
-        val transactionDB = mainActivity!!.transactionDB
-        val transactionVM = TransactionViewModel(cardNumber)
-        transactionVM.transactionDB = transactionDB
+        transactionViewModel!!.cardNumber = cardNumber
         val transactionList = TransactionList()
         transactionList.postTxnFragment = this@PostTxnFragment
-        transactionList.viewModel = transactionVM
+        transactionList.viewModel = transactionViewModel
         mainActivity!!.replaceFragment(transactionList)
         mainActivity!!.isVoid = false //it returns false again to check correctly next operations
     }

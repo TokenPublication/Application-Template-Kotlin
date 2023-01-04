@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputListFragment
@@ -23,6 +24,7 @@ import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintService
+import com.tokeninc.sardis.application_template.viewmodels.RefundViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,6 +53,7 @@ class RefundFragment : Fragment() {
         lateinit var inputAuthCode: CustomInputFormat
         private var installmentCount = 0
         private var instFragment: ListMenuFragment? = null
+        private lateinit var viewModel: RefundViewModel
     }
 
     override fun onCreateView(
@@ -59,6 +62,7 @@ class RefundFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentRefundBinding.inflate(inflater,container,false)
+        viewModel = ViewModelProvider(this)[RefundViewModel::class.java]
         return binding.root
     }
 
@@ -104,8 +108,8 @@ class RefundFragment : Fragment() {
         mainActivity!!.finish()
     }
 
-    private fun showMenu(){
-        var menuItems = mutableListOf<IListMenuItem>()
+    private fun showMenu(){ //recycler view gibi buna eklenebilir belki ? viewmodel
+        var menuItems = viewModel.list
         menuItems.add(MenuItem(getStrings(R.string.matched_refund), {
             showMatchedReturnFragment()
         }))

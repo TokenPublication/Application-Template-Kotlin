@@ -11,6 +11,7 @@ import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.helpers.printHelpers.DateUtil
+import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import kotlinx.coroutines.*
 
 class TransactionService  {
@@ -21,6 +22,7 @@ class TransactionService  {
     var mainActivity: MainActivity? = null
     var transactionDB: TransactionDB? = null
     var batchDB: BatchDB? = null
+    var transactionViewModel: TransactionViewModel? = null
 
     suspend fun doInBackground(context: Context, amount: Int, card: ICCCard, transactionCode: TransactionCode, extraContent: ContentValues,
                                onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean):TransactionResponse? {
@@ -125,12 +127,15 @@ class TransactionService  {
         var success = true
         // TODO BARIS  VOID ise Insert etmeyecek!
         if (responseCode == ResponseCode.SUCCESS && transactionCode == TransactionCode.SALE) {
-            success = transactionDB!!.insertTransaction(content)
+            success =
+                runBlocking {
+                    transactionViewModel!!.insertTransaction(content)
+                }
             success = true
         }
 
         // TODO: TEST USE for get all transactions as content values list
-        val allTransactions: List<ContentValues?> = transactionDB!!.getAllTransactions()
+        val allTransactions: List<ContentValues?> = transactionViewModel!!.getAllTransactions()
         allTransactions.forEach(::println)
 
         if (success) {

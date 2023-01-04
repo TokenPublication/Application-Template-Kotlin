@@ -6,14 +6,14 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.IdRes
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.ViewModelProvider
 import com.google.gson.Gson
 import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
@@ -25,13 +25,17 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
-import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
+import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.CardReadType
 import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
+import com.tokeninc.sardis.application_template.viewmodels.ActivationVMFactory
+import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
+import com.tokeninc.sardis.application_template.viewmodels.TransactionVMFactory
+import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -40,10 +44,10 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.sql.Ref
 
 
 class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener {
+
 
     //menu items is mutable list which we can add and delete
     private val menuItems = mutableListOf<IListMenuItem>()
@@ -56,23 +60,39 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     var transactionDB: TransactionDB? = null
     private val transactionService = TransactionService()
     private val postTxnFragment = PostTxnFragment()
-    private val dummySaleFragment = DummySaleFragment()
+    private lateinit var dummySaleFragment : DummySaleFragment
     private val settingsFragment = SettingsFragment()
     private val refundFragment = RefundFragment()
+    private lateinit var transactionViewModel: TransactionViewModel
+    lateinit var activationViewModel: ActivationViewModel
     var isVoid = false  //if readCard is for void operation it returns true from voidFragment
     var isSale = false  //if readCard is for sale operation it returns true from dummySaleFragment
     var isRefund = false //TODO TransactionCode a göre yap
     var isMatchedRefund = false //bunlara göre transactionCode yazdıracaksın.
     var isCashRefund = false
     var isInstallmentRefund = false
+    var batchDB: BatchDB? = null
+
+    // to continue where it was when the screen is rotating
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        startActivity()
+    }
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        startActivity()
+    }
+
+    private fun startActivity(){
         val binding = ActivityMainBinding.inflate(layoutInflater)
         actDB = ActivationDB(this).getInstance(this) // TODO Egecan: Check not null
         transactionDB = TransactionDB(this).getInstance(this)
         batchDB = BatchDB(this).getInstance(this)
+        transactionViewModel = ViewModelProvider(this,TransactionVMFactory(transactionDB!!))[TransactionViewModel::class.java]
+        activationViewModel = ViewModelProvider(this,ActivationVMFactory(actDB!!))[ActivationViewModel::class.java]
+        dummySaleFragment = DummySaleFragment(transactionViewModel)
         cardServiceBinding = CardServiceBinding(this, this)
         startTransactionService()
         setContentView(binding.root)
@@ -81,9 +101,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         printService = PrintServiceBinding()
         //printService?.print(PrintHelper().PrintSuccess())
         val textFragment = TextFragment()
-        replaceFragment(textFragment)
-        //startSettingsFragment(settingsFragment)  //TODO açıldığında burası gelecek ama sonra işlem yapabilecek şekilde ayarla
-
+        //replaceFragment(textFragment)
 
         when (intent.action){
             getString(R.string.PosTxn_Action) ->  startPostTxnFragment(postTxnFragment)
@@ -92,7 +110,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
             getString(R.string.BatchClose_Action) ->  textFragment.setActionName(getString(R.string.BatchClose_Action))
             getString(R.string.Parameter_Action) ->  textFragment.setActionName(getString(R.string.Parameter_Action))
             getString(R.string.Refund_Action) ->  textFragment.setActionName(getString(R.string.Refund_Action))
-            else -> textFragment.setActionName("${intent.action}")
+            else -> startSettingsFragment(settingsFragment)
         }
     }
 
@@ -102,6 +120,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
 
     private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
         postTxnFragment.mainActivity = this
+        postTxnFragment.transactionViewModel = transactionViewModel
         postTxnFragment.transactionService = transactionService
         postTxnFragment.refundFragment = refundFragment
         replaceFragment(postTxnFragment)
@@ -110,6 +129,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     private fun startTransactionService(){
         transactionService.mainActivity = this
         transactionService.transactionDB = transactionDB
+        transactionService.transactionViewModel = transactionViewModel
     }
 
 
@@ -124,15 +144,16 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         dummySaleFragment.mainActivity = this
         dummySaleFragment.saleIntent = Intent(getString(R.string.Sale_Action))
         dummySaleFragment.saleBundle = Intent(getString(R.string.Sale_Action)).extras
-        dummySaleFragment.activationDB = actDB
+        dummySaleFragment.activationViewModel = activationViewModel
         dummySaleFragment.transactionDB = transactionDB
+        dummySaleFragment.batchDB = batchDB
         replaceFragment(dummySaleFragment)
     }
 
     private fun startSettingsFragment(settingsFragment: SettingsFragment){
         settingsFragment.resultIntent = Intent()
         settingsFragment.mainActivity = this
-        settingsFragment.actDB = actDB
+        settingsFragment.activationViewModel = activationViewModel
         settingsFragment._context = this@MainActivity
         replaceFragment(settingsFragment)
     }
