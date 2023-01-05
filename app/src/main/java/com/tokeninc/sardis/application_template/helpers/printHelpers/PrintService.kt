@@ -100,7 +100,7 @@ class PrintService:BasePrintHelper() {
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TARİHİ: ${extraContentValues!!.getAsString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
-            styledText.addTextToLine("ORJ. İŞ YERİ NO: ${mainActivity.actDB!!.getMerchantId() }",PrinterDefinitions.Alignment.Center)
+            styledText.addTextToLine("ORJ. İŞ YERİ NO: ${mainActivity.activationViewModel.getMerchantId() }",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TEMASSIZ TAMAMLANMIŞTIR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()

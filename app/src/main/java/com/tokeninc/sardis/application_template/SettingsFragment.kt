@@ -13,10 +13,9 @@ import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
-import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
-import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
+import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
 import org.apache.commons.lang3.StringUtils
 
 
@@ -32,7 +31,7 @@ class SettingsFragment : Fragment() {
     var _context: Context? = null
     var resultIntent: Intent? = null
     private var isBankActivateAction = true
-    var actDB: ActivationDB? = null
+    var activationViewModel: ActivationViewModel? = null
 
     private var terminalId: String? = null
     private var merchantId: String? = null
@@ -64,7 +63,7 @@ class SettingsFragment : Fragment() {
 
 
     private fun showMenu(){
-        var menuItems = mutableListOf<IListMenuItem>()
+        var menuItems = activationViewModel!!.menuItemList
         menuItems.add(MenuItem("Setup", {
             addTidMidFragment()
         }))
@@ -88,8 +87,8 @@ class SettingsFragment : Fragment() {
             "Port", EditTextInputType.Number, 4, "Invalid Port!"
         ) { customInputFormat -> customInputFormat.text.length >= 2 && customInputFormat.text.toInt() > 0 })
 
-        inputList[0].text = actDB!!.getHostIP()
-        inputList[1].text = actDB!!.getHostPort()
+        inputList[0].text = activationViewModel!!.getHostIP()
+        inputList[1].text = activationViewModel!!.getHostPort()
         if (inputList[0].text != null && inputList[1].text!= null)
             Toast.makeText(_context,"HostIP: ${inputList[0].text}, HostPort: ${inputList[1].text }"
             ,Toast.LENGTH_SHORT).show()
@@ -98,7 +97,7 @@ class SettingsFragment : Fragment() {
             InputListFragment.ButtonListener{
                 ip_no = inputList[0].text
                 port_no = inputList[1].text
-                if (actDB!!.insertConnection(ip_no, port_no) )
+                if (activationViewModel!!.insertConnection(ip_no, port_no) )
                     Toast.makeText(_context,"IP: $ip_no  PORT: $port_no",Toast.LENGTH_LONG).show()
             })
 
@@ -136,15 +135,16 @@ class SettingsFragment : Fragment() {
             "Invalid Terminal No!"
         ) { input -> input.text.length == 8 })
 
-        inputList[0].text = actDB!!.getMerchantId()
-        inputList[1].text = actDB!!.getTerminalId()
+        inputList[0].text = activationViewModel!!.getMerchantId()
+        inputList[1].text = activationViewModel!!.getTerminalId()
 
         TidMidFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 merchantId = inputList[0].text
                 terminalId = inputList[1].text
-                actDB!!.insertActivation(terminalId, merchantId)
-                Toast.makeText(_context,"merc: $merchantId  term: $terminalId",Toast.LENGTH_LONG).show()
+                activationViewModel!!.insertActivation(terminalId, merchantId)
+                Toast.makeText(_context,"merc: ${activationViewModel!!.getMerchantId()}  term: ${activationViewModel!!.getTerminalId()}",Toast.LENGTH_LONG).show()
+                //mainActivity!!.finish()
             })
 
         mainActivity!!.addFragment(TidMidFragment as Fragment)

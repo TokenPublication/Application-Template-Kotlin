@@ -15,9 +15,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
-import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
@@ -26,12 +24,16 @@ import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintService
+import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
+import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import kotlinx.coroutines.*
+import org.json.JSONException
+import org.json.JSONObject
 import java.lang.String.valueOf
 import java.util.*
 
 
-class DummySaleFragment : Fragment() {
+class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
@@ -41,13 +43,12 @@ class DummySaleFragment : Fragment() {
     var saleIntent: Intent? = null
     private var bundle: Bundle? = null
     var saleBundle: Bundle? = null
-    var activationDB: ActivationDB? = null
+    var activationViewModel: ActivationViewModel? = null
     var transactionDB: TransactionDB? = null
     var batchDB: BatchDB? = null
     var mainActivity: MainActivity? = null
     var transactionService: TransactionService? = null
-
-    private var menuItemList = mutableListOf<IListMenuItem>()
+    //private lateinit var viewModel: DummySaleViewModel
     private var card: ICCCard? = null
     var amount = 0
 
@@ -76,6 +77,8 @@ class DummySaleFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentDummySaleBinding.inflate(inflater,container,false)
+
+        //viewModel = ViewModelProvider(this)[DummySaleViewModel::class.java]
         return binding.root
     }
 
@@ -98,7 +101,8 @@ class DummySaleFragment : Fragment() {
         )
         //because there were an error with context, we get context from mainActivity
         val adapter: ArrayAdapter<String> =
-            ArrayAdapter<String>(activityContext!!, android.R.layout.simple_spinner_dropdown_item, items)
+            ArrayAdapter<String>(activityContext!!, R.layout.spinner_item, items)
+        adapter.setDropDownViewResource(R.layout.spinner_drop_down)
         spinner.adapter = adapter
         spinner.onItemSelectedListener = listener
     }
@@ -132,6 +136,7 @@ class DummySaleFragment : Fragment() {
 
     private fun doSale() {
         transactionService!!.mainActivity = mainActivity
+        transactionService!!.batchDB = batchDB
         CoroutineScope(Dispatchers.Default).launch {
             val transactionResponse = transactionService!!.doInBackground(activityContext!!,
                 amount, card!!,TransactionCode.SALE,
@@ -153,8 +158,8 @@ class DummySaleFragment : Fragment() {
 
             getNotNullBundle().putInt("BatchNo", 1) // TODO Do it after implementing Batch
             getNotNullBundle().putString("CardNo", StringHelper().maskCardNumber(card!!.mCardNumber!!))
-            getNotNullBundle().putString("MID", activationDB!!.getMerchantId());
-            getNotNullBundle().putString("TID", activationDB!!.getTerminalId());
+            getNotNullBundle().putString("MID", activationViewModel!!.getMerchantId());
+            getNotNullBundle().putString("TID", activationViewModel!!.getTerminalId());
             getNotNullBundle().putInt("TxnNo",5)  // TODO Do it after implementing Batch
             getNotNullBundle().putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
 
@@ -322,6 +327,7 @@ class DummySaleFragment : Fragment() {
     fun prepareSaleMenu(mCard: ICCCard?) {
         card = mCard
         mainActivity!!.isSale = false
+        var menuItemList = viewModel.menuItemList
         menuItemList.add(MenuItem( getStrings(R.string.sale), {
             doSale()
         }))
