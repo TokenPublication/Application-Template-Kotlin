@@ -109,7 +109,7 @@ class RefundFragment : Fragment() {
     }
 
     private fun showMenu(){ //recycler view gibi buna eklenebilir belki ? viewmodel
-        var menuItems = viewModel.list
+        var menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.matched_refund), {
             showMatchedReturnFragment()
         }))
@@ -122,9 +122,17 @@ class RefundFragment : Fragment() {
         menuItems.add(MenuItem(getStrings(R.string.loyalty_refund), {
             //showLoyaltyRefundFragment()
         }))
-        menuFragment = ListMenuFragment.newInstance(menuItems,"PostTxn",
-            true, R.drawable.token_logo)
-        mainActivity!!.replaceFragment(menuFragment as Fragment)
+        viewModel.list = menuItems
+        viewModel.replaceFragment(mainActivity!!)
+    }
+
+    fun addFragment( fragment: Fragment)
+    {
+        parentFragmentManager.beginTransaction().apply {
+            replace(R.id.container,fragment) //replacing fragment
+            addToBackStack("RefundFragment")
+            commit() //call signals to the FragmentManager that all operations have been added to the transaction
+        }
     }
 
 

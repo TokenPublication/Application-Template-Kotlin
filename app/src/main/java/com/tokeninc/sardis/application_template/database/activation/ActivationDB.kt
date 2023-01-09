@@ -16,12 +16,13 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
 
 
     private fun initActivationTable(db: SQLiteDatabase) {
-        tblActivation = LinkedHashMap<String, String>()
+        tblActivation = LinkedHashMap()
         (tblActivation as LinkedHashMap<String, String>)[ActivationCol.ColTerminalId.name] = "TEXT"
         (tblActivation as LinkedHashMap<String, String>)[ActivationCol.ColMerchantId.name] = "TEXT"
         (tblActivation as LinkedHashMap<String, String>)[ActivationCol.ColIPNo.name] = "TEXT"
         (tblActivation as LinkedHashMap<String, String>)[ActivationCol.ColPortNo.name] = "TEXT"
-        DatabaseOperations.createTable(DatabaseInfo.ACTTABLE, tblActivation, db)
+        DatabaseOperations.createTable(DatabaseInfo.ACTTABLE,
+            tblActivation as LinkedHashMap<String, String>, db)
     }
 
     override fun getTableName(): String {
@@ -47,14 +48,14 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
         val values = ContentValues()
         values.put(ActivationCol.ColIPNo.name, IP)
         values.put(ActivationCol.ColPortNo.name, port)
-        DatabaseOperations.deleteAllRecords(DatabaseInfo.ACTTABLE, writableSQLite) //TODO BARIS anlık kaydediyor sonra siliniyor
-        return DatabaseOperations.insert(DatabaseInfo.ACTTABLE, writableSQLite, values)
+        DatabaseOperations.deleteAllRecords(DatabaseInfo.ACTTABLE, writableSQLite!!) //TODO BARIS anlık kaydediyor sonra siliniyor
+        return DatabaseOperations.insert(DatabaseInfo.ACTTABLE, writableSQLite!!, values)
     }
 
     private fun initHostSettings() {
         val count = try {
             DatabaseOperations.query(
-                readableSQLite,
+                readableSQLite!!,
                 "SELECT COUNT(*) FROM $" + DatabaseInfo.ACTTABLE
             ).toInt()
         } catch (e:Exception) {
@@ -69,26 +70,26 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
         val values = ContentValues()
         values.put(ActivationCol.ColTerminalId.name, terminalId)
         values.put(ActivationCol.ColMerchantId.name, merchantId)
-        DatabaseOperations.update(writableSQLite, DatabaseInfo.ACTTABLE, "1=1", values)
+        DatabaseOperations.update(writableSQLite!!, DatabaseInfo.ACTTABLE, "1=1", values)
     }
 
     fun getMerchantId(): String? {
         val query = "SELECT " + ActivationCol.ColMerchantId.name + " FROM " + DatabaseInfo.ACTTABLE + " LIMIT 1"
-        return DatabaseOperations.query(readableSQLite, query)
+        return DatabaseOperations.query(readableSQLite!!, query)
     }
 
     fun getTerminalId(): String? {
         val query = "SELECT " + ActivationCol.ColTerminalId.name + " FROM " + DatabaseInfo.ACTTABLE + " LIMIT 1"
-        return DatabaseOperations.query(readableSQLite, query)
+        return DatabaseOperations.query(readableSQLite!!, query)
     }
 
     fun getHostIP(): String? {
         val query = "SELECT " + ActivationCol.ColIPNo.name + " FROM " + DatabaseInfo.ACTTABLE + " LIMIT 1"
-        return DatabaseOperations.query(readableSQLite, query)
+        return DatabaseOperations.query(readableSQLite!!, query)
     }
 
     fun getHostPort(): String? {
         val query = "SELECT " + ActivationCol.ColPortNo.name + " FROM " + DatabaseInfo.ACTTABLE + " LIMIT 1"
-        return DatabaseOperations.query(readableSQLite, query)
+        return DatabaseOperations.query(readableSQLite!!, query)
     }
 }

@@ -5,7 +5,7 @@ import java.util.stream.IntStream.range
 
 class StringHelper {
 
-    public fun getAmount(amount: Int): String? {
+    fun getAmount(amount: Int): String? {
         val Lang = Locale.getDefault().displayLanguage
         val currency: String
         currency = if (Lang == "Türkçe") {
@@ -20,14 +20,14 @@ class StringHelper {
         return "$s1,$s2$currency"
     }
 
-    public fun GenerateApprovalCode(BatchNo: String, TransactionNo: String, SaleID: String): String? {
+    fun GenerateApprovalCode(BatchNo: String, TransactionNo: String, SaleID: String): String? {
         var approvalCode = "0"
         approvalCode = BatchNo + TransactionNo + SaleID
         return approvalCode
     }
 
 
-    public fun maskCardNumber(cardNo: String): String? {
+    fun maskCardNumber(cardNo: String): String? {
         // 1234 **** **** 7890
         //val prefix = cardNo.substring(0, 4)
         val suffix = cardNo.substring(cardNo.length - 4)
@@ -46,7 +46,7 @@ class StringHelper {
     }
 
 
-    public fun MaskTheCardNo(cardNo: String): String? {
+    fun MaskTheCardNo(cardNo: String): String? {
         // CREATE A MASKED CARD NO
         // First 6 and Last 4 digit is visible, others are masked with '*' Card No can be 16,17,18 Digits...
         // 123456******0987

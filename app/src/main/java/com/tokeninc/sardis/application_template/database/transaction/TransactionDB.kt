@@ -9,7 +9,7 @@ import com.tokeninc.sardis.application_template.database.DatabaseOperations
 
 class TransactionDB(context: Context?) : DatabaseHelper(context) {
 
-    //TODO bence sadece ilk installationdaki satışları kaydediyor
+    //TODO initte hata olduğundan çalıştırmıyor sorunu çözmeye çalış
     private var tblTransaction: Map<String, String>? = null
     private var sDatabaseHelper: TransactionDB? = null
 
@@ -72,7 +72,8 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_AID2.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_UN.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_IAD.name] = "TEXT"
-        DatabaseOperations.createTable(DatabaseInfo.TRANSACTIONTABLE, tblTransaction, db)
+        DatabaseOperations.createTable(DatabaseInfo.TRANSACTIONTABLE,
+            tblTransaction as LinkedHashMap<String, String>, db)
     }
 
     fun insertTransaction(contentValues: ContentValues?): Boolean {
@@ -80,7 +81,7 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
     }
 
     fun updateContentVal(values: ContentValues){
-        DatabaseOperations.update(writableSQLite, DatabaseInfo.TRANSACTIONTABLE, "1=1", values)
+        DatabaseOperations.update(writableSQLite!!, DatabaseInfo.TRANSACTIONTABLE, "1=1", values)
     }
 
     /**
@@ -88,7 +89,7 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
      */
     fun getColumn(columnName: String): String? { 
         val query = "SELECT " + columnName + " FROM " + DatabaseInfo.TRANSACTIONTABLE + " LIMIT 1"
-        return DatabaseOperations.query(readableSQLite, query)
+        return DatabaseOperations.query(readableSQLite!!, query)
     }
 
     fun getTransactionsByCardNo(cardNo: String): List<ContentValues?> {
