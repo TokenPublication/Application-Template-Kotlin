@@ -31,6 +31,7 @@ import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.CardReadType
 import com.tokeninc.sardis.application_template.enums.CardServiceResult
+import com.tokeninc.sardis.application_template.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import com.tokeninc.sardis.application_template.viewmodels.ActivationVMFactory
 import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
@@ -46,7 +47,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 
-class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener {
+class MainActivity : TimeOutActivity(), CardServiceListener {
 
 
     //menu items is mutable list which we can add and delete
@@ -67,11 +68,14 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     lateinit var activationViewModel: ActivationViewModel
     var isVoid = false  //if readCard is for void operation it returns true from voidFragment
     var isSale = false  //if readCard is for sale operation it returns true from dummySaleFragment
-    var isRefund = false //TODO TransactionCode a göre yap
+    var isRefund = false
     var isMatchedRefund = false //bunlara göre transactionCode yazdıracaksın.
     var isCashRefund = false
     var isInstallmentRefund = false
     var batchDB: BatchDB? = null
+
+    val exampleActivity = ExampleActivity()
+
 
     // to continue where it was when the screen is rotating
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -87,7 +91,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
 
     private fun startActivity(){
         val binding = ActivityMainBinding.inflate(layoutInflater)
-        actDB = ActivationDB(this).getInstance(this) // TODO Egecan: Check not null
+        actDB = ActivationDB(this).getInstance(this)
         transactionDB = TransactionDB(this).getInstance(this)
         batchDB = BatchDB(this).getInstance(this)
         transactionViewModel = ViewModelProvider(this,TransactionVMFactory(transactionDB!!))[TransactionViewModel::class.java]
@@ -101,7 +105,8 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         printService = PrintServiceBinding()
         //printService?.print(PrintHelper().PrintSuccess())
         val textFragment = TextFragment()
-        //replaceFragment(textFragment)
+        textFragment.mainActivity = this
+        replaceFragment(textFragment)
 
         when (intent.action){
             getString(R.string.PosTxn_Action) ->  startPostTxnFragment(postTxnFragment)
@@ -110,12 +115,17 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
             getString(R.string.BatchClose_Action) ->  textFragment.setActionName(getString(R.string.BatchClose_Action))
             getString(R.string.Parameter_Action) ->  textFragment.setActionName(getString(R.string.Parameter_Action))
             getString(R.string.Refund_Action) ->  textFragment.setActionName(getString(R.string.Refund_Action))
-            else -> startSettingsFragment(settingsFragment)
+            else ->  startSettingsFragment(settingsFragment) //textFragment.setActionName("Main")
         }
     }
 
     fun showDialog(infoDialog: InfoDialog){
         infoDialog.show(supportFragmentManager,"")
+    }
+
+    fun startExampleActivity(){ //it can be deleted
+        exampleActivity.mainActivity = this@MainActivity
+        startActivity(Intent(this@MainActivity, exampleActivity::class.java))
     }
 
     private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
@@ -168,33 +178,6 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
     }
 
 
-    protected fun addCustomInputFormat(){
-        inputList.add(
-            CustomInputFormat(
-                "Card Number",
-                EditTextInputType.CreditCardNumber,
-                null,
-                "Invalid card number!",
-                null
-            )
-        )
-        inputList.add(
-            CustomInputFormat(
-                "Expire Date",
-                EditTextInputType.ExpiryDate,
-                null,
-                null,
-                null
-            )
-        )
-        inputList.add(CustomInputFormat("CVV", EditTextInputType.CVV,
-            null, null, null))
-
-        val input = CustomInputFormat("IP", EditTextInputType.IpAddress, null, null, null)
-        input.text = "123.456.789.1"
-
-    }
-
     /**
      * Shows a dialog to the user which asks for a confirmation.
      * Dialog will be dismissed automatically when user taps on to confirm/cancel button.
@@ -214,80 +197,7 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         return dialog
     }
 
-    /**
-     * Shows a dialog to the user which informs the user about current progress.
-     * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, boolean)}
-     * Dialog can dismissed by calling .dismiss() method of the fragment instance returned from this method.
-     */
-    private fun showInfoDialog(
-        type: InfoDialog.InfoType,
-        text: String,
-        isCancelable: Boolean
-    ): InfoDialog? {
-        val fragment = InfoDialog.newInstance(type, text, isCancelable)
-        fragment.show(supportFragmentManager, "")
-        return fragment
-    }
 
-    /**
-     * preparing some data to show in fragment, first create a list for sublist with menuitems
-     * then add that sublist and currently created menuItems to menuItems mutable list
-     */
-    fun prepareData() {
-        val subList1 = mutableListOf<IListMenuItem>()// Creating a mutable list for your sub menu items
-        /* Your Sub List Items*/
-        /* Your Sub List Items*/
-        // adding some menu items to sublist
-        subList1.add( MenuItem( "MenuItem 1", { menuItem: IListMenuItem? ->
-            Toast.makeText(this, "Sub Menu 1", Toast.LENGTH_LONG).show() } )
-        )
-
-        subList1.add(
-            MenuItem(
-                "MenuItem 2",
-                { menuItem ->
-                    Toast.makeText(this, "Sub Menu 2", Toast.LENGTH_LONG).show()
-                },
-            ))
-
-        subList1.add(
-            MenuItem(
-                "MenuItem 3",
-                { menuItem ->
-                    Toast.makeText(this, "Sub Menu 3", Toast.LENGTH_LONG).show()
-                },
-            ))
-
-        // The menu item in to the List Menu Fragment
-        // adding subList1 which we added before
-        menuItems.add(
-            MenuItem("Sub Menu (Error Alıyor)", subList1, null) )
-
-        //adding some other menuitems which we defined there not before
-        //a menu item which you call a confirmation dialog
-        menuItems.add(MenuItem("Warning", { menuItem: IListMenuItem? ->
-                    Toast.makeText(this, "Menu Item 1", Toast.LENGTH_LONG).show()
-            showConfirmationDialog(
-                InfoDialog.InfoType.Warning,
-                "Warning",
-                "Confirmation: Warning",
-                InfoDialogButtons.Both,
-                99,
-                this@MainActivity)
-                } ) )
-        // a menu item which you call an info dialog
-        menuItems.add(
-            MenuItem("Connecting", { menuItem: IListMenuItem? ->
-                    Toast.makeText(this, "Menu Item 2", Toast.LENGTH_LONG).show()
-                showInfoDialog(InfoDialog.InfoType.Connecting, "Connecting", true)
-                } ) )
-
-        menuItems.add(
-            MenuItem("Menu Item 3",
-                {
-                    Toast.makeText(this@MainActivity, "Menu Item 3", Toast.LENGTH_LONG).show()
-                } ) )
-    }
 
     /**
      * Returns time out value in seconds for activities which extend
@@ -325,25 +235,14 @@ class MainActivity : TimeOutActivity(), InfoDialogListener, CardServiceListener 
         }
     }
 
+
     protected fun removeFragment(fragment: Fragment) {
         val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
         ft.remove(fragment)
         ft.commit()
     }
 
-    override fun confirmed(arg: Int) {
-        if (arg == 99) {
-            //  Do something else...
-        }
-        //else if (arg == ***) { Do something else... }
-    }
 
-    override fun canceled(arg: Int) {
-        if (arg == 99) {
-            //  Do something else...
-        }
-        //else if (arg == ***) { Do something else... }
-    }
 
     /**
      * This function only works in installation, it calls setConfig and setCLConfig

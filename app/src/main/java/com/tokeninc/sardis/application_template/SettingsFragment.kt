@@ -13,6 +13,7 @@ import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
+import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
 import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
@@ -63,16 +64,15 @@ class SettingsFragment : Fragment() {
 
 
     private fun showMenu(){
-        var menuItems = activationViewModel!!.menuItemList
+        var menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem("Setup", {
             addTidMidFragment()
         }))
         menuItems.add(MenuItem("Host Settings", {
             addIPFragment()
         }))
-        menuFragment = ListMenuFragment.newInstance(menuItems,"Settings",
-            true, R.drawable.token_logo)
-        mainActivity!!.replaceFragment(menuFragment as Fragment)
+        activationViewModel!!.menuItemList = menuItems
+        activationViewModel!!.replaceFragment(mainActivity!!)
     }
 
     private fun addIPFragment(){

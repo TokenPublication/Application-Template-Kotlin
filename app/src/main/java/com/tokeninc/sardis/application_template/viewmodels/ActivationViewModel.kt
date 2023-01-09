@@ -1,12 +1,27 @@
 package com.tokeninc.sardis.application_template.viewmodels
 
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.ListMenuFragment.ListMenuFragment
+import com.tokeninc.sardis.application_template.MainActivity
+import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ActivationViewModel(val database: ActivationDB):ViewModel() {
 
     var menuItemList = mutableListOf<IListMenuItem>()
+
+    fun replaceFragment(mainActivity: MainActivity){
+        val menuFragment = ListMenuFragment.newInstance(menuItemList,"Settings",
+            true, R.drawable.token_logo)
+        viewModelScope.launch(Dispatchers.Main) {
+            mainActivity.replaceFragment(menuFragment as Fragment)
+        }
+    }
 
     fun insertConnection(IP: String?, port: String?): Boolean {
         return database.insertConnection(IP, port)

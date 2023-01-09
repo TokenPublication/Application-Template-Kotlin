@@ -100,7 +100,7 @@ class TransactionService  {
         content.put(TransactionCol.Col_InstCnt.name, onlineTransactionResponse.insCount)
         content.put(TransactionCol.Col_InstAmount.name, onlineTransactionResponse.instAmount)
         content.put(TransactionCol.Col_TranDate.name, "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}")
-        content.put(TransactionCol.Col_TranDate2.name, "Col_TranDate2") //TODO: If void get void date from OnlineTransactionResponse, bu yok
+        content.put(TransactionCol.Col_TranDate2.name, "Col_TranDate2")
         content.put(TransactionCol.Col_HostLogKey.name, onlineTransactionResponse.mHostLogKey)
         if (transactionCode == TransactionCode.VOID)
             content.put(TransactionCol.Col_VoidDateTime.name, "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}")

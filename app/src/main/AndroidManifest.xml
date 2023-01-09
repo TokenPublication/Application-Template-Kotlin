@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.tokeninc.sardis.application_template">
 
+
     <application
         android:name=".AppTemp"
         android:usesCleartextTraffic="true"
@@ -14,6 +15,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar"> <!-- Token theme without Actionbar -->
+        <activity android:name=".examples.ExampleActivity"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

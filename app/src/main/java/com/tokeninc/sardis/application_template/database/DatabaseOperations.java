@@ -11,7 +11,6 @@ import java.util.Map;
 
 public class DatabaseOperations {
 
-
     /**
      * Method creates a table with specified tableName
      * Columns and constraints must be given in a Map

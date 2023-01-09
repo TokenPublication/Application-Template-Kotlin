@@ -37,8 +37,6 @@ class MenuItem @JvmOverloads constructor(
     ): this(title, null,subMenuItemList ,authenticator) {
     }
 
-    private val notnullListener get() = mListener!!
-
     override fun getName(): String {
        return mTitle
     }
@@ -47,8 +45,8 @@ class MenuItem @JvmOverloads constructor(
         return msubMenuItemList
     }
 
-    override fun getClickListener(): MenuItemClickListener<*> {
-        return notnullListener
+    override fun getClickListener(): MenuItemClickListener<*>? {
+        return mListener
     }
 
     override fun getAuthenticator(): IAuthenticator? {

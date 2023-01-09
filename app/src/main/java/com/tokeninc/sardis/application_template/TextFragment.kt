@@ -1,5 +1,6 @@
 package com.tokeninc.sardis.application_template
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -7,11 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.tokeninc.sardis.application_template.databinding.FragmentTextBinding
+import com.tokeninc.sardis.application_template.examples.ExampleActivity
 
 
 class TextFragment : Fragment() {
 
-
+    var mainActivity: MainActivity? = null
     private var _binding: FragmentTextBinding? = null
     private val binding get() = _binding!!
 

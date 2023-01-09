@@ -19,7 +19,7 @@ abstract class DatabaseHelper(@Nullable context: Context?) : SQLiteOpenHelper(co
     }
 
     protected open fun replace(tableName: String?, values: ContentValues?): Boolean {
-        return DatabaseOperations.replace(tableName, writableSQLite, values)
+        return DatabaseOperations.replace(tableName, writableSQLite!!, values)
     }
 
     protected open fun update(
@@ -28,10 +28,10 @@ abstract class DatabaseHelper(@Nullable context: Context?) : SQLiteOpenHelper(co
         whereClause: String?
     ): Int {
         return DatabaseOperations.update(
-            writableSQLite,
+            writableSQLite!!,
             tableName,
             whereClause,
-            values
+            values!!
         )
     }
 
@@ -42,7 +42,7 @@ abstract class DatabaseHelper(@Nullable context: Context?) : SQLiteOpenHelper(co
     protected abstract fun getTableName(): String?
 
     protected open fun insert(values: ContentValues?): Boolean {
-        return DatabaseOperations.insert(getTableName(), writableSQLite, values)
+        return DatabaseOperations.insert(getTableName(), writableSQLite!!, values)
     }
 
     protected open fun addColumnValue(
@@ -90,6 +90,6 @@ abstract class DatabaseHelper(@Nullable context: Context?) : SQLiteOpenHelper(co
     }
 
     open fun clearTable() {
-        DatabaseOperations.deleteAllRecords(getTableName(), writableSQLite)
+        DatabaseOperations.deleteAllRecords(getTableName(), writableSQLite!!)
     }
 }

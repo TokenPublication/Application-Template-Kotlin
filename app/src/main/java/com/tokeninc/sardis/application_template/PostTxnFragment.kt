@@ -9,6 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.repeatOnLifecycle
+import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
@@ -53,25 +55,34 @@ class PostTxnFragment : Fragment() {
     }
 
     private fun showMenu(){
-        var menuItems = viewModel.list
+        var menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
             mainActivity!!.isVoid = true
             mainActivity!!.readCard()
         }))
         menuItems.add(MenuItem(getStrings(R.string.refund), {
             startRefundFragment()
-            mainActivity!!.replaceFragment(refundFragment!!)
+            mainActivity!!.addFragment(refundFragment!!) //burada stacke ekliyor
         }))
         menuItems.add(MenuItem(getStrings(R.string.batch_close), {
 
         }))
         menuItems.add(MenuItem(getStrings(R.string.examples), {
-
+            mainActivity!!.startExampleActivity()
         }))
-        menuFragment = ListMenuFragment.newInstance(menuItems,"PostTxn",
-            true, R.drawable.token_logo)
-        mainActivity!!.replaceFragment(menuFragment as Fragment)
+        viewModel.list = menuItems
+        viewModel.replaceFragment(mainActivity!!)
     }
+
+    fun addFragment( fragment: Fragment)
+    {
+        parentFragmentManager.beginTransaction().apply {
+            replace(R.id.container,fragment) //replacing fragment
+            addToBackStack("PostTxnFragment")
+            commit() //call signals to the FragmentManager that all operations have been added to the transaction
+        }
+    }
+
 
     private fun startRefundFragment(){
         refundFragment!!.mainActivity = mainActivity
