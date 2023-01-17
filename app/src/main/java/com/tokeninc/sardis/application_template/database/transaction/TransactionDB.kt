@@ -51,7 +51,6 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_TransCode.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_InstAmount.name] = "INTEGER DEFAULT 0"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_UUID.name] = "TEXT"
-        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_STN.name] = "INTEGER NOT NULL"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_GUP_SN.name] = "INTEGER NOT NULL UNIQUE"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Amount.name] = "INTEGER"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Amount2.name] = "INTEGER"
@@ -82,6 +81,10 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
 
     fun updateContentVal(values: ContentValues){
         DatabaseOperations.update(writableSQLite!!, DatabaseInfo.TRANSACTIONTABLE, "1=1", values)
+    }
+
+    fun deleteAll(){
+        DatabaseOperations.deleteAllRecords(DatabaseInfo.TRANSACTIONTABLE, writableSQLite!!)
     }
 
     /**

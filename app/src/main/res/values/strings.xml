@@ -68,6 +68,9 @@
     <string name="terminal_no">Terminal No</string>
     <string name="invalid_terminal_no">Invalid Terminal No!</string>
 
+    <string name="batch_empty">No Transaction</string>
+    <string name="batch_close_implementing">Batch Close Implementing</string>
+
     <string name="starting_activation">Starting Activation…</string>
     <string name="parameter_loading">Parameter Loading</string>
     <string name="member_act_completed">Member activation: Completed</string>

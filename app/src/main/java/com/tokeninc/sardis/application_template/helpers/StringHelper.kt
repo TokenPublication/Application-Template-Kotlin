@@ -54,8 +54,11 @@ class StringHelper {
         val CardNoLastFour = cardNo.substring(cardNo.length - 4)
         val masked = StringBuilder(CardNoFirstFour)
         for (i in 4 .. cardNo.length - 5) {
+            if (i % 4 == 0)
+                masked.append(" ")
             masked.append("*")
         }
+        masked.append(" ")
         masked.append(CardNoLastFour)
         val formatted = StringBuilder(masked)
         return formatted.toString()

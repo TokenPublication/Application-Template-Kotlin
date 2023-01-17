@@ -1,6 +1,5 @@
 package com.tokeninc.sardis.application_template
 
-import MenuItem
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -16,14 +15,13 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModelProvider
 import com.google.gson.Gson
 import com.token.uicomponents.CustomInput.CustomInputFormat
-import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.infodialog.InfoDialog
-import com.token.uicomponents.infodialog.InfoDialog.InfoDialogButtons
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
+import com.tokeninc.sardis.application_template.database.SlipDB
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
@@ -60,6 +58,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     var actDB: ActivationDB? = null
     var transactionDB: TransactionDB? = null
     private val transactionService = TransactionService()
+    private val batchCloseService = BatchCloseService()
     private val postTxnFragment = PostTxnFragment()
     private lateinit var dummySaleFragment : DummySaleFragment
     private val settingsFragment = SettingsFragment()
@@ -73,9 +72,9 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     var isCashRefund = false
     var isInstallmentRefund = false
     var batchDB: BatchDB? = null
+    var slipDB: SlipDB? = null
 
     val exampleActivity = ExampleActivity()
-
 
     // to continue where it was when the screen is rotating
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -94,11 +93,13 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         actDB = ActivationDB(this).getInstance(this)
         transactionDB = TransactionDB(this).getInstance(this)
         batchDB = BatchDB(this).getInstance(this)
+        slipDB = SlipDB(this).getInstance(this)
         transactionViewModel = ViewModelProvider(this,TransactionVMFactory(transactionDB!!))[TransactionViewModel::class.java]
         activationViewModel = ViewModelProvider(this,ActivationVMFactory(actDB!!))[ActivationViewModel::class.java]
         dummySaleFragment = DummySaleFragment(transactionViewModel)
         cardServiceBinding = CardServiceBinding(this, this)
         startTransactionService()
+        startBatchService()
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
 
@@ -133,15 +134,21 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         postTxnFragment.transactionViewModel = transactionViewModel
         postTxnFragment.transactionService = transactionService
         postTxnFragment.refundFragment = refundFragment
+        postTxnFragment.batchCloseService = batchCloseService
+        postTxnFragment.slipDB = slipDB
         replaceFragment(postTxnFragment)
     }
 
     private fun startTransactionService(){
         transactionService.mainActivity = this
-        transactionService.transactionDB = transactionDB
-        transactionService.transactionViewModel = transactionViewModel
+        transactionService.batchDB = batchDB
     }
 
+    private fun startBatchService(){
+        batchCloseService.mainActivity = this
+        batchCloseService.batchDB = batchDB //TODO batch viewModel olacak
+        batchCloseService.transactionViewModel = transactionViewModel
+    }
 
     private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
         amount = intent.extras!!.getInt("Amount")
@@ -150,12 +157,10 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         dummySaleFragment.getNewBundle(bundleOf())
         dummySaleFragment.getNewIntent(Intent())
         dummySaleFragment.transactionService = transactionService
-        transactionService.transactionDB = transactionDB
         dummySaleFragment.mainActivity = this
         dummySaleFragment.saleIntent = Intent(getString(R.string.Sale_Action))
         dummySaleFragment.saleBundle = Intent(getString(R.string.Sale_Action)).extras
         dummySaleFragment.activationViewModel = activationViewModel
-        dummySaleFragment.transactionDB = transactionDB
         dummySaleFragment.batchDB = batchDB
         replaceFragment(dummySaleFragment)
     }
@@ -183,7 +188,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      * Dialog will be dismissed automatically when user taps on to confirm/cancel button.
      * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, String, InfoDialog.InfoDialogButtons, int, InfoDialogListener)}
      */
-    private fun showConfirmationDialog(
+    fun showConfirmationDialog(
         type: InfoDialog.InfoType,
         title: String,
         info: String,
@@ -236,10 +241,17 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     }
 
 
-    protected fun removeFragment(fragment: Fragment) {
+    fun removeFragment(fragment: Fragment) {
         val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
         ft.remove(fragment)
         ft.commit()
+    }
+
+    fun showInfoDialog(type: InfoDialog.InfoType, text: String, isCancelable: Boolean
+    ): InfoDialog? {
+        val fragment = InfoDialog.newInstance(type, text, isCancelable)
+        fragment.show(supportFragmentManager, "")
+        return fragment
     }
 
 
@@ -380,5 +392,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     override fun onICCTakeOut() {
         TODO("Not yet implemented")
     }
+
+
 
 }
