@@ -29,7 +29,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-
 class PostTxnFragment : Fragment() {
     private var _binding: FragmentPostTxnBinding? = null
     private val binding get() = _binding!!
@@ -160,42 +159,6 @@ class PostTxnFragment : Fragment() {
         this.printService.print(customerSlip)
         this.printService.print(merchantSlip)
         mainActivity!!.finish()
-
-        /**  //TODO BARIS
-        val responseCode = transactionResponse.responseCode
-        getNotNullBundle().putInt("ResponseCode", responseCode.ordinal)
-        getNotNullBundle().putInt("PaymentStatus", 0) // #2 Payment Status
-        getNotNullBundle().putInt("Amount", DummySaleFragment.amount) // #3 Amount
-        getNotNullBundle().putInt("Amount2", DummySaleFragment.amount)
-        getNotNullBundle().putBoolean("IsSlip", true)
-
-        getNotNullBundle().putInt("BatchNo", 1) // TODO Do it after implementing Batch
-        getNotNullBundle().putString("CardNo", StringHelper().maskCardNumber(card!!.mCardNumber!!))
-        getNotNullBundle().putString("MID", activationDB!!.getMerchantId());
-        getNotNullBundle().putString("TID", activationDB!!.getTerminalId());
-        getNotNullBundle().putInt("TxnNo",5)  // TODO Do it after implementing Batch
-        getNotNullBundle().putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
-
-        var slipType: SlipType = SlipType.NO_SLIP
-        if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
-        slipType = SlipType.NO_SLIP
-        }
-        else{
-        if (transactionResponse.responseCode == ResponseCode.SUCCESS){
-        val salePrintHelper = SalePrintHelper()
-        getNotNullBundle().putString("customerSlipData", salePrintHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
-        getNotNullBundle().putString("merchantSlipData", salePrintHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.onlineTransactionResponse, activityContext!!,1, 1,false))
-        //getNotNullBundle().putString("RefundInfo", getRefundInfo(response)); //TODO sonra bakılacak
-        if(transactionResponse.contentVal != null) {
-        getNotNullBundle().putString("RefNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_HostLogKey.name))
-        getNotNullBundle().putString("AuthNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_AuthCode.name))
-        }
-        }
-        }
-        getNotNullBundle().putInt("SlipType", slipType.value) //TODO fail receipt yap
-        getNotNullIntent().putExtras(getNotNullBundle())
-        mainActivity!!.dummySetResult(getNotNullIntent())
-         */
     }
 
 

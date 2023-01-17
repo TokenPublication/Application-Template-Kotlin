@@ -120,17 +120,16 @@ class TransactionService  {
         content.put(TransactionCol.Col_AID2.name, card.AID2)
         content.put(TransactionCol.Col_UN.name, card.UN)
         content.put(TransactionCol.Col_IAD.name, card.IAD)
+        content.put(TransactionCol.Col_SID.name, card.SID)
 
         var success = true
         // TODO BARIS  VOID ise Insert etmeyecek!
         if (responseCode == ResponseCode.SUCCESS && transactionCode == TransactionCode.SALE) {
             transactionViewModel!!.insertTransaction(content)
             success = true
+        } else if (responseCode == ResponseCode.SUCCESS && transactionCode == TransactionCode.VOID) {
+           // TODO Egecan: TransactionDB SetVoid with Gup SN.
         }
-
-        // TODO: TEST USE for get all transactions as content values list
-        val allTransactions: List<ContentValues?> = transactionViewModel!!.getAllTransactions()
-        allTransactions.forEach(::println)
 
         if (success) {
             return TransactionResponse(responseCode, onlineTransactionResponse, content, extraContent, transactionCode)
