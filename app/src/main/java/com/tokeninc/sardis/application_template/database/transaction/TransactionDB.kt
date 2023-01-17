@@ -6,6 +6,9 @@ import android.database.sqlite.SQLiteDatabase
 import com.tokeninc.sardis.application_template.database.DatabaseHelper
 import com.tokeninc.sardis.application_template.database.DatabaseInfo
 import com.tokeninc.sardis.application_template.database.DatabaseOperations
+import com.tokeninc.sardis.application_template.entities.ICCCard
+import java.text.SimpleDateFormat
+import java.util.*
 
 class TransactionDB(context: Context?) : DatabaseHelper(context) {
 
@@ -115,5 +118,14 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         }
         cursor.close()
         return rows
+    }
+
+    fun setVoid(gupSN: Int, date: String?, cardReadType: Int, card: ICCCard): Int {
+        val values = ContentValues()
+        values.put(TransactionCol.Col_IsVoid.name, 1)
+        values.put(TransactionCol.Col_VoidDateTime.name, date)
+        values.put(TransactionCol.Col_CardReadType.name, cardReadType)
+        values.put(TransactionCol.Col_SID.name, card.SID)
+        return DatabaseOperations.update(writableSQLite, DatabaseInfo.TRANSACTIONTABLE, TransactionCol.Col_GUP_SN.name + " = " + gupSN, values)
     }
 }

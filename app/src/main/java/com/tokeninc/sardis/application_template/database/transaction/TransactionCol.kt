@@ -1,6 +1,6 @@
 package com.tokeninc.sardis.application_template.database.transaction
 
-public enum class TransactionCol {
+enum class TransactionCol {
     Col_UUID,
     Col_STN,
     Col_GUP_SN,
@@ -40,5 +40,6 @@ public enum class TransactionCol {
     Col_CVM,
     Col_AID2,
     Col_UN,
-    Col_IAD;
+    Col_IAD,
+    Col_SID;
 }
