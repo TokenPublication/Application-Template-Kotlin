@@ -18,7 +18,6 @@ enum class TransactionCol {
     Col_InstCnt,
     Col_InstAmount,
     Col_TranDate,
-    Col_TranDate2,
     Col_HostLogKey,
     Col_VoidDateTime,
     Col_AuthCode,
@@ -40,5 +39,8 @@ enum class TransactionCol {
     Col_AID2,
     Col_UN,
     Col_IAD,
-    Col_SID;
+    Col_SID,
+    Col_Ext_Conf,
+    Col_Ext_Ref,
+    Col_Ext_RefundDateTime;
 }

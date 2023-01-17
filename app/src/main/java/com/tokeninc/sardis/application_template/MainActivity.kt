@@ -29,6 +29,7 @@ import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.CardReadType
 import com.tokeninc.sardis.application_template.enums.CardServiceResult
+import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import com.tokeninc.sardis.application_template.viewmodels.ActivationVMFactory
@@ -65,12 +66,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     private val refundFragment = RefundFragment()
     private lateinit var transactionViewModel: TransactionViewModel
     lateinit var activationViewModel: ActivationViewModel
-    var isVoid = false  //if readCard is for void operation it returns true from voidFragment
-    var isSale = false  //if readCard is for sale operation it returns true from dummySaleFragment
-    var isRefund = false
-    var isMatchedRefund = false //bunlara göre transactionCode yazdıracaksın.
-    var isCashRefund = false
-    var isInstallmentRefund = false
+    var transactionCode: Int = 0
     var batchDB: BatchDB? = null
     var slipDB: SlipDB? = null
 
@@ -142,6 +138,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     private fun startTransactionService(){
         transactionService.mainActivity = this
         transactionService.batchDB = batchDB
+        transactionService.transactionViewModel = transactionViewModel
     }
 
     private fun startBatchService(){
@@ -325,7 +322,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         try {
             obj.put("forceOnline", 0)
             obj.put("zeroAmount", 1)
-            obj.put("showAmount", if (isVoid) 0 else 1)
+            obj.put("showAmount", if (transactionCode == TransactionCode.VOID.type) 0 else 1)
             obj.put("partialEMV", 1)
             // TODO Developer: Check from Allowed Operations Parameter
             val isManEntryAllowed = true
@@ -373,12 +370,12 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                     //card = Gson().fromJson(cardData, ICCCard::class.java)
                     //cardServiceBinding!!.getOnlinePIN(amount, card?.cardNumber, 0x0A01, 0, 4, 8, 30)
                 }
-                if (isSale)
+                if (transactionCode == TransactionCode.SALE.type)
                     dummySaleFragment.prepareSaleMenu(card)
-                else if (isVoid)
+                else if (transactionCode == TransactionCode.VOID.type)
                     postTxnFragment.cardNumberReceived(card)
-                else if (isRefund)
-                    refundFragment.afterReadCard(card,isMatchedRefund,isInstallmentRefund,isCashRefund)
+                else if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type)
+                    refundFragment.afterReadCard(card,transactionCode)
             }
         } catch (e: java.lang.Exception) {
             e.printStackTrace()

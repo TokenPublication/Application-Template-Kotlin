@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
-import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.database.SlipDB
@@ -33,8 +32,6 @@ class PostTxnFragment : Fragment() {
     private var _binding: FragmentPostTxnBinding? = null
     private val binding get() = _binding!!
     var card: ICCCard? = null
-
-    private var menuFragment: ListMenuFragment? = null
     var mainActivity: MainActivity? = null
     var transactionService: TransactionService? = null
     var refundFragment: RefundFragment? = null
@@ -60,9 +57,9 @@ class PostTxnFragment : Fragment() {
     }
 
     private fun showMenu(){
-        var menuItems = mutableListOf<IListMenuItem>()
+        val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
-            mainActivity!!.isVoid = true
+            mainActivity!!.transactionCode = TransactionCode.VOID.type
             mainActivity!!.readCard()
         }))
         menuItems.add(MenuItem(getStrings(R.string.refund), {
@@ -105,21 +102,10 @@ class PostTxnFragment : Fragment() {
         }
     }
 
-
-    fun addFragment( fragment: Fragment)
-    {
-        parentFragmentManager.beginTransaction().apply {
-            replace(R.id.container,fragment) //replacing fragment
-            addToBackStack("PostTxnFragment")
-            commit() //call signals to the FragmentManager that all operations have been added to the transaction
-        }
-    }
-
     private fun finishBatchClose(batchCloseResponse: BatchCloseResponse){
         Log.d("finishBatch","${batchCloseResponse.batchResult}")
         mainActivity!!.finish()
     }
-
 
     private fun startRefundFragment(){
         refundFragment!!.mainActivity = mainActivity
@@ -128,40 +114,40 @@ class PostTxnFragment : Fragment() {
     }
 
     fun cardNumberReceived(mCard: ICCCard?){
-        card = mCard
-        val cardNumber = card!!.mCardNumber
-        transactionViewModel!!.cardNumber = cardNumber
-        val transactionList = TransactionList()
-        transactionList.postTxnFragment = this@PostTxnFragment
-        transactionList.viewModel = transactionViewModel
-        mainActivity!!.replaceFragment(transactionList)
-        mainActivity!!.isVoid = false //it returns false again to check correctly next operations
+        mainActivity!!.transactionCode = 0
+        if (transactionViewModel!!.getTransactionsByCardNo(mCard!!.mCardNumber.toString()).isEmpty()){
+            val infoDialog = mainActivity!!.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
+            Handler(Looper.getMainLooper()).postDelayed({
+                infoDialog!!.dismiss()
+            }, 2000)
+        }
+        else{
+            card = mCard
+            val cardNumber = card!!.mCardNumber
+            transactionViewModel!!.cardNumber = cardNumber
+            val transactionList = TransactionList()
+            transactionList.postTxnFragment = this@PostTxnFragment
+            transactionList.viewModel = transactionViewModel
+            mainActivity!!.replaceFragment(transactionList)
+        }
     }
 
     fun voidOperation(transaction: ContentValues?){
         CoroutineScope(Dispatchers.Default).launch {
             val transactionResponse = transactionService!!.doInBackground(mainActivity!!, transaction!!.getAsString(TransactionCol.Col_Amount.name).toInt(),
-                card!!,TransactionCode.VOID,
-                ContentValues(),null,false,null,false)
+                card!!,TransactionCode.VOID.type,
+                transaction,null,false,null,false)
             finishVoid(transactionResponse!!)
         }
     }
 
-
-
-
-
     private fun finishVoid(transactionResponse: TransactionResponse) {
         Log.d("TransactionResponse/PostTxn", transactionResponse.contentVal.toString())
         val printService = PrintService()
-        val customerSlip = printService.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, ContentValues(), transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity!!,1, 1,false)
-        val merchantSlip = printService.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, ContentValues(), transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity!!,1, 1,false)
+        val customerSlip = printService.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity!!,1, 1,false)
+        val merchantSlip = printService.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity!!,1, 1,false)
         this.printService.print(customerSlip)
         this.printService.print(merchantSlip)
         mainActivity!!.finish()
     }
-
-
-
-
 }

@@ -109,7 +109,7 @@ class DummySaleFragment(val viewModel: TransactionViewModel) : Fragment() {
 
     private fun clickButtons(){
         binding.btnSale.setOnClickListener {
-            mainActivity!!.isSale = true
+            mainActivity!!.transactionCode = TransactionCode.SALE.type
             mainActivity!!.readCard()
         }
         binding.btnSuccess.setOnClickListener {
@@ -132,12 +132,10 @@ class DummySaleFragment(val viewModel: TransactionViewModel) : Fragment() {
         }
     }
 
-
     private fun doSale() {
-        transactionService!!.transactionViewModel = viewModel
         CoroutineScope(Dispatchers.Default).launch {
             val transactionResponse = transactionService!!.doInBackground(activityContext!!,
-                amount, card!!,TransactionCode.SALE,
+                amount, card!!,TransactionCode.SALE.type,
                 ContentValues(), null,false,null ,false)
             finishSale(transactionResponse!!)
         }
@@ -296,23 +294,8 @@ class DummySaleFragment(val viewModel: TransactionViewModel) : Fragment() {
         //bundle.putString("ApprovalCode", getApprovalCode())
         getNotNullIntent().putExtras(getNotNullBundle())
         mainActivity!!.dummySetResult(getNotNullIntent())
-
-
     }
 
-
-
-    private fun getApprovalCode(): String? {
-        val sharedPref = PreferenceManager.getDefaultSharedPreferences(activityContext!!)
-        var approvalCode = sharedPref.getInt("ApprovalCode", 0)
-        sharedPref.edit().putInt("ApprovalCode", ++approvalCode).apply()
-        return String.format(Locale.ENGLISH, "%06d", approvalCode)
-    }
-
-
-    /**
-     * this is for avoiding memory leaks
-     */
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
@@ -324,7 +307,7 @@ class DummySaleFragment(val viewModel: TransactionViewModel) : Fragment() {
 
     fun prepareSaleMenu(mCard: ICCCard?) {
         card = mCard
-        mainActivity!!.isSale = false
+        mainActivity!!.transactionCode = 0
         var menuItemList = viewModel!!.menuItemList
         menuItemList.add(MenuItem( getStrings(R.string.sale), {
             doSale()
@@ -336,7 +319,4 @@ class DummySaleFragment(val viewModel: TransactionViewModel) : Fragment() {
             getStrings(R.string.sale_type), false, null)
         mainActivity!!.replaceFragment(fragment)
     }
-
-
-
 }

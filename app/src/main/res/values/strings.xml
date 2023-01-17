@@ -32,7 +32,7 @@
     <string name="refund_amount">Refund Amount</string>
     <string name="invalid_amount">Invalid Amount</string>
     <string name="ref_no">Ref No</string>
-    <string name="ref_no_invalid_ten_digits">Ref No Invalid (10 digits)</string>
+    <string name="ref_no_invalid_ten_digits">Ref No Invalid (9 digits)</string>
     <string name="confirmation_code">Confirmation Code</string>
     <string name="confirmation_code_invalid_six_digits">Confirmation Code is Invalid (6 Digits)</string>
     <string name="tran_date">Transaction Date</string>

@@ -7,6 +7,7 @@ import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.helpers.printHelpers.DateUtil
@@ -22,11 +23,11 @@ class TransactionService  {
     var batchDB: BatchDB? = null
     var transactionViewModel: TransactionViewModel? = null
 
-    suspend fun doInBackground(context: Context, amount: Int, card: ICCCard, transactionCode: TransactionCode, extraContent: ContentValues,
+    suspend fun doInBackground(context: Context, amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues,
                                onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean):TransactionResponse? {
         this.context = context
         var transactionResponse: TransactionResponse? = null
-        val dialog = if (transactionCode == TransactionCode.SALE)
+        val dialog = if (transactionCode == TransactionCode.SALE.type)
             InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         else
             InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",true)
@@ -58,7 +59,7 @@ class TransactionService  {
         return transactionResponse
     }
 
-    private fun parseResponse(card: ICCCard, contentVal: ContentValues?, transactionCode: TransactionCode): OnlineTransactionResponse?{
+    private fun parseResponse(card: ICCCard, contentVal: ContentValues?, transactionCode: Int): OnlineTransactionResponse?{
         val onlineTransactionResponse = OnlineTransactionResponse()
         onlineTransactionResponse.mResponseCode = ResponseCode.SUCCESS
         onlineTransactionResponse.mTextPrintCode1 = "Test Print 1"
@@ -73,21 +74,42 @@ class TransactionService  {
         return onlineTransactionResponse
     }
 
-    private fun finishTransaction(context: Context, amount: Int, card: ICCCard, transactionCode: TransactionCode, extraContent: ContentValues?, onlinePin: String?,
+    private fun finishTransaction(context: Context, amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues?, onlinePin: String?,
                                   isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse, responseCode: ResponseCode): TransactionResponse? {
 
         val content = ContentValues()
         content.put(TransactionCol.Col_UUID.name, uuid)
         content.put(TransactionCol.Col_BatchNo.name, batchDB!!.getBatchNo())
-        content.put(TransactionCol.Col_GUP_SN.name, batchDB!!.updateGUPSN()) // TODO Unique number, will be added from batch. Random for test use
-        //content.put(TransactionCol.Col_BatchNo.name, 1)
+        if (transactionCode != TransactionCode.VOID.type) {
+            content.put(TransactionCol.Col_GUP_SN.name, batchDB!!.updateGUPSN())
+        }
         content.put(TransactionCol.Col_ReceiptNo.name, 2) // TODO Check Receipt NO 1000TR
         content.put(TransactionCol.Col_CardReadType.name, card.mCardReadType)
         content.put(TransactionCol.Col_PAN.name, card.mCardNumber)
         content.put(TransactionCol.Col_CardSequenceNumber.name, card.CardSeqNum)
-        content.put(TransactionCol.Col_TransCode.name, transactionCode.name)
+        content.put(TransactionCol.Col_TransCode.name, transactionCode)
         content.put(TransactionCol.Col_Amount.name, amount)
-        content.put(TransactionCol.Col_Amount2.name, amount)
+        when (transactionCode) {
+            TransactionCode.MATCHED_REFUND.type -> {
+                content.put(TransactionCol.Col_Amount2.name,extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
+                content.put(TransactionCol.Col_Ext_Conf.name,extraContent.getAsString(ExtraKeys.AUTH_CODE.name).toInt())
+                content.put(TransactionCol.Col_Ext_Ref.name,extraContent.getAsString(ExtraKeys.REF_NO.name).toInt())
+                content.put(TransactionCol.Col_Ext_RefundDateTime.name,extraContent.getAsString(ExtraKeys.TRAN_DATE.name))
+            }
+            TransactionCode.INSTALLMENT_REFUND.type -> {
+                content.put(TransactionCol.Col_Amount2.name,extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
+                content.put(TransactionCol.Col_Ext_RefundDateTime.name,extraContent.getAsString(ExtraKeys.TRAN_DATE.name))
+            }
+            TransactionCode.INSTALLMENT_REFUND.type -> {
+                content.put(TransactionCol.Col_Amount2.name, extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt() )
+            }
+            else -> {
+                content.put(TransactionCol.Col_Amount2.name,0)
+                content.put(TransactionCol.Col_Ext_Conf.name,0)
+                content.put(TransactionCol.Col_Ext_Ref.name,0)
+                content.put(TransactionCol.Col_Ext_RefundDateTime.name,"")
+            }
+        }
         content.put(TransactionCol.Col_ExpDate.name, card.mExpireDate)
         content.put(TransactionCol.Col_Track2.name, card.mTrack2Data)
         content.put(TransactionCol.Col_CustName.name, card.ownerName)
@@ -97,12 +119,8 @@ class TransactionService  {
         content.put(TransactionCol.Col_InstCnt.name, onlineTransactionResponse.insCount)
         content.put(TransactionCol.Col_InstAmount.name, onlineTransactionResponse.instAmount)
         content.put(TransactionCol.Col_TranDate.name, "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}")
-        content.put(TransactionCol.Col_TranDate2.name, "Col_TranDate2")
         content.put(TransactionCol.Col_HostLogKey.name, onlineTransactionResponse.mHostLogKey)
-        if (transactionCode == TransactionCode.VOID)
-            content.put(TransactionCol.Col_VoidDateTime.name, "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}")
-        else
-            content.put(TransactionCol.Col_VoidDateTime.name, "")
+        content.put(TransactionCol.Col_VoidDateTime.name, "")
         content.put(TransactionCol.Col_AuthCode.name, onlineTransactionResponse.mAuthCode)
         content.put(TransactionCol.Col_Aid.name, card.AID2)
         content.put(TransactionCol.Col_AidLabel.name, card.AIDLabel)
@@ -121,14 +139,16 @@ class TransactionService  {
         content.put(TransactionCol.Col_UN.name, card.UN)
         content.put(TransactionCol.Col_IAD.name, card.IAD)
         content.put(TransactionCol.Col_SID.name, card.SID)
-
+        Log.d("Service","Transaction Code: $transactionCode")
         var success = true
-        // TODO BARIS  VOID ise Insert etmeyecek!
-        if (responseCode == ResponseCode.SUCCESS && transactionCode == TransactionCode.SALE) {
-            transactionViewModel!!.insertTransaction(content)
-            success = true
-        } else if (responseCode == ResponseCode.SUCCESS && transactionCode == TransactionCode.VOID) {
-           // TODO Egecan: TransactionDB SetVoid with Gup SN.
+        if (responseCode == ResponseCode.SUCCESS){
+            if (transactionCode == TransactionCode.VOID.type){
+                transactionViewModel!!.setVoid(extraContent!!.getAsString(TransactionCol.Col_GUP_SN.name).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card)
+            }
+            else if (transactionCode != 0){
+                transactionViewModel!!.insertTransaction(content) //TODO bak
+                Log.d("Service","Success: $success")
+            }
         }
 
         if (success) {
