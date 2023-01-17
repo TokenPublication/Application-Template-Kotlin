@@ -22,4 +22,5 @@ class ICCCard {
     var UN: String? = null
     var IAD: String? = null
     var AIDLabel: String? = null
+    var SID: String? = null
 }
