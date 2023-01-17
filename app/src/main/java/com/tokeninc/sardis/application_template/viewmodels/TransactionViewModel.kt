@@ -17,11 +17,12 @@ class TransactionViewModel(val database: TransactionDB): ViewModel() {
     var menuItemList = mutableListOf<IListMenuItem>()
 
 
-    suspend fun insertTransaction(contentValues: ContentValues?): Boolean {
-        val async = viewModelScope.async(Dispatchers.IO) {
-            database.insertTransaction(contentValues)
-        }
-        return async.await()
+    fun insertTransaction(contentValues: ContentValues?): Boolean {
+        return database.insertTransaction(contentValues)
+    }
+
+    fun deleteAll(){
+        database.deleteAll()
     }
 
     private fun getTransactionsByCardNo(cardNo: String): List<ContentValues?> {

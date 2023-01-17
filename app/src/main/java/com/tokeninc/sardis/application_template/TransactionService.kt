@@ -6,7 +6,6 @@ import android.util.Log
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.database.batch.BatchDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
-import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
@@ -20,7 +19,6 @@ class TransactionService  {
     private var downloadNumber: Int = 0
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     var mainActivity: MainActivity? = null
-    var transactionDB: TransactionDB? = null
     var batchDB: BatchDB? = null
     var transactionViewModel: TransactionViewModel? = null
 
@@ -45,13 +43,12 @@ class TransactionService  {
                     }
                 }
                 downloadNumber++
-                Log.d("DownloadNumb",downloadNumber.toString())
                 if (downloadNumber == 10){
                     coroutineScope.async(Dispatchers.Main) {
                         dialog.update(InfoDialog.InfoType.Confirmed, "İşlem Tamamlandı")
                     }
                     val deferred = coroutineScope.async(Dispatchers.IO) {
-                    val onlineTransactionResponse = parseResponse(card,extraContent,transactionCode)
+                        val onlineTransactionResponse = parseResponse(card,extraContent,transactionCode)
                         finishTransaction(context,amount, card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,onlineTransactionResponse!!, ResponseCode.SUCCESS)
                     }
                     transactionResponse = deferred.await()
@@ -66,8 +63,8 @@ class TransactionService  {
         onlineTransactionResponse.mResponseCode = ResponseCode.SUCCESS
         onlineTransactionResponse.mTextPrintCode1 = "Test Print 1"
         onlineTransactionResponse.mTextPrintCode2 = "Test Print 2"
-        onlineTransactionResponse.mAuthCode = "12345"
-        onlineTransactionResponse.mHostLogKey = "12345678"
+        onlineTransactionResponse.mAuthCode = (0..99999).random().toString()
+        onlineTransactionResponse.mHostLogKey = (0..99999999).random().toString()
         onlineTransactionResponse.mDisplayData = "Display Data"
         onlineTransactionResponse.mKeySequenceNumber = "3"
         onlineTransactionResponse.insCount = 0
@@ -81,9 +78,9 @@ class TransactionService  {
 
         val content = ContentValues()
         content.put(TransactionCol.Col_UUID.name, uuid)
-        content.put(TransactionCol.Col_STN.name, batchDB?.getSTN())
-        content.put(TransactionCol.Col_GUP_SN.name, batchDB?.updateSTN())
-        content.put(TransactionCol.Col_BatchNo.name, batchDB?.getBatchNo())
+        content.put(TransactionCol.Col_BatchNo.name, batchDB!!.getBatchNo())
+        content.put(TransactionCol.Col_GUP_SN.name, batchDB!!.updateGUPSN()) // TODO Unique number, will be added from batch. Random for test use
+        //content.put(TransactionCol.Col_BatchNo.name, 1)
         content.put(TransactionCol.Col_ReceiptNo.name, 2) // TODO Check Receipt NO 1000TR
         content.put(TransactionCol.Col_CardReadType.name, card.mCardReadType)
         content.put(TransactionCol.Col_PAN.name, card.mCardNumber)
@@ -128,10 +125,7 @@ class TransactionService  {
         var success = true
         // TODO BARIS  VOID ise Insert etmeyecek!
         if (responseCode == ResponseCode.SUCCESS && transactionCode == TransactionCode.SALE) {
-            success =
-                runBlocking {
-                    transactionViewModel!!.insertTransaction(content)
-                }
+            transactionViewModel!!.insertTransaction(content)
             success = true
         } else if (responseCode == ResponseCode.SUCCESS && transactionCode == TransactionCode.VOID) {
            // TODO Egecan: TransactionDB SetVoid with Gup SN.

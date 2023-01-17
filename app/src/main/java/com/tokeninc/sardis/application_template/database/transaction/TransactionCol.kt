@@ -2,7 +2,6 @@ package com.tokeninc.sardis.application_template.database.transaction
 
 enum class TransactionCol {
     Col_UUID,
-    Col_STN,
     Col_GUP_SN,
     Col_BatchNo,
     Col_ReceiptNo,

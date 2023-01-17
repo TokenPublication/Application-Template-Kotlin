@@ -9,15 +9,17 @@ import com.tokeninc.sardis.application_template.database.DatabaseOperations
 
 class BatchDB(context: Context?) : DatabaseHelper(context) {
 
+
+    //TODO batch bastırılınca numara artıyor sonraki satışta tekrar 1 oluyor
+    // TID MID null gelmesiyle bunun ana sebebi aynı olmalı updatelerimizde bir sıkıntı var bence
+    // O yüzden deleteAll diyip insert yapmak daha mı mantıklı acaba, insertümüz doğru çünkü en azından?
     private var sDatabaseHelper: BatchDB? = null
     private var tblBatch: Map<String, String>? = null
 
     private fun initBatchTable(db: SQLiteDatabase) {
         tblBatch = LinkedHashMap()
-        (tblBatch as HashMap<String, String>)[BatchCol.col_ulSTN.name] = "INTEGER DEFAULT 0"
         (tblBatch as HashMap<String, String>)[BatchCol.col_ulGUP_SN.name] = "INTEGER DEFAULT 0"
         (tblBatch as HashMap<String, String>)[BatchCol.col_batchNo.name] = "INTEGER DEFAULT 1"
-        (tblBatch as HashMap<String, String>)[BatchCol.col_settleNo.name] = "TEXT"
         DatabaseOperations.createTable(DatabaseInfo.BATCHTABLE,
             tblBatch as LinkedHashMap<String, String>, db)
     }
@@ -30,7 +32,7 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
         if (sDatabaseHelper == null) {
             sDatabaseHelper = BatchDB(context)
             initBatchTable(writableSQLite!!)
-            sDatabaseHelper!!.initHostSettings()
+            sDatabaseHelper!!.initBatch()
         }
         return sDatabaseHelper
     }
@@ -41,9 +43,9 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
         }
     }
 
-    private fun initHostSettings() {
+    private fun initBatch() {
         val count = try {
-            DatabaseOperations.query(readableSQLite!!,"SELECT COUNT(*) FROM $" + DatabaseInfo.BATCHTABLE).toInt()
+            DatabaseOperations.query(readableSQLite!!,"SELECT COUNT(*) FROM " + DatabaseInfo.BATCHTABLE).toInt()
         } catch (e:Exception) {
             0
         }
@@ -54,47 +56,10 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
 
     private fun insertBatch(): Boolean {
         val values = ContentValues()
-        values.put(BatchCol.col_ulSTN.name, 0)
         values.put(BatchCol.col_ulGUP_SN.name, 0)
         values.put(BatchCol.col_batchNo.name, 1)
         DatabaseOperations.deleteAllRecords(DatabaseInfo.BATCHTABLE, writableSQLite!!)
         return DatabaseOperations.insert(DatabaseInfo.BATCHTABLE, writableSQLite!!, values)
-    }
-
-    fun updateSTN(): Int {
-        var stn: Int = getSTN()
-        val v = ContentValues()
-        if (stn == null) {
-            stn = 0
-            v.put(BatchCol.col_ulSTN.name, ++stn)
-            if (DatabaseOperations.insert(DatabaseInfo.BATCHTABLE, writableSQLite!!, v)) {
-                return stn
-            }
-        } else {
-            if (stn == 999) {
-                stn = 0
-            }
-            v.put(BatchCol.col_ulSTN.name, ++stn)
-            DatabaseOperations.update(writableSQLite!!, DatabaseInfo.BATCHTABLE, null, v)
-        }
-        return stn
-    }
-
-    fun getSTN(): Int {
-        val query = "SELECT " + BatchCol.col_ulSTN.name + " FROM " + DatabaseInfo.BATCHTABLE + " LIMIT 1"
-        val stn = DatabaseOperations.query(readableSQLite!!, query)
-        return if (stn == null) 0 else Integer.valueOf(stn)
-    }
-
-    fun getSettleNo(): String? {
-        val query = "SELECT " + BatchCol.col_settleNo.name  + " FROM " + DatabaseInfo.BATCHTABLE + " LIMIT 1"
-        return DatabaseOperations.query(readableSQLite!!, query)
-    }
-
-    fun setSettleNo(settleNo: String?) {
-        val v = ContentValues()
-        v.put(BatchCol.col_settleNo.name, settleNo)
-        DatabaseOperations.update(writableSQLite!!, DatabaseInfo.BATCHTABLE, null, v)
     }
 
     fun updateGUPSN(): Int {
@@ -113,28 +78,24 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
         return sn
     }
 
-    fun resetGUPSN() {
+    private fun resetGUPSN() {
         val v = ContentValues()
         v.put(BatchCol.col_ulGUP_SN.name, 0)
         DatabaseOperations.update(writableSQLite!!, DatabaseInfo.BATCHTABLE, null, v)
     }
 
-    fun resetSTN() {
-        val v = ContentValues()
-        v.put(BatchCol.col_ulSTN.name, 0)
-        DatabaseOperations.update(writableSQLite!!, DatabaseInfo.BATCHTABLE, null, v)
-    }
 
     fun getGUPSN(): Int? {
         val query = "SELECT " + BatchCol.col_ulGUP_SN.name + " FROM " + DatabaseInfo.BATCHTABLE + " LIMIT 1"
         val sn = DatabaseOperations.query(readableSQLite!!, query)
-        return if (sn == null) 1 else Integer.valueOf(sn)
+        return if (sn == null) null else Integer.valueOf(sn)
     }
 
     fun updateBatchNo(batchNo: Int) {
         val v = ContentValues()
         v.put(BatchCol.col_batchNo.name, batchNo)
         DatabaseOperations.update(writableSQLite!!, DatabaseInfo.BATCHTABLE, null, v)
+        resetGUPSN()
     }
 
     fun getBatchNo(): Int? {

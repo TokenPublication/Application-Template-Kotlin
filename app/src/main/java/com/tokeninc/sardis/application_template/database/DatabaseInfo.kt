@@ -7,5 +7,6 @@ class DatabaseInfo {
         const val ACTTABLE: String = "ACTIVATION"
         const val TRANSACTIONTABLE: String = "TRANSACTIONS"
         const val BATCHTABLE: String = "BATCH"
+        const val SLIPTABLE: String = "SLIP"
     }
 }

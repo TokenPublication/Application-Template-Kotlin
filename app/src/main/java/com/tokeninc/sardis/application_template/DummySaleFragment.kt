@@ -33,7 +33,7 @@ import java.lang.String.valueOf
 import java.util.*
 
 
-class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
+class DummySaleFragment(val viewModel: TransactionViewModel) : Fragment() {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
@@ -44,7 +44,6 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
     private var bundle: Bundle? = null
     var saleBundle: Bundle? = null
     var activationViewModel: ActivationViewModel? = null
-    var transactionDB: TransactionDB? = null
     var batchDB: BatchDB? = null
     var mainActivity: MainActivity? = null
     var transactionService: TransactionService? = null
@@ -135,8 +134,7 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
 
 
     private fun doSale() {
-        transactionService!!.mainActivity = mainActivity
-        transactionService!!.batchDB = batchDB
+        transactionService!!.transactionViewModel = viewModel
         CoroutineScope(Dispatchers.Default).launch {
             val transactionResponse = transactionService!!.doInBackground(activityContext!!,
                 amount, card!!,TransactionCode.SALE,
@@ -327,7 +325,7 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
     fun prepareSaleMenu(mCard: ICCCard?) {
         card = mCard
         mainActivity!!.isSale = false
-        var menuItemList = viewModel.menuItemList
+        var menuItemList = viewModel!!.menuItemList
         menuItemList.add(MenuItem( getStrings(R.string.sale), {
             doSale()
         }))
