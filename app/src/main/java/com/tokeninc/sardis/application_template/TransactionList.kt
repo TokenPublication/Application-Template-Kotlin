@@ -28,9 +28,9 @@ class TransactionList : Fragment() {
         binding =ListTransactionBinding.inflate(inflater,container,false)
         val recyclerView = binding.recyclerViewTransactions
         recyclerView.layoutManager =LinearLayoutManager(requireContext())
-
+        //TODO iadede iade tutarı değil org tutarı bastırıyor
         viewModel!!.createLiveData() //in here list = getTransactionsByCardNo(cardNo)
-        viewModel!!.list.observe(viewLifecycleOwner) { //TODO iadede iade tutarı değil org tutarı bastırıyor
+        viewModel!!.list.observe(viewLifecycleOwner) {
             adapter = TransactionAdapter(it.toMutableList())
             adapter.postTxnFragment = postTxnFragment
             binding.adapter = adapter

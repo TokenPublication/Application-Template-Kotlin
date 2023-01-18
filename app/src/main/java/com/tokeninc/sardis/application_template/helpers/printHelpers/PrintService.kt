@@ -49,7 +49,14 @@ class PrintService:BasePrintHelper() {
         if (transactionCode == TransactionCode.SALE.type)
             styledText.addTextToLine("SATIŞ", PrinterDefinitions.Alignment.Center)
         if (transactionCode == TransactionCode.MATCHED_REFUND.type)
-            styledText.addTextToLine("E. İADE", PrinterDefinitions.Alignment.Center) //TODO do for other refunds
+            styledText.addTextToLine("E. İADE", PrinterDefinitions.Alignment.Center)
+        if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type){
+            styledText.addTextToLine("T. SATIŞ İADE", PrinterDefinitions.Alignment.Center)
+            styledText.newLine()
+            styledText.addTextToLine("${contentValues.getAsString(TransactionCol.Col_InstCnt.name)} TAKSİT", PrinterDefinitions.Alignment.Center)
+        }
+        if (transactionCode == TransactionCode.CASH_REFUND.type)
+            styledText.addTextToLine("NAKİT İADE", PrinterDefinitions.Alignment.Center)
         val sdf = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
         val dateTime = sdf.format(Calendar.getInstance().time)
         var lineTime = ""
@@ -75,9 +82,11 @@ class PrintService:BasePrintHelper() {
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.newLine()
         styledText.addTextToLine("TUTAR:")
-        if (transactionCode == TransactionCode.MATCHED_REFUND.type)
+        if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type)
             styledText.addTextToLine(stringHelper.getAmount(extraContentValues!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()), PrinterDefinitions.Alignment.Right)
-        else //TODO diğer refundlar gelince yapı değişir
+        if (transactionCode == TransactionCode.CASH_REFUND.type)
+            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCol.Col_Amount2.name).toInt()), PrinterDefinitions.Alignment.Right)
+        else
             styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCol.Col_Amount.name).toInt()), PrinterDefinitions.Alignment.Right)
         styledText.setLineSpacing(0.5f)
         styledText.setFontSize(10)
@@ -98,7 +107,7 @@ class PrintService:BasePrintHelper() {
                 styledText.addTextToLine("===========================",PrinterDefinitions.Alignment.Center)
             }
         }
-        if (transactionCode == TransactionCode.MATCHED_REFUND.type){
+        if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type){
             styledText.addTextToLine("MAL/HİZM İADE EDİLMİŞTİR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TARİHİ: ${extraContentValues!!.getAsString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
@@ -132,10 +141,10 @@ class PrintService:BasePrintHelper() {
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)
         styledText.setFontSize(12)
         styledText.newLine()
-        if (transactionCode == TransactionCode.SALE.type)
-            styledText.addTextToLine("SN: " + contentValues.getAsString(TransactionCol.Col_GUP_SN.name))
-        else if (transactionCode == TransactionCode.VOID.type)
+        if (transactionCode == TransactionCode.VOID.type)
             styledText.addTextToLine("SN: " + extraContentValues!!.getAsString(TransactionCol.Col_GUP_SN.name))
+        else
+            styledText.addTextToLine("SN: " + contentValues.getAsString(TransactionCol.Col_GUP_SN.name))
         styledText.addTextToLine("ONAY KODU: " + contentValues.getAsString(TransactionCol.Col_AuthCode.name), PrinterDefinitions.Alignment.Right)
         styledText.setFontSize(8)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
@@ -177,7 +186,7 @@ class PrintService:BasePrintHelper() {
         addTextToNewLine(styledText,"BU BELGEYİ SAKLAYINIZ", PrinterDefinitions.Alignment.Center, 8)
         styledText.newLine()
         styledText.printBitmap("ykb", 20)
-        styledText.addSpace(100)
+        styledText.addSpace(50)
         return styledText.toString()
     }
 

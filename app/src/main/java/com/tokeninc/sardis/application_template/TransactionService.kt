@@ -103,8 +103,8 @@ class TransactionService  {
                 content.put(TransactionCol.Col_Amount2.name,extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
                 content.put(TransactionCol.Col_Ext_RefundDateTime.name,extraContent.getAsString(ExtraKeys.TRAN_DATE.name))
             }
-            TransactionCode.INSTALLMENT_REFUND.type -> {
-                content.put(TransactionCol.Col_Amount2.name, extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt() )
+            TransactionCode.CASH_REFUND.type -> {
+                content.put(TransactionCol.Col_Amount2.name, extraContent!!.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt() )
             }
             else -> {
                 content.put(TransactionCol.Col_Amount2.name,0)

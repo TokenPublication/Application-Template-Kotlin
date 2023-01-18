@@ -30,7 +30,10 @@ class TransactionAdapter(private val transactionList: MutableList<ContentValues?
         val hb = holder.binding
         hb.textCardNo.text = StringHelper().MaskTheCardNo(transaction!!.getAsString(TransactionCol.Col_PAN.name))
         hb.textDate.text = transaction.getAsString(TransactionCol.Col_TranDate.name)
-        hb.textAmount.text = StringHelper().getAmount(transaction.getAsString(TransactionCol.Col_Amount.name).toInt())
+        if (transaction.getAsString(TransactionCol.Col_TransCode.name).toInt() == 4 || transaction.getAsString(TransactionCol.Col_TransCode.name).toInt() == 6)
+            hb.textAmount.text = StringHelper().getAmount(transaction.getAsString(TransactionCol.Col_Amount2.name).toInt())
+        else
+            hb.textAmount.text = StringHelper().getAmount(transaction.getAsString(TransactionCol.Col_Amount.name).toInt())
         hb.textApprovalCode.text = transaction.getAsString(TransactionCol.Col_AuthCode.name)
         hb.tvSN.text = transaction.getAsString(TransactionCol.Col_GUP_SN.name)
         holder.itemView.setOnClickListener {
