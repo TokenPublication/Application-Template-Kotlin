@@ -129,6 +129,7 @@ class RefundFragment : Fragment() {
         addInputAmount(inputList,extraContent)
         addInputRetAmount(inputList,extraContent)
         addInputTranDate(inputList,extraContent)
+        stringExtraContent.put(ExtraKeys.INST_COUNT.name, installmentCount)
         addFragment(inputList,getStrings(R.string.installment_refund))
     }
 
@@ -153,7 +154,8 @@ class RefundFragment : Fragment() {
     //TODO db instcount buna göre güncelle
     private fun showInstallments() { // TAKSİTLİ İADE
         val listener = MenuItemClickListener { menuItem: MenuItem? ->
-            installmentCount = 12
+            val itemName = menuItem!!.name.toString().split(" ")
+            installmentCount = itemName[0].toInt()
             showInstallmentRefundFragment()
         }
         val maxInst = 12

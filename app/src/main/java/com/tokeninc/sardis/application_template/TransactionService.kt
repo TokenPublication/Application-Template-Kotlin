@@ -68,7 +68,10 @@ class TransactionService  {
         onlineTransactionResponse.mHostLogKey = (0..99999999).random().toString()
         onlineTransactionResponse.mDisplayData = "Display Data"
         onlineTransactionResponse.mKeySequenceNumber = "3"
-        onlineTransactionResponse.insCount = 0
+        if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type)
+            onlineTransactionResponse.insCount = contentVal!!.getAsString(ExtraKeys.INST_COUNT.name).toInt()
+        else
+            onlineTransactionResponse.insCount = 0
         onlineTransactionResponse.instAmount = 0
         onlineTransactionResponse.dateTime = "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}"
         return onlineTransactionResponse
@@ -117,6 +120,7 @@ class TransactionService  {
         content.put(TransactionCol.Col_isPinByPass.name, isPinByPass)
         content.put(TransactionCol.Col_isOffline.name, isOffline)
         content.put(TransactionCol.Col_InstCnt.name, onlineTransactionResponse.insCount)
+        Log.d("Inst cnt","${onlineTransactionResponse.insCount}")
         content.put(TransactionCol.Col_InstAmount.name, onlineTransactionResponse.instAmount)
         content.put(TransactionCol.Col_TranDate.name, "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}")
         content.put(TransactionCol.Col_HostLogKey.name, onlineTransactionResponse.mHostLogKey)
