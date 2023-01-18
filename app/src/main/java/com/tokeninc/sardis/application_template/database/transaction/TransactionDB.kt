@@ -35,6 +35,7 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
 
     private fun initTransactionTable(db: SQLiteDatabase) {
         tblTransaction = LinkedHashMap()
+        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_GUP_SN.name] = "INTEGER NOT NULL UNIQUE"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Aid.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_AidLabel.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_AuthCode.name] = "TEXT"
@@ -50,11 +51,9 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_ReceiptNo.name] = "INTEGER NOT NULL"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Track2.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_TranDate.name] = "TEXT"
-        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_TranDate2.name] = "TEXT"
-        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_TransCode.name] = "TEXT"
+        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_TransCode.name] = "INTEGER DEFAULT 0"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_InstAmount.name] = "INTEGER DEFAULT 0"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_UUID.name] = "TEXT"
-        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_GUP_SN.name] = "INTEGER NOT NULL UNIQUE"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Amount.name] = "INTEGER"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Amount2.name] = "INTEGER"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_PAN.name] = "TEXT"
@@ -74,6 +73,10 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_AID2.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_UN.name] = "TEXT"
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_IAD.name] = "TEXT"
+        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_SID.name] = "TEXT"
+        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Ext_Conf.name] = "INTEGER DEFAULT 0"
+        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Ext_Ref.name] = "INTEGER DEFAULT 0"
+        (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_Ext_RefundDateTime.name] = "TEXT"
         DatabaseOperations.createTable(DatabaseInfo.TRANSACTIONTABLE,
             tblTransaction as LinkedHashMap<String, String>, db)
     }
@@ -123,12 +126,13 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         return rows
     }
 
-    fun setVoid(gupSN: Int, date: String?, cardReadType: Int, card: ICCCard): Int {
+    fun setVoid(gupSN: Int, date: String?, card: ICCCard): Int {
         val values = ContentValues()
         values.put(TransactionCol.Col_IsVoid.name, 1)
         values.put(TransactionCol.Col_VoidDateTime.name, date)
-        values.put(TransactionCol.Col_CardReadType.name, cardReadType)
         values.put(TransactionCol.Col_SID.name, card.SID)
         return DatabaseOperations.update(writableSQLite, DatabaseInfo.TRANSACTIONTABLE, TransactionCol.Col_GUP_SN.name + " = " + gupSN, values)
     }
+
+
 }

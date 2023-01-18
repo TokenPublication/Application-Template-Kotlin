@@ -5,5 +5,5 @@ enum class ExtraKeys() {
     REFUND_AMOUNT,
     TRAN_DATE,
     AUTH_CODE,
-    REF_NO
+    REF_NO;
 }

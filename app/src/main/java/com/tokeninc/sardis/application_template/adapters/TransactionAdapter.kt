@@ -31,8 +31,8 @@ class TransactionAdapter(private val transactionList: MutableList<ContentValues?
         hb.textCardNo.text = StringHelper().MaskTheCardNo(transaction!!.getAsString(TransactionCol.Col_PAN.name))
         hb.textDate.text = transaction.getAsString(TransactionCol.Col_TranDate.name)
         hb.textAmount.text = StringHelper().getAmount(transaction.getAsString(TransactionCol.Col_Amount.name).toInt())
-        hb.textApprovalCode.text = transaction.getAsString(TransactionCol.Col_TransCode.name)
-        hb.tvSN.text = transaction.getAsString(TransactionCol.Col_AuthCode.name)
+        hb.textApprovalCode.text = transaction.getAsString(TransactionCol.Col_AuthCode.name)
+        hb.tvSN.text = transaction.getAsString(TransactionCol.Col_GUP_SN.name)
         holder.itemView.setOnClickListener {
             postTxnFragment!!.voidOperation(transaction)
             Log.d("RecyclerView/onClick","ContentVal: ${transaction.toString()} ")

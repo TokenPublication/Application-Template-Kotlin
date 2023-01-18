@@ -30,7 +30,7 @@ class TransactionList : Fragment() {
         recyclerView.layoutManager =LinearLayoutManager(requireContext())
 
         viewModel!!.createLiveData() //in here list = getTransactionsByCardNo(cardNo)
-        viewModel!!.list.observe(viewLifecycleOwner) {
+        viewModel!!.list.observe(viewLifecycleOwner) { //TODO iadede iade tutarı değil org tutarı bastırıyor
             adapter = TransactionAdapter(it.toMutableList())
             adapter.postTxnFragment = postTxnFragment
             binding.adapter = adapter

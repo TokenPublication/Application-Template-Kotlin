@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
+import com.tokeninc.sardis.application_template.entities.ICCCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 
@@ -25,7 +26,7 @@ class TransactionViewModel(val database: TransactionDB): ViewModel() {
         database.deleteAll()
     }
 
-    private fun getTransactionsByCardNo(cardNo: String): List<ContentValues?> {
+    fun getTransactionsByCardNo(cardNo: String): List<ContentValues?> {
         return database.getTransactionsByCardNo(cardNo)
     }
 
@@ -39,5 +40,8 @@ class TransactionViewModel(val database: TransactionDB): ViewModel() {
         return list.value!!.toMutableList()
     }
 
+    fun setVoid(gupSN: Int, date: String?, card: ICCCard): Int {
+        return database.setVoid(gupSN, date, card)
+    }
 
 }

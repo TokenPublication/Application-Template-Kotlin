@@ -18,12 +18,13 @@ import java.util.*
 
 class PrintService:BasePrintHelper() {
 
+    //TODO installment ve cash refunda göre de düzenleme yap
     fun getFormattedText(slipType: SlipType, contentValues: ContentValues, extraContentValues: ContentValues?,onlineTransactionResponse: OnlineTransactionResponse,
-                         transactionCode: TransactionCode, context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
+                         transactionCode: Int, context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
         val mainActivity = context as MainActivity
-        if (transactionCode == TransactionCode.SALE){
+        if (transactionCode == TransactionCode.SALE.type){
             if (slipType === SlipType.CARDHOLDER_SLIP) {
                 if (!(context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.ECR.name) &&
                     !(context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.VUK507.name))  {
@@ -43,20 +44,20 @@ class PrintService:BasePrintHelper() {
             styledText.addTextToLine("İŞYERİ NÜSHASI", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
         }
-        if (transactionCode == TransactionCode.VOID)
+        if (transactionCode == TransactionCode.VOID.type)
             styledText.addTextToLine("SATIŞ İPTALİ", PrinterDefinitions.Alignment.Center)
-        if (transactionCode == TransactionCode.SALE)
+        if (transactionCode == TransactionCode.SALE.type)
             styledText.addTextToLine("SATIŞ", PrinterDefinitions.Alignment.Center)
-        if (transactionCode == TransactionCode.MATCHED_REFUND)
+        if (transactionCode == TransactionCode.MATCHED_REFUND.type)
             styledText.addTextToLine("E. İADE", PrinterDefinitions.Alignment.Center) //TODO do for other refunds
         val sdf = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
         val dateTime = sdf.format(Calendar.getInstance().time)
         var lineTime = ""
-        if (transactionCode == TransactionCode.VOID)
+        if (transactionCode == TransactionCode.VOID.type)
             lineTime = "$dateTime M OFFLINE"
-        if (transactionCode == TransactionCode.SALE)
+        if (transactionCode == TransactionCode.SALE.type)
             lineTime = "$dateTime C ONLINE"
-        if (transactionCode == TransactionCode.MATCHED_REFUND)
+        if (transactionCode == TransactionCode.MATCHED_REFUND.type)
             lineTime = "$dateTime M ONLINE"
         styledText.newLine()
         styledText.addTextToLine(lineTime, PrinterDefinitions.Alignment.Center )
@@ -74,17 +75,17 @@ class PrintService:BasePrintHelper() {
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.newLine()
         styledText.addTextToLine("TUTAR:")
-        if (transactionCode == TransactionCode.MATCHED_REFUND)
+        if (transactionCode == TransactionCode.MATCHED_REFUND.type)
             styledText.addTextToLine(stringHelper.getAmount(extraContentValues!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()), PrinterDefinitions.Alignment.Right)
         else //TODO diğer refundlar gelince yapı değişir
             styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCol.Col_Amount.name).toInt()), PrinterDefinitions.Alignment.Right)
         styledText.setLineSpacing(0.5f)
         styledText.setFontSize(10)
         styledText.newLine()
-        if (transactionCode == TransactionCode.VOID){
+        if (transactionCode == TransactionCode.VOID.type){
             styledText.addTextToLine("İPTAL EDİLMİŞTİR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
-            styledText.addTextToLine("= = = = = = = = = = = = = = = = = = = = = = = = = = =",PrinterDefinitions.Alignment.Center)
+            styledText.addTextToLine("===========================",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TEMASSIZ TAMAMLANMIŞTIR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
@@ -93,9 +94,11 @@ class PrintService:BasePrintHelper() {
                 styledText.newLine()
                 val signature = "İŞ YERİ İMZA: _ _ _ _ _ _ _ _ _ _ _ _ _ _"
                 styledText.addTextToLine(signature,PrinterDefinitions.Alignment.Center)
+                styledText.newLine()
+                styledText.addTextToLine("===========================",PrinterDefinitions.Alignment.Center)
             }
         }
-        if (transactionCode == TransactionCode.MATCHED_REFUND){
+        if (transactionCode == TransactionCode.MATCHED_REFUND.type){
             styledText.addTextToLine("MAL/HİZM İADE EDİLMİŞTİR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TARİHİ: ${extraContentValues!!.getAsString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
@@ -111,7 +114,7 @@ class PrintService:BasePrintHelper() {
                 styledText.addTextToLine(signature,PrinterDefinitions.Alignment.Center)
             }
         }
-        if (transactionCode == TransactionCode.SALE){
+        if (transactionCode == TransactionCode.SALE.type){
             if (slipType === SlipType.CARDHOLDER_SLIP) {
                 styledText.addTextToLine(
                     "KARŞILIĞI MAL/HİZM ALDIM",
@@ -129,7 +132,10 @@ class PrintService:BasePrintHelper() {
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)
         styledText.setFontSize(12)
         styledText.newLine()
-        styledText.addTextToLine("SN: " + contentValues.getAsString(TransactionCol.Col_GUP_SN.name))
+        if (transactionCode == TransactionCode.SALE.type)
+            styledText.addTextToLine("SN: " + contentValues.getAsString(TransactionCol.Col_GUP_SN.name))
+        else if (transactionCode == TransactionCode.VOID.type)
+            styledText.addTextToLine("SN: " + extraContentValues!!.getAsString(TransactionCol.Col_GUP_SN.name))
         styledText.addTextToLine("ONAY KODU: " + contentValues.getAsString(TransactionCol.Col_AuthCode.name), PrinterDefinitions.Alignment.Right)
         styledText.setFontSize(8)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
@@ -141,7 +147,7 @@ class PrintService:BasePrintHelper() {
         styledText.addTextToLine(contentValues.getAsString(TransactionCol.Col_AidLabel.name), PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.addTextToLine("Ver: 92.12.05")
-        if (transactionCode == TransactionCode.SALE){
+        if (transactionCode == TransactionCode.SALE.type){
             if (slipType === SlipType.MERCHANT_SLIP) {
                 addTextToNewLine(
                     styledText,

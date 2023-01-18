@@ -35,15 +35,12 @@ import java.util.*
 class RefundFragment : Fragment() {
     private var _binding: FragmentRefundBinding? = null
     private val binding get() = _binding!!
-
-    private var menuFragment: ListMenuFragment? = null
     var mainActivity: MainActivity? = null
     lateinit var card: ICCCard
     var transactionService: TransactionService? = null
     private var extraContent = ContentValues()  //at the end of every Refund we finish mainActivity so no need to delete it at everytime
     private var printService = PrintServiceBinding()
     private var stringExtraContent = ContentValues() //this is for switching customInput format type to string
-
 
     companion object{
         lateinit var inputTranDate: CustomInputFormat
@@ -78,24 +75,14 @@ class RefundFragment : Fragment() {
         return mainActivity!!.getString(resID)
     }
 
-    fun afterReadCard(mCard: ICCCard?, isMatched: Boolean, isInstallment: Boolean, isCash: Boolean){
+    fun afterReadCard(mCard: ICCCard?, transactionCode: Int){
+        mainActivity!!.transactionCode = 0
         card = mCard!!
-        mainActivity!!.isRefund = false
-        val transactionCode = transactionCode(isMatched,isInstallment,isCash)
         CoroutineScope(Dispatchers.Default).launch {
             val transactionResponse = transactionService!!.doInBackground(mainActivity!!,stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
-                    ,card, transactionCode,stringExtraContent,null,false,null,false)
+                    ,card, transactionCode, stringExtraContent,null,false,null,false)
             finishRefund(transactionResponse)
         }
-    }
-
-    private fun transactionCode(isMatched: Boolean, isInstallment: Boolean, isCash: Boolean):TransactionCode{
-        if(isMatched)
-            return TransactionCode.MATCHED_REFUND
-        if(isInstallment)
-            return TransactionCode.INSTALLMENT_REFUND
-        else
-            return TransactionCode.CASH_REFUND
     }
 
     private fun finishRefund(transactionResponse: TransactionResponse?){
@@ -138,6 +125,7 @@ class RefundFragment : Fragment() {
 
     private fun showInstallmentRefundFragment(){
         val inputList = mutableListOf<CustomInputFormat>()
+        mainActivity!!.transactionCode = TransactionCode.INSTALLMENT_REFUND.type
         addInputAmount(inputList,extraContent)
         addInputRetAmount(inputList,extraContent)
         addInputTranDate(inputList,extraContent)
@@ -145,6 +133,7 @@ class RefundFragment : Fragment() {
     }
 
     private fun showMatchedReturnFragment() { // EŞLENİKLİ İADE
+        mainActivity!!.transactionCode = TransactionCode.MATCHED_REFUND.type
         val inputList = mutableListOf<CustomInputFormat>()
         addInputAmount(inputList,extraContent)
         addInputRetAmount(inputList,extraContent)
@@ -155,11 +144,13 @@ class RefundFragment : Fragment() {
     }
 
     private fun showReturnFragment(){ // İADE
+        mainActivity!!.transactionCode = TransactionCode.CASH_REFUND.type
         val inputList: MutableList<CustomInputFormat> = mutableListOf()
         addInputAmount(inputList,extraContent)
         addFragment(inputList,getStrings(R.string.cash_refund))
     }
 
+    //TODO db instcount buna göre güncelle
     private fun showInstallments() { // TAKSİTLİ İADE
         val listener = MenuItemClickListener { menuItem: MenuItem? ->
             installmentCount = 12
@@ -195,20 +186,28 @@ class RefundFragment : Fragment() {
         val fragment = InputListFragment.newInstance(
             inputList, getStrings(R.string.refund)
         ){ list: List<String?>? ->
-            //TODO Eşlenikli için şimdilik sadece, hepsine uygun dinamik yap
-            stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name,list!![0])
-            stringExtraContent.put(ExtraKeys.REFUND_AMOUNT.name,list[1])
-            stringExtraContent.put(ExtraKeys.REF_NO.name,list[2])
-            stringExtraContent.put(ExtraKeys.AUTH_CODE.name,list[3])
-            stringExtraContent.put(ExtraKeys.TRAN_DATE.name,list[4])
-            mainActivity!!.isRefund = true
-            if (refundType == getStrings(R.string.matched_refund))
-                mainActivity!!.isMatchedRefund = true
-            if (refundType == getStrings(R.string.cash_refund))
-                mainActivity!!.isCashRefund = true
-            if (refundType == getStrings(R.string.installment_refund))
-                mainActivity!!.isInstallmentRefund = true
-            mainActivity!!.amount = stringExtraContent.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()
+            when (mainActivity!!.transactionCode) {
+                TransactionCode.MATCHED_REFUND.type -> {
+                    stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name,list!![0])
+                    stringExtraContent.put(ExtraKeys.REFUND_AMOUNT.name,list[1])
+                    stringExtraContent.put(ExtraKeys.REF_NO.name,list[2])
+                    stringExtraContent.put(ExtraKeys.AUTH_CODE.name,list[3])
+                    stringExtraContent.put(ExtraKeys.TRAN_DATE.name,list[4])
+                }
+                TransactionCode.INSTALLMENT_REFUND.type -> {
+                    stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name,list!![0])
+                    stringExtraContent.put(ExtraKeys.REFUND_AMOUNT.name,list[1])
+                    stringExtraContent.put(ExtraKeys.TRAN_DATE.name,list[2])
+                }
+                else -> {
+                    stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name, list!![0])
+                }
+            }
+            if (mainActivity!!.transactionCode == TransactionCode.CASH_REFUND.type){
+                mainActivity!!.amount = stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
+            } else{
+                mainActivity!!.amount = stringExtraContent.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()
+            }
             mainActivity!!.readCard()
         }
         mainActivity!!.addFragment(fragment)
@@ -249,12 +248,12 @@ class RefundFragment : Fragment() {
         inputRefNo = CustomInputFormat(
             getStrings(R.string.ref_no),
             EditTextInputType.Number,
-            10,
+            9,
             getStrings(R.string.ref_no_invalid_ten_digits)
         ) { customInputFormat: CustomInputFormat ->
             !isCurrentDay(inputTranDate.text) || isCurrentDay(
                 inputTranDate.text
-            ) && customInputFormat.text.length == 10
+            ) && customInputFormat.text.length == 9
         }
         extraContentValues.put(ExtraKeys.REF_NO.name, inputRefNo.toString())
         inputList.add(inputRefNo)
