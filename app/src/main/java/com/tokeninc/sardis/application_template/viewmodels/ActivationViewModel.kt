@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
-import com.tokeninc.sardis.application_template.MainActivity
+import com.tokeninc.sardis.application_template.ui.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import kotlinx.coroutines.Dispatchers
@@ -27,8 +27,12 @@ class ActivationViewModel(val database: ActivationDB):ViewModel() {
         return database.insertConnection(IP, port)
     }
 
-    fun insertActivation(terminalId: String?, merchantId: String?) {
-        database.insertActivation(terminalId,merchantId)
+    fun updateConnection(IP: String?, port: String?) {
+        database.updateConnection(IP, port)
+    }
+
+    fun updateActivation(terminalId: String?, merchantId: String?) {
+        database.updateActivation(terminalId,merchantId)
     }
 
     fun getMerchantId(): String?{

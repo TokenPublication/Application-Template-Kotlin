@@ -6,8 +6,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.PostTxnFragment
+import com.tokeninc.sardis.application_template.ui.PostTxnFragment
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding

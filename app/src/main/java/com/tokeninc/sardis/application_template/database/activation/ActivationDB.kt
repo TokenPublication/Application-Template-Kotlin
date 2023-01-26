@@ -52,12 +52,24 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
         return DatabaseOperations.insert(DatabaseInfo.ACTTABLE, writableSQLite!!, values)
     }
 
+    fun updateConnection(IP: String?, port: String?) {
+        val values = ContentValues()
+        values.put(ActivationCol.ColIPNo.name, IP)
+        values.put(ActivationCol.ColPortNo.name, port)
+        DatabaseOperations.update(writableSQLite!!, DatabaseInfo.ACTTABLE, null, values)
+    }
+    fun updateActivation(terminalId: String?, merchantId: String?) {
+        val values = ContentValues()
+        values.put(ActivationCol.ColTerminalId.name, terminalId)
+        values.put(ActivationCol.ColMerchantId.name, merchantId)
+        DatabaseOperations.update(writableSQLite!!, DatabaseInfo.ACTTABLE, null, values)
+        //DatabaseOperations.update(writableSQLite!!, DatabaseInfo.ACTTABLE, "1=1", values)
+    }
+
     private fun initHostSettings() {
         val count = try {
             DatabaseOperations.query(
-                readableSQLite!!,
-                "SELECT COUNT(*) FROM $" + DatabaseInfo.ACTTABLE
-            ).toInt()
+                readableSQLite!!, "SELECT COUNT(*) FROM " + DatabaseInfo.ACTTABLE).toInt()
         } catch (e:Exception) {
             0
         }
@@ -66,12 +78,7 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
         }
     }
 
-    fun insertActivation(terminalId: String?, merchantId: String?) {
-        val values = ContentValues()
-        values.put(ActivationCol.ColTerminalId.name, terminalId)
-        values.put(ActivationCol.ColMerchantId.name, merchantId)
-        DatabaseOperations.update(writableSQLite!!, DatabaseInfo.ACTTABLE, "1=1", values)
-    }
+
 
     fun getMerchantId(): String? {
         val query = "SELECT " + ActivationCol.ColMerchantId.name + " FROM " + DatabaseInfo.ACTTABLE + " LIMIT 1"

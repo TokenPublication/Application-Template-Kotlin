@@ -40,8 +40,8 @@ class TransactionViewModel(val database: TransactionDB): ViewModel() {
         return list.value!!.toMutableList()
     }
 
-    fun setVoid(gupSN: Int, date: String?, card: ICCCard): Int {
-        return database.setVoid(gupSN, date, card)
+    fun setVoid(gupSN: Int, date: String?, card: ICCCard): Boolean {
+        return database.setVoid(gupSN, date, card) == 1
     }
 
 }

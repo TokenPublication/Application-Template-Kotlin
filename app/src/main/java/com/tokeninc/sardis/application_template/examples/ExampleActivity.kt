@@ -4,7 +4,6 @@ import MenuItem
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
@@ -16,13 +15,12 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.deviceinfo.DeviceInfo
-import com.tokeninc.sardis.application_template.MainActivity
+import com.tokeninc.sardis.application_template.ui.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.examples.viewmodels.ExampleViewModel
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
-import java.lang.ref.WeakReference
 
 class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListener {
 
@@ -31,7 +29,7 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
     private var qrString = "QR Code Test"
     private val printService = PrintServiceBinding()
     private var menuItems = mutableListOf<IListMenuItem>()
-    var mainActivity: MainActivity? = null
+    lateinit var mainActivity: MainActivity
     private val viewModel = ExampleViewModel()
     lateinit var cardServiceBinding: CardServiceBinding
 
@@ -44,6 +42,10 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
         cardServiceBinding = CardServiceBinding(this, this)
         viewModel.list = menuItems
         viewModel.replaceFragment(this)
+    }
+
+    fun setter(mainActivity: MainActivity){
+        this.mainActivity = mainActivity
     }
 
     fun addFragment(fragment: Fragment)

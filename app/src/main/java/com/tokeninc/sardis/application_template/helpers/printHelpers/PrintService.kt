@@ -6,8 +6,8 @@ import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.AppTemp
-import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.OnlineTransactionResponse
+import com.tokeninc.sardis.application_template.ui.MainActivity
+import com.tokeninc.sardis.application_template.responses.OnlineTransactionResponse
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.SlipType
@@ -19,7 +19,7 @@ import java.util.*
 class PrintService:BasePrintHelper() {
 
     //TODO installment ve cash refunda göre de düzenleme yap
-    fun getFormattedText(slipType: SlipType, contentValues: ContentValues, extraContentValues: ContentValues?,onlineTransactionResponse: OnlineTransactionResponse,
+    fun getFormattedText(slipType: SlipType, contentValues: ContentValues, extraContentValues: ContentValues?, onlineTransactionResponse: OnlineTransactionResponse,
                          transactionCode: Int, context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
@@ -44,8 +44,17 @@ class PrintService:BasePrintHelper() {
             styledText.addTextToLine("İŞYERİ NÜSHASI", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
         }
-        if (transactionCode == TransactionCode.VOID.type)
-            styledText.addTextToLine("SATIŞ İPTALİ", PrinterDefinitions.Alignment.Center)
+        if (transactionCode == TransactionCode.VOID.type){
+            var transactionType = ""
+            when(contentValues.getAsString(TransactionCol.Col_TransCode.name).toInt()){
+                1 -> transactionType = "SATIŞ İPTALİ"
+                3 -> transactionType = "İPTAL İŞLEMİ"
+                4 -> transactionType = "E. İADE İPTALİ"
+                5 -> transactionType = "N. İADE İPTALİ"
+                6 -> transactionType = "T. İADE İPTALİ"
+            }
+            styledText.addTextToLine(transactionType, PrinterDefinitions.Alignment.Center)
+        }
         if (transactionCode == TransactionCode.SALE.type)
             styledText.addTextToLine("SATIŞ", PrinterDefinitions.Alignment.Center)
         if (transactionCode == TransactionCode.MATCHED_REFUND.type)

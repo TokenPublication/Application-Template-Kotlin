@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Application Template MVVM</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="Sale_Action">Sale_Action</string>
     <string name="Settings_Action">Settings_Action</string>
     <string name="Refund_Action">Refund_Action</string>
@@ -77,7 +76,6 @@
     <string name="rkl_loading">RKL Loading</string>
     <string name="rkl_loaded">RKL Loaded</string>
     <string name="key_block_loading">Key Block Loading</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

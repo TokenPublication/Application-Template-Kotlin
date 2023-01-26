@@ -105,6 +105,10 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         return selectTransaction("SELECT * FROM " + DatabaseInfo.TRANSACTIONTABLE + " WHERE " + TransactionCol.Col_PAN.name + "='" + cardNo + "' AND " + TransactionCol.Col_IsVoid.name + " <> '1' ORDER BY " + TransactionCol.Col_GUP_SN.name + " DESC")
     }
 
+    fun getTransactionsByRefNo(refNo: String): List<ContentValues?> {
+        return selectTransaction("SELECT * FROM " + DatabaseInfo.TRANSACTIONTABLE + " WHERE " + TransactionCol.Col_HostLogKey.name + "='" + refNo +"'")
+    }
+
     fun getAllTransactions(): List<ContentValues?> {
         return selectTransaction("SELECT * FROM " + DatabaseInfo.TRANSACTIONTABLE + " ORDER BY " + TransactionCol.Col_GUP_SN.name)
     }
@@ -131,7 +135,8 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         values.put(TransactionCol.Col_IsVoid.name, 1)
         values.put(TransactionCol.Col_VoidDateTime.name, date)
         values.put(TransactionCol.Col_SID.name, card.SID)
-        return DatabaseOperations.update(writableSQLite, DatabaseInfo.TRANSACTIONTABLE, TransactionCol.Col_GUP_SN.name + " = " + gupSN, values)
+        val retval = DatabaseOperations.update(writableSQLite, DatabaseInfo.TRANSACTIONTABLE, TransactionCol.Col_GUP_SN.name + " = " + gupSN, values)
+        return retval
     }
 
 
