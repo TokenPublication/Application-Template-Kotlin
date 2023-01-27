@@ -5,6 +5,9 @@ import com.token.printerlib.StyledString
 import com.tokeninc.sardis.application_template.ui.MainActivity
 import com.tokeninc.sardis.application_template.R
 
+/**
+ * This class includes styledText methods.
+ */
 open class BasePrintHelper {
 
     fun addText(styledText: StyledString, text: String?, alignment: PrinterDefinitions.Alignment?) {

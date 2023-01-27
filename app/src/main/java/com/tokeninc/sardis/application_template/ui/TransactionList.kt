@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template
+package com.tokeninc.sardis.application_template.ui
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -8,10 +8,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tokeninc.sardis.application_template.adapters.TransactionAdapter
 import com.tokeninc.sardis.application_template.databinding.ListTransactionBinding
-import com.tokeninc.sardis.application_template.ui.PostTxnFragment
 import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 
-
+/**
+ * This is the Fragment that holds all the Void transactions in recyclerView, transactions one by one are set in TransactionAdapter
+ */
 class TransactionList : Fragment() {
 
     private lateinit var adapter: TransactionAdapter
@@ -19,7 +20,9 @@ class TransactionList : Fragment() {
     var viewModel: TransactionViewModel? = null
     var postTxnFragment: PostTxnFragment? = null
 
-
+    /**
+     * Recycler view is prepared while view is creating.
+     */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

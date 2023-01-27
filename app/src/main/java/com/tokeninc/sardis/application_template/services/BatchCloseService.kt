@@ -14,6 +14,9 @@ import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * This is Batch Close Service, its aim is running batchClose and UI operations in parallel.
+ */
 class BatchCloseService {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
@@ -30,12 +33,15 @@ class BatchCloseService {
         this.slipDB = slipDB
     }
 
+    /** It runs functions in parallel while ui updating dynamically in main thread
+     * It also calls finishBatchClose functions in parallel in IO coroutine thread.
+     */
     suspend fun doInBackground(): BatchCloseResponse?{
 
         var batchCloseResponse: BatchCloseResponse? = null
-        var dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         coroutineScope.launch(Dispatchers.Main){
-            mainActivity!!.showDialog(dialog)
+            mainActivity.showDialog(dialog)
         }
 
         coroutineScope.launch {
@@ -57,24 +63,25 @@ class BatchCloseService {
         return batchCloseResponse
     }
 
-
-    private fun finishBatchClose(dialog: InfoDialog): BatchCloseResponse?{
-        val transactions = transactionViewModel!!.getAllTransactions()
+    /** It gets all transactions from transaction View Model, then makes up slip from printService.
+     * Lastly insert this slip to database, to print it again in next day. If it inserts it successfully, ui is updating
+     * with Success Message. Lastly, update Batch number and resets group number and delete all transactions from Transaction Table.
+     */
+    private fun finishBatchClose(dialog: InfoDialog): BatchCloseResponse{
+        val transactions = transactionViewModel.getAllTransactions()
 
         val printService = BatchClosePrintHelper()
         val printServiceBinding = PrintServiceBinding()
-        var slip = printService.batchText(batchDB!!.getBatchNo().toString(),transactions,mainActivity!!,false)
-
-        slip = printService.batchText(batchDB!!.getBatchNo().toString(),transactions,mainActivity!!,true)
+        val slip = printService.batchText(batchDB.getBatchNo().toString(),transactions,mainActivity,true)
         Log.d("Repetition",slip)
-        if (slipDB!!.insertSlip(slip)){
+        if (slipDB.insertSlip(slip)){
             coroutineScope.async(Dispatchers.Main) {
                 dialog.update(InfoDialog.InfoType.Confirmed, "Grup Kapama Başarılı")
             }
         }
         printServiceBinding.print(slip)
-        batchDB!!.updateBatchNo(batchDB!!.getBatchNo()!! + 1)
-        transactionViewModel!!.deleteAll()
+        batchDB.updateBatchNo(batchDB.getBatchNo()!! + 1)
+        transactionViewModel.deleteAll()
         return BatchCloseResponse(BatchResult.SUCCESS, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()))
     }
 

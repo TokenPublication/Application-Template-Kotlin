@@ -49,7 +49,9 @@ import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-
+/** This is the Main Activity class,
+ *  all operations are run here because this application is designed as a single-activity architecture
+ */
 class MainActivity : TimeOutActivity(), CardServiceListener {
 
 
@@ -180,7 +182,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
             }, 2000)
         } else{
             refundInfo = intent.extras!!.getString("RefundInfo")
-            val json = JSONObject(refundInfo)
+            val json = JSONObject(refundInfo!!)
             refNo = json.getString("RefNo")
             val batchNo = json.getInt("BatchNo")
             if (batchNo == batchDB!!.getBatchNo()){ //void
@@ -344,7 +346,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
             setConfig()
             setCLConfig()
             editor.putBoolean("FIRST_RUN",true)
-            editor.commit()
+            editor.apply()
         }
     }
 
@@ -362,7 +364,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                 total.append(line).append('\n')
                 line = r.readLine()
             }
-            val setConfigResult = cardServiceBinding!!.setEMVConfiguration(total.toString())
+            val setConfigResult = cardServiceBinding.setEMVConfiguration(total.toString())
             Toast.makeText(
                 applicationContext,
                 "setEMVConfiguration res=$setConfigResult",

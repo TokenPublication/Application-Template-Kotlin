@@ -3,6 +3,9 @@ package com.tokeninc.sardis.application_template.helpers
 import java.util.*
 import java.util.stream.IntStream.range
 
+/**
+ * This class is helper for printing some strings
+ */
 class StringHelper {
 
     fun getAmount(amount: Int): String? {
@@ -26,7 +29,9 @@ class StringHelper {
         return approvalCode
     }
 
-
+    /**
+     * It forms card number as **** **** **** 4321
+     */
     fun maskCardNumber(cardNo: String): String? {
         // 1234 **** **** 7890
         //val prefix = cardNo.substring(0, 4)
@@ -45,7 +50,9 @@ class StringHelper {
         return formatted.toString()
     }
 
-
+    /**
+     * It forms card Number as 1234 **** **** 4321
+     */
     fun MaskTheCardNo(cardNo: String): String? {
         // CREATE A MASKED CARD NO
         // First 6 and Last 4 digit is visible, others are masked with '*' Card No can be 16,17,18 Digits...

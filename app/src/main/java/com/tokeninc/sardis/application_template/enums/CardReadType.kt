@@ -1,5 +1,8 @@
 package com.tokeninc.sardis.application_template.enums
 
+/**
+ * This is enum class for holding types of cards.
+ */
 enum class CardReadType(val type: Int) {
     NONE(0),
     ICC(1),

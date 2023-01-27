@@ -9,7 +9,9 @@ import com.token.uicomponents.CustomInput.InputValidator
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.examples.viewmodels.CustomInputViewModel
 
-
+/** It can be deleted
+ * This fragment includes Custom Input List methods for example activity
+ */
 class CustomInputListFragment : Fragment(R.layout.fragment_custom_input_list) {
 
     var exampleActivity: ExampleActivity? = null

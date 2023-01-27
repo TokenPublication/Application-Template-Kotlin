@@ -1,5 +1,8 @@
 package com.tokeninc.sardis.application_template.enums
 
+/**
+ * This is enum class for holding types of Transaction.
+ */
 enum class TransactionCode(val type: Int) {
     SALE(1),
     INSTALLMENT_SALE(2),

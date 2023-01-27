@@ -11,6 +11,9 @@ import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/** This connects view with Models
+ * It is the interlayer between UI and Activation Table
+ */
 class ActivationViewModel(val database: ActivationDB):ViewModel() {
 
     var menuItemList = mutableListOf<IListMenuItem>()

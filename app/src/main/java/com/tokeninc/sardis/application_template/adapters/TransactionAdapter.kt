@@ -12,6 +12,9 @@ import com.tokeninc.sardis.application_template.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 
+/**
+ * This adapter arranges Void transactions one by one.
+ */
 class TransactionAdapter(private val transactionList: MutableList<ContentValues?>): RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
 
     inner class TransactionViewHolder(val binding: TransactionItemsBinding): RecyclerView.ViewHolder(binding.root)
@@ -24,6 +27,9 @@ class TransactionAdapter(private val transactionList: MutableList<ContentValues?
         return TransactionViewHolder(binding)
     }
 
+    /** In here their views are set
+     * If the user clicks one of those items, selected Void transaction are started to occur.
+     */
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
         val transaction = transactionList[position]
         val hb = holder.binding
@@ -37,7 +43,7 @@ class TransactionAdapter(private val transactionList: MutableList<ContentValues?
         hb.tvSN.text = transaction.getAsString(TransactionCol.Col_GUP_SN.name)
         holder.itemView.setOnClickListener {
             postTxnFragment!!.voidOperation(transaction)
-            Log.d("RecyclerView/onClick","ContentVal: ${transaction.toString()} ")
+            Log.d("RecyclerView/onClick","ContentVal: $transaction ")
         }
     }
 

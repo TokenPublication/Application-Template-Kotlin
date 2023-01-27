@@ -34,13 +34,17 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-
+/**
+ * This is the fragment for the Refund actions. Refund operation methods are defined here.
+ */
 class RefundFragment : Fragment() {
     private var _binding: FragmentRefundBinding? = null
     private val binding get() = _binding!!
-    var mainActivity: MainActivity? = null
-    lateinit var card: ICCCard
-    var transactionService: TransactionService? = null
+
+    private lateinit var mainActivity: MainActivity
+    private lateinit var transactionService: TransactionService
+
+    private lateinit var card: ICCCard
     private var extraContent = ContentValues()  //at the end of every Refund we finish mainActivity so no need to delete it at everytime
     private var printService = PrintServiceBinding()
     private var stringExtraContent = ContentValues() //this is for switching customInput format type to string
@@ -62,7 +66,7 @@ class RefundFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentRefundBinding.inflate(inflater,container,false)
         viewModel = ViewModelProvider(this)[RefundViewModel::class.java]
         return binding.root
@@ -77,31 +81,40 @@ class RefundFragment : Fragment() {
      * this function needs for getting string from activity otherwise it causes an error because we update UI in mainActivity
      */
     private fun getStrings(resID: Int): String{
-        return mainActivity!!.getString(resID)
+        return mainActivity.getString(resID)
     }
 
+    /**
+     * After reading card, refund transaction will be added Transaction table with this function in parallel.
+     */
     fun afterReadCard(mCard: ICCCard?, transactionCode: Int){
-        mainActivity!!.transactionCode = 0
+        mainActivity.transactionCode = 0
         card = mCard!!
         CoroutineScope(Dispatchers.Default).launch {
-            val transactionResponse = transactionService!!.doInBackground(mainActivity!!,stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
+            val transactionResponse = transactionService.doInBackground(mainActivity,stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
                     ,card, transactionCode, stringExtraContent,null,false,null,false)
             finishRefund(transactionResponse)
         }
     }
 
+    /**
+     * It finishes the refund via printing slip.
+     */
     private fun finishRefund(transactionResponse: TransactionResponse?){
         Log.d("TransactionResponse/Refund", transactionResponse!!.contentVal.toString())
         val printHelper = PrintService()
-        val customerSlip = printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity!!,1, 1,false)
-        val merchantSlip = printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity!!,1, 1,false)
+        val customerSlip = printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
+        val merchantSlip = printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         printService.print(customerSlip)
         printService.print(merchantSlip)
-        mainActivity!!.finish()
+        mainActivity.finish()
     }
 
+    /**
+     * It prepares list menu item and shows it to the screen.
+     */
     private fun showMenu(){ //recycler view gibi buna eklenebilir belki ? viewmodel
-        var menuItems = mutableListOf<IListMenuItem>()
+        val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.matched_refund), {
             showMatchedReturnFragment()
         }))
@@ -115,22 +128,17 @@ class RefundFragment : Fragment() {
             //showLoyaltyRefundFragment()
         }))
         viewModel.list = menuItems
-        viewModel.replaceFragment(mainActivity!!)
+        viewModel.replaceFragment(mainActivity)
     }
 
-    fun addFragment( fragment: Fragment)
-    {
-        parentFragmentManager.beginTransaction().apply {
-            replace(R.id.container,fragment) //replacing fragment
-            addToBackStack("RefundFragment")
-            commit() //call signals to the FragmentManager that all operations have been added to the transaction
-        }
-    }
-
-
+    /**
+     * It shows Installment Refund with preparing corresponding inputs and puts those inputs ->
+     * Original Amount && Return Amount && Transaction Date and also installment count
+     * to extraContent which will be sent to Transaction Service
+     */
     private fun showInstallmentRefundFragment(){
         val inputList = mutableListOf<CustomInputFormat>()
-        mainActivity!!.transactionCode = TransactionCode.INSTALLMENT_REFUND.type
+        mainActivity.transactionCode = TransactionCode.INSTALLMENT_REFUND.type
         addInputAmount(inputList,extraContent)
         addInputRetAmount(inputList,extraContent)
         addInputTranDate(inputList,extraContent)
@@ -138,8 +146,12 @@ class RefundFragment : Fragment() {
         addFragment(inputList,getStrings(R.string.installment_refund))
     }
 
+    /**
+     * It shows Matched Refund with preparing corresponding inputs similar to Installment Refund
+     * The only difference is it contains Reference Number and Authorization Code.
+     */
     private fun showMatchedReturnFragment() { // EŞLENİKLİ İADE
-        mainActivity!!.transactionCode = TransactionCode.MATCHED_REFUND.type
+        mainActivity.transactionCode = TransactionCode.MATCHED_REFUND.type
         val inputList = mutableListOf<CustomInputFormat>()
         addInputAmount(inputList,extraContent)
         addInputRetAmount(inputList,extraContent)
@@ -149,14 +161,19 @@ class RefundFragment : Fragment() {
         addFragment(inputList,getStrings(R.string.matched_refund))
     }
 
+    /**
+     * It is similar to other fragment, it only contains original amount.
+     */
     private fun showReturnFragment(){ // İADE
-        mainActivity!!.transactionCode = TransactionCode.CASH_REFUND.type
+        mainActivity.transactionCode = TransactionCode.CASH_REFUND.type
         val inputList: MutableList<CustomInputFormat> = mutableListOf()
         addInputAmount(inputList,extraContent)
         addFragment(inputList,getStrings(R.string.cash_refund))
     }
 
-    //TODO db instcount buna göre güncelle
+    /**
+     * It prepares a menu that contains 2 to 12 installment, Installment count updating with respect to clicked item
+     */
     private fun showInstallments() { // TAKSİTLİ İADE
         val listener = MenuItemClickListener { menuItem: MenuItem? ->
             val itemName = menuItem!!.name.toString().split(" ")
@@ -175,9 +192,12 @@ class RefundFragment : Fragment() {
             true,
             R.drawable.token_logo
         )
-       mainActivity!!.addFragment(instFragment as Fragment)
+       mainActivity.addFragment(instFragment as Fragment)
     }
 
+    /**
+     * This is for bank application, not used for now.
+     */
     private fun showLoyaltyRefundFragment(){
         val inputList: MutableList<CustomInputFormat> = mutableListOf()
         addInputAmount(inputList,extraContent)
@@ -187,14 +207,14 @@ class RefundFragment : Fragment() {
         addFragment(inputList,getStrings(R.string.loyalty_refund))
     }
 
-    /**
-     * Adds fragment with respect to inputlist and refund Type
+    /** It adds values to stringExtraContent to use it later. Then calls readCard operation.
+     *
      */
     private fun addFragment(inputList: MutableList<CustomInputFormat>, refundType: String){
         val fragment = InputListFragment.newInstance(
             inputList, getStrings(R.string.refund)
         ){ list: List<String?>? ->
-            when (mainActivity!!.transactionCode) {
+            when (mainActivity.transactionCode) {
                 TransactionCode.MATCHED_REFUND.type -> {
                     stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name,list!![0])
                     stringExtraContent.put(ExtraKeys.REFUND_AMOUNT.name,list[1])
@@ -211,16 +231,19 @@ class RefundFragment : Fragment() {
                     stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name, list!![0])
                 }
             }
-            if (mainActivity!!.transactionCode == TransactionCode.CASH_REFUND.type){
-                mainActivity!!.amount = stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
+            if (mainActivity.transactionCode == TransactionCode.CASH_REFUND.type){
+                mainActivity.amount = stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
             } else{
-                mainActivity!!.amount = stringExtraContent.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()
+                mainActivity.amount = stringExtraContent.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()
             }
-            mainActivity!!.readCard()
+            mainActivity.readCard()
         }
-        mainActivity!!.addFragment(fragment)
+        mainActivity.addFragment(fragment)
     }
 
+    /**
+     * This method is for creating input amount with respect to validator.
+     */
     private fun addInputAmount(inputList: MutableList<CustomInputFormat>,extraContentValues: ContentValues){
         inputOrgAmount = CustomInputFormat(
             getStrings(R.string.original_amount),
@@ -235,6 +258,10 @@ class RefundFragment : Fragment() {
         inputList.add(inputOrgAmount)
     }
 
+    /**
+     * This method is for creating input retun amount with respect to validator which checks whether that amount smaller than
+     * original amount or not.
+     */
     private fun addInputRetAmount(inputList: MutableList<CustomInputFormat>,extraContentValues: ContentValues){
         inputRetAmount = CustomInputFormat(
             getStrings(R.string.refund_amount),
@@ -250,6 +277,10 @@ class RefundFragment : Fragment() {
         inputList.add(inputRetAmount)
     }
 
+    /**
+     * This method is for creating input reference number with respect to validator which checks if reference number is not null
+     * (Refund from Gib) it compares whether reference numbers are matching else -> checks for 9 digits.
+     */
     private fun addInputRefNo(inputList: MutableList<CustomInputFormat>,extraContentValues: ContentValues){
         inputRefNo = CustomInputFormat(
             getStrings(R.string.ref_no),
@@ -263,6 +294,9 @@ class RefundFragment : Fragment() {
         inputList.add(inputRefNo)
     }
 
+    /**
+     * This method is for creating input authorization code respect to validator which checks whether there is 6 digits or not.
+     */
     private fun addInputAuthCode(inputList: MutableList<CustomInputFormat>,extraContentValues: ContentValues){
         inputAuthCode = CustomInputFormat(
             getStrings(R.string.confirmation_code),
@@ -274,6 +308,9 @@ class RefundFragment : Fragment() {
         inputList.add(inputAuthCode)
     }
 
+    /**
+     * This method is for creating input transaction date
+     */
     @SuppressLint("SimpleDateFormat")
     private fun addInputTranDate(inputList: MutableList<CustomInputFormat>,extraContentValues: ContentValues){
         inputTranDate = CustomInputFormat(getStrings(R.string.tran_date),
@@ -307,6 +344,14 @@ class RefundFragment : Fragment() {
     private fun getFormattedDate(dateText: String): String {
         val lst = dateText.split("/").toMutableList()
         return lst[0] + lst[1] + lst[2].substring(2)
+    }
+
+    /**
+     * This is for initializing some variables on that class, it is called from PostTxn
+     */
+    fun setter(mainActivity: MainActivity, transactionService: TransactionService){
+        this.mainActivity = mainActivity
+        this.transactionService = transactionService
     }
 
 }

@@ -16,6 +16,10 @@ import com.tokeninc.sardis.application_template.helpers.StringHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * This class forms slips with respect to type of Transaction, it can arrange slip for
+ * Sale, Void and all types of refund.
+ */
 class PrintService:BasePrintHelper() {
 
     //TODO installment ve cash refunda göre de düzenleme yap

@@ -2,6 +2,10 @@ package com.tokeninc.sardis.application_template.responses
 
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 
+
+/**
+ * This is a class for holding some data in a regular way.
+ */
 class OnlineTransactionResponse {
     var mResponseCode: ResponseCode? = null
     var mTextPrintCode1: String? = null

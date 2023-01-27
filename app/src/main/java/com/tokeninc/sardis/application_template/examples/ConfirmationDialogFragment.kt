@@ -11,7 +11,9 @@ import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.examples.viewmodels.ConfirmationDialogViewModel
 
-
+/** It can be deleted
+ * This fragment includes Confirmation Dialog methods for example activity
+ */
 class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialog), InfoDialogListener {
 
     private var menuItems = mutableListOf<IListMenuItem>()

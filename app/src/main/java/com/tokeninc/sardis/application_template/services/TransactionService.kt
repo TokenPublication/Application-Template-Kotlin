@@ -17,6 +17,9 @@ import com.tokeninc.sardis.application_template.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import kotlinx.coroutines.*
 
+/**
+ * This is the Transaction Service class, whose mission is to run processes concurrently.
+ */
 class TransactionService  {
 
     private lateinit var context: Context
@@ -33,13 +36,18 @@ class TransactionService  {
         this.transactionViewModel = transactionViewModel
     }
 
+    /** It runs functions in parallel while ui updating dynamically in main thread
+     * Additionally, in IO coroutine thread it parses the response and make it OnlineTransactionResponse
+     * then call Finish Transaction operation with that parameter.
+     * @param extraContent is null if it is sale, refund inputs if it is refund, the whole transaction if it is void type transaction.
+     */
     suspend fun doInBackground(context: Context, amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues,
                                onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean): TransactionResponse? {
         this.context = context
         var transactionResponse: TransactionResponse? = null
 
         coroutineScope.launch(Dispatchers.Main){
-            mainActivity!!.showDialog(dialog)
+            mainActivity.showDialog(dialog)
         }
 
         coroutineScope.launch {
@@ -54,7 +62,7 @@ class TransactionService  {
                 if (downloadNumber == 10){
                     val deferred = coroutineScope.async(Dispatchers.IO) {
                         val onlineTransactionResponse = parseResponse(card,extraContent,transactionCode)
-                        finishTransaction(context,amount, card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,onlineTransactionResponse!!, ResponseCode.SUCCESS)
+                        finishTransaction(context,amount, card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,onlineTransactionResponse, ResponseCode.SUCCESS)
                     }
                     transactionResponse = deferred.await()
                 }
@@ -63,7 +71,10 @@ class TransactionService  {
         return transactionResponse
     }
 
-    private fun parseResponse(card: ICCCard, contentVal: ContentValues?, transactionCode: Int): OnlineTransactionResponse?{
+    /**
+     * This is dummy, parsing response with respect to parameters.
+     */
+    private fun parseResponse(card: ICCCard, contentVal: ContentValues?, transactionCode: Int): OnlineTransactionResponse{
         val onlineTransactionResponse = OnlineTransactionResponse()
         onlineTransactionResponse.mResponseCode = ResponseCode.SUCCESS
         onlineTransactionResponse.mTextPrintCode1 = "Test Print 1"
@@ -81,14 +92,18 @@ class TransactionService  {
         return onlineTransactionResponse
     }
 
+    /** Add values to content with respect to parameters, then if it is Void update transaction as changing isVoid else ->
+     * insert that contents to Transaction table and update Group Serial Number of batch table.
+     * Update dialog with success message if database operations result without an error.
+     */
     private fun finishTransaction(context: Context, amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues?, onlinePin: String?,
-                                  isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse, responseCode: ResponseCode): TransactionResponse? {
+                                  isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse, responseCode: ResponseCode): TransactionResponse {
 
         val content = ContentValues()
         content.put(TransactionCol.Col_UUID.name, uuid)
-        content.put(TransactionCol.Col_BatchNo.name, batchDB!!.getBatchNo())
+        content.put(TransactionCol.Col_BatchNo.name, batchDB.getBatchNo())
         if (transactionCode != TransactionCode.VOID.type) {
-            content.put(TransactionCol.Col_GUP_SN.name, batchDB!!.updateGUPSN())
+            content.put(TransactionCol.Col_GUP_SN.name, batchDB.updateGUPSN())
         }
         content.put(TransactionCol.Col_ReceiptNo.name, 2) // TODO Check Receipt NO 1000TR
         content.put(TransactionCol.Col_CardReadType.name, card.mCardReadType)
@@ -151,10 +166,10 @@ class TransactionService  {
         var success = true
         if (responseCode == ResponseCode.SUCCESS){
             if (transactionCode == TransactionCode.VOID.type){
-                success = transactionViewModel!!.setVoid(extraContent!!.getAsString(TransactionCol.Col_GUP_SN.name).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card)
+                success = transactionViewModel.setVoid(extraContent!!.getAsString(TransactionCol.Col_GUP_SN.name).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card)
             }
             else if (transactionCode != 0){
-                success = transactionViewModel!!.insertTransaction(content)
+                success = transactionViewModel.insertTransaction(content)
                 Log.d("Service","Success: $success")
             }
         }

@@ -1,5 +1,8 @@
 package com.tokeninc.sardis.application_template.database
 
+/**
+ * This is for holding data in regular way.
+ */
 class DatabaseInfo {
     companion object {
         const val DATABASENAME: String = "APP_TEMP"

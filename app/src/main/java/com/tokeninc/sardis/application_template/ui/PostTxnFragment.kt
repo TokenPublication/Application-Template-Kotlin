@@ -15,7 +15,6 @@ import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.TransactionList
 import com.tokeninc.sardis.application_template.database.slip.SlipDB
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
@@ -34,7 +33,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * This is the class for Post Transaction Methods.
+ */
 class PostTxnFragment : Fragment() {
+
     private var _binding: FragmentPostTxnBinding? = null
     private val binding get() = _binding!!
     var card: ICCCard? = null
@@ -58,6 +61,9 @@ class PostTxnFragment : Fragment() {
         showMenu()
     }
 
+    /**
+     * This is for initializing some variables on that class, it is called from mainActivity before this class is called
+     */
     fun setter(mainActivity: MainActivity, transactionViewModel: TransactionViewModel, transactionService: TransactionService,
     refundFragment: RefundFragment, batchCloseService: BatchCloseService, slipDB: SlipDB){
         this.mainActivity = mainActivity
@@ -68,10 +74,9 @@ class PostTxnFragment : Fragment() {
         this.slipDB = slipDB
     }
 
-    private fun getStrings(resID: Int): String{
-        return mainActivity.getString(resID)
-    }
-
+    /**
+     * This function prepares the Post Transactions Menu that contains Void, Refund, Batch Close, Examples and Slip Repetition
+     */
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
@@ -114,6 +119,9 @@ class PostTxnFragment : Fragment() {
         viewModel.replaceFragment(mainActivity)
     }
 
+    /**
+     * It starts batch close with batch close service which runs parallel with Coroutine
+     */
     fun startBatchClose() {
         CoroutineScope(Dispatchers.Default).launch {
             val batchResponse = batchCloseService.doInBackground()
@@ -121,16 +129,25 @@ class PostTxnFragment : Fragment() {
         }
     }
 
+    /**
+     * It finishes the batch close operation with finishing mainActivity.
+     */
     private fun finishBatchClose(batchCloseResponse: BatchCloseResponse){
         Log.d("finishBatch","${batchCloseResponse.batchResult}")
         mainActivity.finish()
     }
 
+    /**
+     * It starts the refund fragment with initializing variables.
+     */
     fun startRefundFragment(){
-        refundFragment.mainActivity = mainActivity
-        refundFragment.transactionService = transactionService
+        refundFragment.setter(mainActivity,transactionService)
     }
 
+    /** After reading a card, this function is called only for Void operations.
+     * If there was no operation with that card, it warns the user. Else ->
+     * It shows transactions that has been operated with that card with recyclerview.
+     */
     fun cardNumberReceived(mCard: ICCCard?){
         mainActivity.transactionCode = 0
         if (transactionViewModel.getTransactionsByCardNo(mCard!!.mCardNumber.toString()).isEmpty()){
@@ -150,6 +167,9 @@ class PostTxnFragment : Fragment() {
         }
     }
 
+    /**
+     * It starts void operation in parallel
+     */
     fun voidOperation(transaction: ContentValues?){
         CoroutineScope(Dispatchers.Default).launch {
             val transactionResponse = transactionService.doInBackground(mainActivity, transaction!!.getAsString(TransactionCol.Col_Amount.name).toInt(),
@@ -159,6 +179,9 @@ class PostTxnFragment : Fragment() {
         }
     }
 
+    /**
+     * It finishes the void operation via printing slip with respect to achieved data and finish the mainActivity
+     */
     private fun finishVoid(transactionResponse: TransactionResponse) {
         Log.d("TransactionResponse/PostTxn", transactionResponse.contentVal.toString())
         val printService = PrintService()
@@ -167,5 +190,12 @@ class PostTxnFragment : Fragment() {
         this.printService.print(customerSlip)
         this.printService.print(merchantSlip)
         mainActivity.finish()
+    }
+
+    /**
+     * Fragment couldn't use getString from res > values > strings, therefore this method call that string from mainActivity.
+     */
+    private fun getStrings(resID: Int): String{
+        return mainActivity.getString(resID)
     }
 }

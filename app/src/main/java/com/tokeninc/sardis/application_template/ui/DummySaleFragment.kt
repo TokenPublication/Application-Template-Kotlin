@@ -218,6 +218,9 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
         }
     }
 
+    /** @return refundInfo which is Json with necessary components
+     *
+     */
     private fun getRefundInfo(transactionResponse: TransactionResponse): String {
         val json = JSONObject()
         val transaction = transactionResponse.contentVal
@@ -243,6 +246,9 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
         return json.toString()
     }
 
+    /**
+     * This is a dummy response, it is doing nothing its only mission is to show how to simulate buttons for now.
+     */
     private fun prepareDummyResponse (code: ResponseCode){
 
         var paymentType = PaymentTypes.CREDITCARD.type
@@ -262,7 +268,7 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
         //with respect to its type
         val spinner = binding.spinner
         if (code == ResponseCode.SUCCESS) {
-            val text: String = spinner.getSelectedItem().toString()
+            val text: String = spinner.selectedItem.toString()
             if (text == valueOf(PaymentTypes.TRQRCREDITCARD))
                 paymentType = PaymentTypes.TRQRCREDITCARD.type
             else if (text == valueOf(PaymentTypes.TRQRFAST))
@@ -275,53 +281,7 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
                 paymentType = PaymentTypes.OTHER.type
         }
 
-        onSaleResponseRetrieved(amount, code, true, slipType, "1234 **** **** 7890",
-            "OWNER NAME", paymentType)
-    }
-
-    /**
-     * This methods for preventing some errors
-     * Because we operate in fragment, its bundle and intents aren't be same as activities
-     * Therefore we get those objects from activity.
-     */
-
-    //TODO Data has to be returned to Payment Gateway after sale operation completed via template
-    // below using actual data.
-    private fun onSaleResponseRetrieved(price: Int, code: ResponseCode, hasSlip: Boolean, slipType: SlipType, cardNo: String, ownerName: String, paymentType: Int){
-        bundle.putInt("ResponseCode", code.ordinal)
-        bundle.putString("CardOwner", cardOwner) // Optional
-        bundle.putString("CardNumber", cardNumber) // Optional, Card No can be masked
-        bundle.putInt("PaymentStatus", 0) // #2 Payment Status
-        bundle.putInt("Amount", price) // #3 Amount
-        bundle.putInt("Amount2", price)
-        bundle.putBoolean("IsSlip", hasSlip)
-
-        //bundle.putInt("BatchNo", databaseHelper.getBatchNo())
-
-        bundle.putString("CardNo", StringHelper().maskCardNumber(cardNumber))
-
-        //bundle.putString("MID", databaseHelper.getMerchantId()); //#6 Merchant ID
-        //bundle.putString("TID", databaseHelper.getTerminalId()); //#7 Terminal ID
-        //bundle.putInt("TxnNo", databaseHelper.getTxNo());
-        bundle.putInt("SlipType", slipType.value)
-
-        //bundle.putString("RefundInfo", getRefundInfo(ResponseCode.SUCCESS))
-        //bundle.putString("RefNo", String.valueOf(databaseHelper.getSaleID()))
-        bundle.putInt("PaymentType", paymentType)
-
-        /*
-        if (slipType == SlipType.CARDHOLDER_SLIP || slipType == SlipType.BOTH_SLIPS) {
-            bundle.putString("customerSlipData", SalePrintHelper.getFormattedText(getSampleReceipt(cardNo, ownerName), SlipType.CARDHOLDER_SLIP, this, 1, 2));
-            //  bundle.putByteArray("customerSlipBitmapData",PrintHelper.getBitmap(getApplicationContext()));
-        }
-        if (slipType == SlipType.MERCHANT_SLIP || slipType == SlipType.BOTH_SLIPS) {
-            bundle.putString("merchantSlipData", SalePrintHelper.getFormattedText(getSampleReceipt(cardNo, ownerName), SlipType.MERCHANT_SLIP, this, 1, 2));
-            //  bundle.putByteArray("merchantSlipBitmapData",PrintHelper.getBitmap(getApplicationContext()));
-        }
-         */
-        //bundle.putString("ApprovalCode", getApprovalCode())
-        intent.putExtras(bundle)
-        mainActivity.dummySetResult(intent)
+        //onSaleResponseRetrieved(amount, code, true, slipType, "1234 **** **** 7890", "OWNER NAME", paymentType)
     }
 
     override fun onDestroy() {
@@ -329,6 +289,9 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
         _binding = null
     }
 
+    /**
+     * Fragment couldn't use getString from res > values > strings, therefore this method call that string from mainActivity.
+     */
     private fun getStrings(resID: Int): String{
         return mainActivity.getString(resID)
     }

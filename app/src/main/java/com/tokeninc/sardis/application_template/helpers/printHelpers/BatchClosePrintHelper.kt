@@ -8,6 +8,9 @@ import com.tokeninc.sardis.application_template.ui.MainActivity
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 
+/**
+ * This class constructs Batch Close slip.
+ */
 class BatchClosePrintHelper(): BasePrintHelper() {
 
     fun batchText(batch_no: String, transactions: List<ContentValues?>, mainActivity: MainActivity, isCopy: Boolean): String {

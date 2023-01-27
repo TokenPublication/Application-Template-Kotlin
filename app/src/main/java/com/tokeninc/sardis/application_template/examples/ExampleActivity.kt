@@ -22,6 +22,10 @@ import com.tokeninc.sardis.application_template.helpers.StringHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 
+/**
+ * This is the class for showing how to simulate examples on this device to developers
+ * This package can be deleted by the developer.
+ */
 class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListener {
 
     private val timeOut = 60
