@@ -11,7 +11,9 @@ import com.token.uicomponents.infodialog.InfoDialog.InfoType
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.examples.viewmodels.InfoDialogViewModel
 
-
+/** It can be deleted
+ * This fragment includes Info Dialog methods for example activity
+ */
 class InfoDialogFragment : Fragment(R.layout.fragment_info_dialog) {
 
     var exampleActivity: ExampleActivity? = null

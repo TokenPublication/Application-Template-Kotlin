@@ -6,6 +6,9 @@ import com.token.printerlib.IPrinterService
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
+/**
+ * This class is for printing slips.
+ */
 class PrintServiceBinding() {
     private var printerService: IPrinterService? = null
     private var runnable: Runnable? = null

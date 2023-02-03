@@ -4,11 +4,13 @@ import android.content.ContentValues
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
-import com.tokeninc.sardis.application_template.MainActivity
+import com.tokeninc.sardis.application_template.ui.MainActivity
 import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
-import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 
+/**
+ * This class constructs Batch Close slip.
+ */
 class BatchClosePrintHelper(): BasePrintHelper() {
 
     fun batchText(batch_no: String, transactions: List<ContentValues?>, mainActivity: MainActivity, isCopy: Boolean): String {
@@ -37,7 +39,17 @@ class BatchClosePrintHelper(): BasePrintHelper() {
         addTextToNewLine(styledText,"PEŞİN İŞLEMLER",PrinterDefinitions.Alignment.Left)
         transactions.forEach {
             addTextToNewLine(styledText,it!!.getAsString(TransactionCol.Col_TranDate.name),PrinterDefinitions.Alignment.Left)
-            addText(styledText,"SATIŞ "+it.getAsString(TransactionCol.Col_GUP_SN.name), PrinterDefinitions.Alignment.Right)
+            var transactionType = ""
+            when(it.getAsString(TransactionCol.Col_TransCode.name).toInt()){
+                1 -> transactionType = "SATIŞ "
+                4 -> transactionType = "E. İADE "
+                5 -> transactionType = "N. İADE "
+                6 -> transactionType = "T. İADE "
+            }
+            if (it.getAsString(TransactionCol.Col_IsVoid.name).toInt() == 1){
+                transactionType = "İPTAL "  //TODO punto küçültüp += yap
+            }
+            addText(styledText,transactionType+it.getAsString(TransactionCol.Col_GUP_SN.name), PrinterDefinitions.Alignment.Right)
             addTextToNewLine(styledText,stringHelper.MaskTheCardNo(it.getAsString(TransactionCol.Col_PAN.name)),PrinterDefinitions.Alignment.Left)
             addText(styledText,it.getAsString(TransactionCol.Col_ExpDate.name),PrinterDefinitions.Alignment.Right)
             addTextToNewLine(styledText,it.getAsString(TransactionCol.Col_HostLogKey.name),PrinterDefinitions.Alignment.Left)

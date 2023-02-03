@@ -10,9 +10,11 @@ import com.tokeninc.sardis.application_template.entities.ICCCard
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * This is a class that holds Transaction Table's operations. It is inherited from Database Helper.
+ */
 class TransactionDB(context: Context?) : DatabaseHelper(context) {
 
-    //TODO initte hata olduğundan çalıştırmıyor sorunu çözmeye çalış
     private var tblTransaction: Map<String, String>? = null
     private var sDatabaseHelper: TransactionDB? = null
 
@@ -25,6 +27,9 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         return DatabaseInfo.TRANSACTIONTABLE
     }
 
+    /**
+     * If tables hasn't been created before, now it is created.
+     */
     fun getInstance(context: Context?): TransactionDB? {
         if (sDatabaseHelper == null) {
             sDatabaseHelper = TransactionDB(context)
@@ -33,6 +38,9 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         return sDatabaseHelper
     }
 
+    /** Initializing table for creating.
+     * All of its columns are created here with their types.
+     */
     private fun initTransactionTable(db: SQLiteDatabase) {
         tblTransaction = LinkedHashMap()
         (tblTransaction as LinkedHashMap<String, String>)[TransactionCol.Col_GUP_SN.name] = "INTEGER NOT NULL UNIQUE"
@@ -81,6 +89,9 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
             tblTransaction as LinkedHashMap<String, String>, db)
     }
 
+    /**
+     * Inserting transaction with DatabaseHelper's method.
+     */
     fun insertTransaction(contentValues: ContentValues?): Boolean {
         return insert(contentValues)
     }
@@ -89,6 +100,9 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         DatabaseOperations.update(writableSQLite!!, DatabaseInfo.TRANSACTIONTABLE, "1=1", values)
     }
 
+    /**
+     * Deleting all transactions in the table for batch close operation.
+     */
     fun deleteAll(){
         DatabaseOperations.deleteAllRecords(DatabaseInfo.TRANSACTIONTABLE, writableSQLite!!)
     }
@@ -101,14 +115,30 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         return DatabaseOperations.query(readableSQLite!!, query)
     }
 
+    /**
+     * It is getting transactions with given card Number for Void operation.
+     */
     fun getTransactionsByCardNo(cardNo: String): List<ContentValues?> {
         return selectTransaction("SELECT * FROM " + DatabaseInfo.TRANSACTIONTABLE + " WHERE " + TransactionCol.Col_PAN.name + "='" + cardNo + "' AND " + TransactionCol.Col_IsVoid.name + " <> '1' ORDER BY " + TransactionCol.Col_GUP_SN.name + " DESC")
     }
 
+    /**
+     * It is getting transactions with given Reference number for Refund operation
+     */
+    fun getTransactionsByRefNo(refNo: String): List<ContentValues?> {
+        return selectTransaction("SELECT * FROM " + DatabaseInfo.TRANSACTIONTABLE + " WHERE " + TransactionCol.Col_HostLogKey.name + "='" + refNo +"'")
+    }
+
+    /**
+     * It gets all transactions for batch close operation.
+     */
     fun getAllTransactions(): List<ContentValues?> {
         return selectTransaction("SELECT * FROM " + DatabaseInfo.TRANSACTIONTABLE + " ORDER BY " + TransactionCol.Col_GUP_SN.name)
     }
 
+    /**
+     * It selects a transaction from database with a given query.
+     */
     private fun selectTransaction(queryStr: String): List<ContentValues> {
         val cursor = readableSQLite!!.rawQuery(queryStr, null)
         val rows: MutableList<ContentValues> = ArrayList()
@@ -126,12 +156,16 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
         return rows
     }
 
+    /**
+     * It is for Void operation, it updates the sale transaction with void parameters.
+     */
     fun setVoid(gupSN: Int, date: String?, card: ICCCard): Int {
         val values = ContentValues()
         values.put(TransactionCol.Col_IsVoid.name, 1)
         values.put(TransactionCol.Col_VoidDateTime.name, date)
         values.put(TransactionCol.Col_SID.name, card.SID)
-        return DatabaseOperations.update(writableSQLite, DatabaseInfo.TRANSACTIONTABLE, TransactionCol.Col_GUP_SN.name + " = " + gupSN, values)
+        val retval = DatabaseOperations.update(writableSQLite, DatabaseInfo.TRANSACTIONTABLE, TransactionCol.Col_GUP_SN.name + " = " + gupSN, values)
+        return retval
     }
 
 

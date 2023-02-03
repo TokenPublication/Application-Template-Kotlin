@@ -6,9 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context=".DummySaleFragment">
-
-    <!-- TODO: Update blank fragment layout -->
+    tools:context=".ui.DummySaleFragment">
 
     <FrameLayout
         android:id="@+id/container"

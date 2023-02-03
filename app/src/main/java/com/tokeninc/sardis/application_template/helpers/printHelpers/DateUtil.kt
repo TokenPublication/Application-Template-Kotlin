@@ -3,6 +3,9 @@ package com.tokeninc.sardis.application_template.helpers.printHelpers
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * This class is for date functions
+ */
 class DateUtil {
 
     fun getDate(format: String?): String? {

@@ -10,6 +10,9 @@ import com.tokeninc.sardis.application_template.entities.ICCCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 
+/** This connects view with Models
+ * It is the interlayer between UI and Transaction Table
+ */
 class TransactionViewModel(val database: TransactionDB): ViewModel() {
 
     val list = MutableLiveData<List<ContentValues?>>()
@@ -34,14 +37,16 @@ class TransactionViewModel(val database: TransactionDB): ViewModel() {
         return database.getAllTransactions()
     }
 
-
+    /**
+     * It is for getting transactions with card number from database for recycler view on Void Operations.
+     */
     fun createLiveData(): MutableList<ContentValues?> {
         list.value = getTransactionsByCardNo(cardNumber!!)
         return list.value!!.toMutableList()
     }
 
-    fun setVoid(gupSN: Int, date: String?, card: ICCCard): Int {
-        return database.setVoid(gupSN, date, card)
+    fun setVoid(gupSN: Int, date: String?, card: ICCCard): Boolean {
+        return database.setVoid(gupSN, date, card) == 1
     }
 
 }

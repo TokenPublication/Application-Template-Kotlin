@@ -7,15 +7,18 @@ import com.tokeninc.sardis.application_template.database.DatabaseHelper
 import com.tokeninc.sardis.application_template.database.DatabaseInfo
 import com.tokeninc.sardis.application_template.database.DatabaseOperations
 
+/**
+ * This is a class that holds methods of Batch Table, it is inherited from DatabaseHelper
+ */
 class BatchDB(context: Context?) : DatabaseHelper(context) {
 
 
-    //TODO batch bastırılınca numara artıyor sonraki satışta tekrar 1 oluyor
-    // TID MID null gelmesiyle bunun ana sebebi aynı olmalı updatelerimizde bir sıkıntı var bence
-    // O yüzden deleteAll diyip insert yapmak daha mı mantıklı acaba, insertümüz doğru çünkü en azından?
     private var sDatabaseHelper: BatchDB? = null
     private var tblBatch: Map<String, String>? = null
 
+    /**
+     * Initializing the table
+     */
     private fun initBatchTable(db: SQLiteDatabase) {
         tblBatch = LinkedHashMap()
         (tblBatch as HashMap<String, String>)[BatchCol.col_ulGUP_SN.name] = "INTEGER DEFAULT 0"
@@ -43,6 +46,9 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
         }
     }
 
+    /**
+     * If table is empty initialize values via insertBatch() function
+     */
     private fun initBatch() {
         val count = try {
             DatabaseOperations.query(readableSQLite!!,"SELECT COUNT(*) FROM " + DatabaseInfo.BATCHTABLE).toInt()
@@ -54,6 +60,9 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
         }
     }
 
+    /**
+     * When table is empty it is called for initializing batch number as 1 and group serial number as 0 with deleting all records.
+     */
     private fun insertBatch(): Boolean {
         val values = ContentValues()
         values.put(BatchCol.col_ulGUP_SN.name, 0)
@@ -62,6 +71,9 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
         return DatabaseOperations.insert(DatabaseInfo.BATCHTABLE, writableSQLite!!, values)
     }
 
+    /**
+     * It is updating Group Serial number as increasing 1.
+     */
     fun updateGUPSN(): Int {
         var sn = getGUPSN()!!
         val v = ContentValues()
@@ -78,6 +90,9 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
         return sn
     }
 
+    /**
+     * It reset group serial number as 0 for the times when batch is closing.
+     */
     private fun resetGUPSN() {
         val v = ContentValues()
         v.put(BatchCol.col_ulGUP_SN.name, 0)
@@ -85,12 +100,18 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
     }
 
 
+    /**
+     * Getting group serial number
+     */
     fun getGUPSN(): Int? {
         val query = "SELECT " + BatchCol.col_ulGUP_SN.name + " FROM " + DatabaseInfo.BATCHTABLE + " LIMIT 1"
         val sn = DatabaseOperations.query(readableSQLite!!, query)
         return if (sn == null) null else Integer.valueOf(sn)
     }
 
+    /**
+     * Updating batch number by increasing 1 for after batch closing
+     */
     fun updateBatchNo(batchNo: Int) {
         val v = ContentValues()
         v.put(BatchCol.col_batchNo.name, batchNo)
@@ -98,6 +119,9 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
         resetGUPSN()
     }
 
+    /**
+     * Getting batch number
+     */
     fun getBatchNo(): Int? {
         val query = "SELECT " + BatchCol.col_batchNo.name + " FROM " + DatabaseInfo.BATCHTABLE + " LIMIT 1"
         val no = DatabaseOperations.query(readableSQLite!!, query)

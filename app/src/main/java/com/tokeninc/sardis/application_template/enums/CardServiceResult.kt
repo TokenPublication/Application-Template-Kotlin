@@ -1,5 +1,8 @@
 package com.tokeninc.sardis.application_template.enums
 
+/**
+ * This is enum class for holding results of card services.
+ */
 enum class CardServiceResult(private val value: Int) {
     SUCCESS(0),
     USER_CANCELLED(1),

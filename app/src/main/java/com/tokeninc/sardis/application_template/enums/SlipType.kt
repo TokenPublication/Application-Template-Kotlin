@@ -1,5 +1,8 @@
 package com.tokeninc.sardis.application_template.enums
 
+/**
+ * This is enum class for holding types of slip.
+ */
 enum class SlipType(val value: Int) {
     NO_SLIP(0),
     MERCHANT_SLIP(1),

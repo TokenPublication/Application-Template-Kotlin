@@ -7,6 +7,9 @@ import com.tokeninc.sardis.application_template.database.DatabaseHelper
 import com.tokeninc.sardis.application_template.database.DatabaseInfo
 import com.tokeninc.sardis.application_template.database.DatabaseOperations
 
+/**
+ * This class includes methods of Activation table, it inherits from databaseHelper.
+ */
 class ActivationDB(context: Context?) : DatabaseHelper(context) {
 
     private var sDatabaseHelper: ActivationDB? = null
@@ -15,6 +18,9 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
     private val port = "1000"
 
 
+    /**
+     * Setting columns of table
+     */
     private fun initActivationTable(db: SQLiteDatabase) {
         tblActivation = LinkedHashMap()
         (tblActivation as LinkedHashMap<String, String>)[ActivationCol.ColTerminalId.name] = "TEXT"
@@ -44,20 +50,45 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
         }
     }
 
+    /**
+     * Inserting connection with IP and port.
+     */
     fun insertConnection(IP: String?, port: String?): Boolean {
         val values = ContentValues()
         values.put(ActivationCol.ColIPNo.name, IP)
         values.put(ActivationCol.ColPortNo.name, port)
-        DatabaseOperations.deleteAllRecords(DatabaseInfo.ACTTABLE, writableSQLite!!) //TODO BARIS anlık kaydediyor sonra siliniyor
+        DatabaseOperations.deleteAllRecords(DatabaseInfo.ACTTABLE, writableSQLite!!)
         return DatabaseOperations.insert(DatabaseInfo.ACTTABLE, writableSQLite!!, values)
     }
 
+    /**
+     * Updating IP and Port numbers from settings menu > Host settings.
+     */
+    fun updateConnection(IP: String?, port: String?) {
+        val values = ContentValues()
+        values.put(ActivationCol.ColIPNo.name, IP)
+        values.put(ActivationCol.ColPortNo.name, port)
+        DatabaseOperations.update(writableSQLite!!, DatabaseInfo.ACTTABLE, null, values)
+    }
+
+    /**
+     * Updating Activation with both terminal and merchant ID from setting menu > TID MID fragment
+     */
+    fun updateActivation(terminalId: String?, merchantId: String?) {
+        val values = ContentValues()
+        values.put(ActivationCol.ColTerminalId.name, terminalId)
+        values.put(ActivationCol.ColMerchantId.name, merchantId)
+        DatabaseOperations.update(writableSQLite!!, DatabaseInfo.ACTTABLE, null, values)
+        //DatabaseOperations.update(writableSQLite!!, DatabaseInfo.ACTTABLE, "1=1", values)
+    }
+
+    /**
+     * If table is empty, it automatically gives ip and port number as a default values.
+     */
     private fun initHostSettings() {
         val count = try {
             DatabaseOperations.query(
-                readableSQLite!!,
-                "SELECT COUNT(*) FROM $" + DatabaseInfo.ACTTABLE
-            ).toInt()
+                readableSQLite!!, "SELECT COUNT(*) FROM " + DatabaseInfo.ACTTABLE).toInt()
         } catch (e:Exception) {
             0
         }
@@ -66,12 +97,7 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
         }
     }
 
-    fun insertActivation(terminalId: String?, merchantId: String?) {
-        val values = ContentValues()
-        values.put(ActivationCol.ColTerminalId.name, terminalId)
-        values.put(ActivationCol.ColMerchantId.name, merchantId)
-        DatabaseOperations.update(writableSQLite!!, DatabaseInfo.ACTTABLE, "1=1", values)
-    }
+
 
     fun getMerchantId(): String? {
         val query = "SELECT " + ActivationCol.ColMerchantId.name + " FROM " + DatabaseInfo.ACTTABLE + " LIMIT 1"

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".TextFragment">
+    tools:context=".ui.TextFragment">
 
     <TextView
         android:id="@+id/tvActionName"

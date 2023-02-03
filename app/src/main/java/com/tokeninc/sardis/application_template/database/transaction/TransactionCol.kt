@@ -1,5 +1,8 @@
 package com.tokeninc.sardis.application_template.database.transaction
 
+/**
+ * This is an enum class for holding names of Transaction Table's columns
+ */
 enum class TransactionCol {
     Col_UUID,
     Col_GUP_SN,

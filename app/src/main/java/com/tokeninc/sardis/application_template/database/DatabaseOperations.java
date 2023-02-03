@@ -77,7 +77,7 @@ public class DatabaseOperations {
 
     public static boolean insert(String tableName, SQLiteDatabase sqLiteDatabase, ContentValues contentValues){
         long rowId = sqLiteDatabase.insert(tableName, null, contentValues);
-        return rowId != -1; // -1 geliyordu o yüzden buna döndürdü
+        return rowId != -1; // -1 geliyordu o yüzden buna döndürdü 1 geldi ilkinde
     }
 
     public static boolean replace(String tableName, SQLiteDatabase sqLiteDatabase, ContentValues contentValues){

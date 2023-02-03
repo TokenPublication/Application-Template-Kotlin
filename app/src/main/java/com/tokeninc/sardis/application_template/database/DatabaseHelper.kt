@@ -9,6 +9,9 @@ import org.jetbrains.annotations.Nullable
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * This an abstract class for helping other Database Table classes. It includes some methods that implementing all the tables.
+ */
 abstract class DatabaseHelper(@Nullable context: Context?) : SQLiteOpenHelper(context, DatabaseInfo.DATABASENAME, null, DatabaseInfo.DATABASEVERSION) {
 
     protected var writableSQLite: SQLiteDatabase? = writableDatabase

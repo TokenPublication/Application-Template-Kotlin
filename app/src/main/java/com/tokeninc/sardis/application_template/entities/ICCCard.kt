@@ -2,6 +2,9 @@ package com.tokeninc.sardis.application_template.entities
 
 import com.tokeninc.sardis.application_template.enums.CardServiceResult
 
+/**
+ * This is a class for keeping ICC card data.
+ */
 class ICCCard {
     var resultCode = CardServiceResult.USER_CANCELLED.resultCode()
     var mCardReadType = 0

@@ -4,6 +4,9 @@ import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 
+/**
+ * This class is for printing some default prints
+ */
 class PrintHelper: BasePrintHelper() {
 
     val dateUtil = DateUtil()
