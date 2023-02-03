@@ -180,17 +180,17 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
      * This intent ensures IPC between application and GiB.
      */
     private fun finishSale(transactionResponse: TransactionResponse){
-        Log.d("Transaction/Response","${transactionResponse.contentVal}")
+        Log.d("Transaction/Response","responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
 
         val responseCode = transactionResponse.responseCode
         if (responseCode == ResponseCode.SUCCESS){
-            bundle.putInt("ResponseCode", responseCode.ordinal)
+            bundle.putInt("ResponseCode", responseCode.ordinal) //TODO bunu diğerlerinde de yap
             bundle.putInt("PaymentStatus", 0) // #2 Payment Status
             bundle.putInt("Amount", amount ) // #3 Amount
             bundle.putInt("Amount2", 0)
             bundle.putBoolean("IsSlip", true)
             bundle.putInt("BatchNo", batchDB.getBatchNo()!!)
-            bundle.putString("CardNo", StringHelper().maskCardNumber(card!!.mCardNumber!!))
+            bundle.putString("CardNo", StringHelper().maskCardForBundle(card!!.mCardNumber!!))
             bundle.putString("MID", activationViewModel.getMerchantId())
             bundle.putString("TID", activationViewModel.getTerminalId())
             bundle.putInt("TxnNo",batchDB.getGUPSN()!!)
@@ -214,7 +214,7 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
             }
             bundle.putInt("SlipType", slipType.value) //TODO fail receipt yap
             intent.putExtras(bundle)
-            mainActivity.dummySetResult(intent)
+            mainActivity.setResult(intent)
         }
     }
 
@@ -233,12 +233,16 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
             json.put("TranDate", transaction.getAsString(TransactionCol.Col_TranDate.name))
             json.put("MID",activationViewModel.getMerchantId())
             json.put("TID",activationViewModel.getTerminalId())
-            json.put("CardNo",StringHelper().maskCardNumber(card!!.mCardNumber!!))
+            json.put("CardNo",card!!.mCardNumber!!)
             if (transaction.getAsInteger(TransactionCol.Col_InstCnt.name) != null && transaction.getAsInteger(TransactionCol.Col_InstCnt.name) > 0) {
-                val installment = JSONObject()
-                installment.put("InstCount", transaction.getAsInteger(TransactionCol.Col_InstCnt.name))
-                installment.put("InstAmount", transaction.getAsInteger(TransactionCol.Col_InstAmount.name))
-                json.put("Installment", installment)
+                //val installment = JSONObject()
+                json.put("InstCount", transaction.getAsInteger(TransactionCol.Col_InstCnt.name))
+                json.put("InstAmount", transaction.getAsInteger(TransactionCol.Col_InstAmount.name))
+                //json.put("Installment", installment)
+            }
+            else{
+                json.put("InstCount", 0)
+                json.put("InstAmount", 0)
             }
         } catch (e: JSONException) {
             e.printStackTrace()

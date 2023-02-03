@@ -9,5 +9,6 @@ enum class ExtraKeys() {
     TRAN_DATE,
     AUTH_CODE,
     REF_NO,
-    INST_COUNT;
+    INST_COUNT,
+    CARD_NO;
 }

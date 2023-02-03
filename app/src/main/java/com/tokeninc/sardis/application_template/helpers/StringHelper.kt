@@ -54,9 +54,6 @@ class StringHelper {
      * It forms card Number as 1234 **** **** 4321
      */
     fun MaskTheCardNo(cardNo: String): String? {
-        // CREATE A MASKED CARD NO
-        // First 6 and Last 4 digit is visible, others are masked with '*' Card No can be 16,17,18 Digits...
-        // 123456******0987
         val CardNoFirstFour = cardNo.substring(0, 4)
         val CardNoLastFour = cardNo.substring(cardNo.length - 4)
         val masked = StringBuilder(CardNoFirstFour)
@@ -67,6 +64,21 @@ class StringHelper {
         }
         masked.append(" ")
         masked.append(CardNoLastFour)
+        val formatted = StringBuilder(masked)
+        return formatted.toString()
+    }
+
+    /**
+     * It forms card number as 12345678****9876 for bundle
+     */
+    fun maskCardForBundle(cardNo: String): String{
+        val first = cardNo.substring(0, 8)
+        val last = cardNo.substring(cardNo.length - 4)
+        val masked = StringBuilder(first)
+        for (i in 8 .. cardNo.length - 5) {
+            masked.append("*")
+        }
+        masked.append(last)
         val formatted = StringBuilder(masked)
         return formatted.toString()
     }

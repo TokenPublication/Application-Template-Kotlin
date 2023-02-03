@@ -2,6 +2,7 @@ package com.tokeninc.sardis.application_template.ui
 
 import MenuItem
 import android.content.ContentValues
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -130,11 +131,16 @@ class PostTxnFragment : Fragment() {
     }
 
     /**
-     * It finishes the batch close operation with finishing mainActivity.
+     * It finishes the batch close operation with passing the response code as a result to mainActivity and finishing mainActivity.
      */
     private fun finishBatchClose(batchCloseResponse: BatchCloseResponse){
         Log.d("finishBatch","${batchCloseResponse.batchResult}")
-        mainActivity.finish()
+        val responseCode = batchCloseResponse.batchResult
+        val intent = Intent()
+        val bundle = Bundle()
+        bundle.putInt("ResponseCode", responseCode.ordinal)
+        intent.putExtras(bundle)
+        mainActivity.setResult(intent)
     }
 
     /**
@@ -180,16 +186,22 @@ class PostTxnFragment : Fragment() {
     }
 
     /**
-     * It finishes the void operation via printing slip with respect to achieved data and finish the mainActivity
+     * It finishes the void operation via printing slip with respect to achieved data and
+     * passes the response code as a result to mainActivity and finishes void transaction.
      */
     private fun finishVoid(transactionResponse: TransactionResponse) {
-        Log.d("TransactionResponse/PostTxn", transactionResponse.contentVal.toString())
+        Log.d("TransactionResponse/PostTxn", "responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
         val printService = PrintService()
         val customerSlip = printService.getFormattedText(SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         val merchantSlip = printService.getFormattedText(SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         this.printService.print(customerSlip)
         this.printService.print(merchantSlip)
-        mainActivity.finish()
+        val responseCode = transactionResponse.responseCode
+        val intent = Intent()
+        val bundle = Bundle()
+        bundle.putInt("ResponseCode", responseCode.ordinal)
+        intent.putExtras(bundle)
+        mainActivity.setResult(intent)
     }
 
     /**

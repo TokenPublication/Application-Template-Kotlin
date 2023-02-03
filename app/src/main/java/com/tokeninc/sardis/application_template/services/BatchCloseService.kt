@@ -74,7 +74,9 @@ class BatchCloseService {
         val printServiceBinding = PrintServiceBinding()
         val slip = printService.batchText(batchDB.getBatchNo().toString(),transactions,mainActivity,true)
         Log.d("Repetition",slip)
+        var batchResult = BatchResult.ERROR
         if (slipDB.insertSlip(slip)){
+            batchResult = BatchResult.SUCCESS
             coroutineScope.async(Dispatchers.Main) {
                 dialog.update(InfoDialog.InfoType.Confirmed, "Grup Kapama Başarılı")
             }
@@ -82,7 +84,7 @@ class BatchCloseService {
         printServiceBinding.print(slip)
         batchDB.updateBatchNo(batchDB.getBatchNo()!! + 1)
         transactionViewModel.deleteAll()
-        return BatchCloseResponse(BatchResult.SUCCESS, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()))
+        return BatchCloseResponse(batchResult, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()))
     }
 
 }

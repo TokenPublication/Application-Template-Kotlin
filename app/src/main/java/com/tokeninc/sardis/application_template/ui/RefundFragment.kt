@@ -3,6 +3,7 @@ package com.tokeninc.sardis.application_template.ui
 import MenuItem
 import android.annotation.SuppressLint
 import android.content.ContentValues
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -87,27 +88,35 @@ class RefundFragment : Fragment() {
     /**
      * After reading card, refund transaction will be added Transaction table with this function in parallel.
      */
-    fun afterReadCard(mCard: ICCCard?, transactionCode: Int){
+    fun afterReadCard(mCard: ICCCard?, transactionCode: Int, mExtraContent: ContentValues?){
+        if (mExtraContent != null){
+            stringExtraContent = mExtraContent
+        }
         mainActivity.transactionCode = 0
         card = mCard!!
         CoroutineScope(Dispatchers.Default).launch {
             val transactionResponse = transactionService.doInBackground(mainActivity,stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
                     ,card, transactionCode, stringExtraContent,null,false,null,false)
-            finishRefund(transactionResponse)
+            finishRefund(transactionResponse!!)
         }
     }
 
     /**
-     * It finishes the refund via printing slip.
+     * It passes the response code as a result to mainActivity and finishes the refund via printing slip.
      */
-    private fun finishRefund(transactionResponse: TransactionResponse?){
-        Log.d("TransactionResponse/Refund", transactionResponse!!.contentVal.toString())
+    private fun finishRefund(transactionResponse: TransactionResponse){
+        Log.d("TransactionResponse/Refund", "responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
         val printHelper = PrintService()
         val customerSlip = printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         val merchantSlip = printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         printService.print(customerSlip)
         printService.print(merchantSlip)
-        mainActivity.finish()
+        val responseCode = transactionResponse.responseCode
+        val intent = Intent()
+        val bundle = Bundle()
+        bundle.putInt("ResponseCode", responseCode.ordinal)
+        intent.putExtras(bundle)
+        mainActivity.setResult(intent)
     }
 
     /**
@@ -259,7 +268,7 @@ class RefundFragment : Fragment() {
     }
 
     /**
-     * This method is for creating input retun amount with respect to validator which checks whether that amount smaller than
+     * This method is for creating input return amount with respect to validator which checks whether that amount smaller than
      * original amount or not.
      */
     private fun addInputRetAmount(inputList: MutableList<CustomInputFormat>,extraContentValues: ContentValues){
@@ -288,7 +297,7 @@ class RefundFragment : Fragment() {
             9,
             getStrings(R.string.ref_no_invalid_ten_digits)
         ) { customInputFormat: CustomInputFormat ->
-            if (refNo == null) customInputFormat.text.length == 9 else refNo == customInputFormat.text
+            customInputFormat.text.length == 9
         }
         extraContentValues.put(ExtraKeys.REF_NO.name, inputRefNo.toString())
         inputList.add(inputRefNo)

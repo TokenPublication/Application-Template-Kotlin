@@ -62,7 +62,7 @@ class TransactionService  {
                 if (downloadNumber == 10){
                     val deferred = coroutineScope.async(Dispatchers.IO) {
                         val onlineTransactionResponse = parseResponse(card,extraContent,transactionCode)
-                        finishTransaction(context,amount, card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,onlineTransactionResponse, ResponseCode.SUCCESS)
+                        finishTransaction(context,amount, card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,onlineTransactionResponse)
                     }
                     transactionResponse = deferred.await()
                 }
@@ -97,7 +97,7 @@ class TransactionService  {
      * Update dialog with success message if database operations result without an error.
      */
     private fun finishTransaction(context: Context, amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues?, onlinePin: String?,
-                                  isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse, responseCode: ResponseCode): TransactionResponse {
+                                  isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse): TransactionResponse {
 
         val content = ContentValues()
         content.put(TransactionCol.Col_UUID.name, uuid)
@@ -163,23 +163,24 @@ class TransactionService  {
         content.put(TransactionCol.Col_IAD.name, card.IAD)
         content.put(TransactionCol.Col_SID.name, card.SID)
         Log.d("Service","Transaction Code: $transactionCode")
-        var success = true
-        if (responseCode == ResponseCode.SUCCESS){
-            if (transactionCode == TransactionCode.VOID.type){
-                success = transactionViewModel.setVoid(extraContent!!.getAsString(TransactionCol.Col_GUP_SN.name).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card)
-            }
-            else if (transactionCode != 0){
-                success = transactionViewModel.insertTransaction(content)
-                Log.d("Service","Success: $success")
-            }
+        var success = false
+        var responseCode = ResponseCode.ERROR
+        if (transactionCode == TransactionCode.VOID.type){
+            success = transactionViewModel.setVoid(extraContent!!.getAsString(TransactionCol.Col_GUP_SN.name).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card)
+        }
+        else if (transactionCode != 0){
+            success = transactionViewModel.insertTransaction(content)
+            Log.d("Service","Success: $success")
         }
 
         if (success) {
+            responseCode = ResponseCode.SUCCESS
             coroutineScope.async(Dispatchers.Main) {
                 dialog.update(InfoDialog.InfoType.Confirmed, "İşlem Tamamlandı")
             }
             return TransactionResponse(responseCode, onlineTransactionResponse, content, extraContent, transactionCode)
         } // TODO: Detailed response will be implemented
+
         return TransactionResponse(responseCode, onlineTransactionResponse, content, extraContent, transactionCode)
         //return null // TODO: if error DB insert, return error...
     }

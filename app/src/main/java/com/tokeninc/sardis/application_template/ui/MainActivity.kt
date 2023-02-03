@@ -1,7 +1,6 @@
 package com.tokeninc.sardis.application_template.ui
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -22,8 +21,6 @@ import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
-import com.tokeninc.deviceinfo.DeviceInfo
-import com.tokeninc.deviceinfo.DeviceInfo.DeviceInfoBankParamsSetterHandler
 import com.tokeninc.sardis.application_template.*
 import com.tokeninc.sardis.application_template.database.activation.ActivationDB
 import com.tokeninc.sardis.application_template.database.batch.BatchDB
@@ -32,11 +29,8 @@ import com.tokeninc.sardis.application_template.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
-import com.tokeninc.sardis.application_template.enums.CardReadType
-import com.tokeninc.sardis.application_template.enums.CardServiceResult
-import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.examples.ExampleActivity
-import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import com.tokeninc.sardis.application_template.services.BatchCloseService
 import com.tokeninc.sardis.application_template.services.TransactionService
 import com.tokeninc.sardis.application_template.viewmodels.ActivationVMFactory
@@ -48,6 +42,8 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.text.SimpleDateFormat
+import java.util.*
 
 /** This is the Main Activity class,
  *  all operations are run here because this application is designed as a single-activity architecture
@@ -59,12 +55,11 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     var amount: Int = 0 //this is for holding amount
     //initializing bindings
     private lateinit var cardServiceBinding: CardServiceBinding
-    private var printService = PrintServiceBinding()
     //initializing databases
-    var actDB: ActivationDB? = null
+    private var actDB: ActivationDB? = null
     private var transactionDB: TransactionDB? = null
     private var batchDB: BatchDB? = null
-    var slipDB: SlipDB? = null //TODO no need to database just append string to batch database
+    private var slipDB: SlipDB? = null //TODO no need to database just append string to batch database
     //initializing viewModels
     private lateinit var transactionViewModel: TransactionViewModel
     lateinit var activationViewModel: ActivationViewModel
@@ -80,9 +75,12 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
 
     //initializing other variables
     var transactionCode: Int = 0
-    var fromGib = false
+    private var autoTransaction = false
+    private var gibSale = false
     private var refundInfo: String? = null
     private var refNo: String? = null
+
+    private var extraContents : ContentValues? = null
 
     /**
      * This function is overwritten to continue the activity where it was left when
@@ -119,6 +117,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
         textFragment.mainActivity = this
 
+        /*
         //this is for preventing some errors while using Gib with Postman
         val deviceInfo: DeviceInfo = DeviceInfo(this)
         deviceInfo.setBankParams(DeviceInfoBankParamsSetterHandler{ var1 ->
@@ -129,6 +128,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
             }
             deviceInfo.unbind()
         }, "12345", "12345678")
+         */
 
         actionChanged(intent.action)
     }
@@ -143,20 +143,27 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                 replaceFragment(postTxnFragment)
             }
             getString(R.string.Sale_Action) ->  {
-                startDummySaleFragment(dummySaleFragment)
                 transactionCode = TransactionCode.SALE.type
+                startDummySaleFragment(dummySaleFragment)
+                if (intent.extras != null){
+                    val cardReadType = intent.extras!!.getInt("CardReadType")
+                    if(cardReadType == CardReadType.ICC.type){
+                        gibSale = true
+                        readCard()
+                    } else{
+                        replaceFragment(dummySaleFragment)
+                    }
+                } else{
+                    replaceFragment(dummySaleFragment)
+                }
             }
             getString(R.string.Settings_Action) ->  startSettingsFragment(settingsFragment)
             getString(R.string.BatchClose_Action) ->  {
                 if (transactionViewModel.getAllTransactions().isEmpty()){ //if it is empty just show no transaction dialog
-                    val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning,getString(R.string.batch_empty),false)
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        infoDialog!!.dismiss()
-                    }, 2000)
+                    callbackMessage(ResponseCode.ERROR)
                 }else{ //else implementing batch closing and finish that activity
                     startPostTxnFragment(postTxnFragment)
                     postTxnFragment.startBatchClose()
-                    finish()
                 }
 
             }
@@ -169,6 +176,11 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         }
     }
 
+    //batchclose biterken ui güncelleyince 2 kez geri basınca düz ui geliyor
+    //refundda da 2 kez geri basmak lazım cancelled için ?
+    //voidde kart okuturken tutar çıkmıyor doğru mu ?
+
+
     /** This function only calls whenever Refund Action is received.
      * If there is no RefundInfo on current intent, it will show info dialog with No Refund Intent for 2 seconds.
      * else -> it transforms refundInfo to JSON object to parse it easily. Then get ReferenceNo and BatchNo
@@ -176,25 +188,39 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      * else start refund operation. */
     private fun refundActionReceived(){
         if (intent.extras == null || intent.extras!!.getString("RefundInfo") == null){
-            val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning,"No Refund Intent",true)
-            Handler(Looper.getMainLooper()).postDelayed({
-                infoDialog!!.dismiss()
-            }, 2000)
+            callbackMessage(ResponseCode.ERROR)
         } else{
+            autoTransaction = true
             refundInfo = intent.extras!!.getString("RefundInfo")
             val json = JSONObject(refundInfo!!)
             refNo = json.getString("RefNo")
+            val refAmount = json.getString("Amount")
+            amount = refAmount.toInt()
             val batchNo = json.getInt("BatchNo")
             if (batchNo == batchDB!!.getBatchNo()){ //void
-                fromGib = true
                 transactionCode = TransactionCode.VOID.type
                 readCard()
             } else{
                 postTxnFragment.startRefundFragment()
-                val amount = json.getString("Amount") //TODO original amountu buna göre yaz
-                refundFragment.amount = amount.toInt()
-                refundFragment.refNo = refNo
-                addFragment(refundFragment)
+                val authCode = json.getString("AuthCode")
+                val installmentCount = json.getString("InstCount")
+                val tranDate = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
+                val cardNo = json.getString("CardNo")
+                extraContents = ContentValues()
+                extraContents!!.put(ExtraKeys.ORG_AMOUNT.name, refAmount.toString())
+                extraContents!!.put(ExtraKeys.REFUND_AMOUNT.name, refAmount.toString())
+                extraContents!!.put(ExtraKeys.TRAN_DATE.name, tranDate.toString())
+                extraContents!!.put(ExtraKeys.REF_NO.name,refNo)
+                extraContents!!.put(ExtraKeys.AUTH_CODE.name,authCode)
+                extraContents!!.put(ExtraKeys.CARD_NO.name,cardNo)
+                if (installmentCount.toInt() > 0){
+                    transactionCode = TransactionCode.INSTALLMENT_REFUND.type
+                    extraContents!!.put(ExtraKeys.INST_COUNT.name, installmentCount)
+                }
+                else{
+                    transactionCode = TransactionCode.MATCHED_REFUND.type
+                }
+                readCard()
             }
         }
     }
@@ -241,9 +267,8 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      * Then replace that fragment to current view.
      */
     private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
-        amount = intent.extras!!.getInt("Amount") //TODO burada çekiyoruz amountu öyle çekeceğiz diğer dataları da
+        amount = intent.extras!!.getInt("Amount")
         dummySaleFragment.setter(this, bundleOf(),Intent(),activationViewModel,batchDB!!, transactionService,amount)
-        replaceFragment(dummySaleFragment)
     }
 
     /**
@@ -255,11 +280,11 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     }
 
     /**
-     * This is for dummySaleFragmen's onSaleResponseRetrieved method
-     * Because we use setResult method on Activities, we call this method in there.
+     * This method is for showing callBack message, it finishes the activity with given intent.
+     * The activity needs to be finished else Postman surmises transaction is continuing and Transaction couldn't end.
      */
-    fun dummySetResult(resultIntent: Intent){
-        setResult(Activity.RESULT_OK, resultIntent)
+    fun setResult(resultIntent: Intent){
+        setResult(RESULT_OK, resultIntent) //responseCode yeterli
         finish()
     }
 
@@ -295,10 +320,6 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      */
     override fun getTimeOutSec(): Int {
         return 60
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     /** This adds fragments to the back stack, in this way user can return this fragment after the view has been changed.
@@ -406,8 +427,10 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         try {
             obj.put("forceOnline", 0)
             obj.put("zeroAmount", 1)
-            obj.put("showAmount", if (transactionCode == TransactionCode.VOID.type) 0 else 1)
+            obj.put("showAmount", if (transactionCode == TransactionCode.VOID.type) 0 else 1) //amountu göstermiyor voidse
             obj.put("partialEMV", 1)
+            if (gibSale)
+                obj.put("showCardScreen", 0)
             // TODO Developer: Check from Allowed Operations Parameter
             val isManEntryAllowed = true
             val isCVVAskedOnMoto = true
@@ -420,12 +443,11 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         } catch (e: JSONException) {
             e.printStackTrace()
         }
-        cardServiceBinding = CardServiceBinding(this ,this )
-        runBlocking(Dispatchers.IO) {
-            GlobalScope.launch(Dispatchers.IO){
-                cardServiceBinding.getCard(amount, 30, obj.toString())
-            }.join()
-        }
+        //runBlocking(Dispatchers.IO) {
+            //GlobalScope.launch(Dispatchers.IO){
+        cardServiceBinding.getCard(amount, 30, obj.toString())
+            //}.join()
+       // }
 
     }
 
@@ -447,8 +469,16 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     override fun onCardDataReceived(cardData: String?) {
         try {
             val json = JSONObject(cardData!!)
-            val type = json.getInt("mCardReadType")
             var card: ICCCard = Gson().fromJson(cardData, ICCCard::class.java)
+            if (card.resultCode == CardServiceResult.USER_CANCELLED.resultCode()) { //if user pressed back button in GiB operation
+                Log.d("CardDataReceived","Card Result Code: User Cancelled")
+                callbackMessage(ResponseCode.CANCELED)
+            }
+            if (card.resultCode == CardServiceResult.ERROR_TIMEOUT.resultCode()) { //if there is a timeout
+                Log.d("CardDataReceived","Card Result Code: TIMEOUT")
+                callbackMessage(ResponseCode.CANCELED)
+            }
+            val type = json.getInt("mCardReadType")
             if (card.resultCode == CardServiceResult.ERROR.resultCode()) {
                 Log.d("CardDataReceived","Card Result Code: ERROR")
             }
@@ -460,7 +490,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                     }
                     CardReadType.CLCard.type -> {
                         card = Gson().fromJson(cardData, ICCCard::class.java)
-                        if (transactionCode == TransactionCode.SALE.type){
+                        if (transactionCode == TransactionCode.SALE.type && !gibSale){
                             transactionCode = 0
                             dummySaleFragment.card = card
                             textFragment.setActionName("")
@@ -470,7 +500,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                     }
                     CardReadType.ICC.type -> {
                         card = Gson().fromJson(cardData, ICCCard::class.java)
-                        if (transactionCode == TransactionCode.SALE.type){
+                        if (transactionCode == TransactionCode.SALE.type && !gibSale){
                             dummySaleFragment.prepareSaleMenu(card)
                         }
                     }
@@ -480,8 +510,8 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                     }
                 }
                 if (transactionCode == TransactionCode.VOID.type){
-                    if (fromGib) {
-                        fromGib = false
+                    if (autoTransaction) {
+                        autoTransaction = false
                         transactionCode = 0
                         val transactionList: List<ContentValues?> = transactionDB!!.getTransactionsByRefNo(refNo!!)
                         val transaction = transactionList[0] //2 tane geldi??
@@ -490,22 +520,52 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                             postTxnFragment.card = card
                             postTxnFragment.voidOperation(transaction)
                         } else {
-                            val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning, "Card Numbers are Mismatching", true)
-                            Handler(Looper.getMainLooper()).postDelayed({
-                                infoDialog!!.dismiss()
-                            }, 2000)
-                            finish()
+                            callbackMessage(ResponseCode.OFFLINE_DECLINE)
                         }
                     }
                      else {
                         postTxnFragment.cardNumberReceived(card)
                     }
                 }
-                else if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type)
-                    refundFragment.afterReadCard(card,transactionCode)
+                else if (gibSale){
+                    gibSale = false
+                    transactionCode = 0
+                    dummySaleFragment.card = card
+                    dummySaleFragment.doSale()
+                }
+                else if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type){
+                    if (autoTransaction){
+                        autoTransaction = false
+                        if (extraContents!!.getAsString(ExtraKeys.CARD_NO.name).equals(card.mCardNumber))
+                            refundFragment.afterReadCard(card,transactionCode,extraContents)
+                        else
+                            callbackMessage(ResponseCode.OFFLINE_DECLINE)
+                    } else
+                        refundFragment.afterReadCard(card,transactionCode,null)
+                }
+
             }
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
+        }
+    }
+
+    /**
+     * It passes responseCode as a callBack message with respect to given parameter
+     */
+    private fun callbackMessage(responseCode: ResponseCode){
+        val intent = Intent()
+        val bundle = Bundle()
+        bundle.putInt("ResponseCode", responseCode.ordinal)
+        intent.putExtras(bundle)
+        if (responseCode == ResponseCode.OFFLINE_DECLINE){
+            val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning, "Card Numbers are Mismatching", true)
+            Handler(Looper.getMainLooper()).postDelayed({
+                infoDialog!!.dismiss()
+                setResult(intent)
+            }, 2000)
+        } else{
+            setResult(intent)
         }
     }
 
