@@ -10,6 +10,7 @@ import com.tokeninc.sardis.application_template.database.DatabaseOperations
 /**
  * This is a class that holds methods of Batch Table, it is inherited from DatabaseHelper
  */
+/**
 class BatchDB(context: Context?) : DatabaseHelper(context) {
 
 
@@ -128,3 +129,4 @@ class BatchDB(context: Context?) : DatabaseHelper(context) {
         return if (no == null) 0 else Integer.valueOf(no)
     }
 }
+ */

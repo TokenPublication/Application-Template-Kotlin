@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import com.tokeninc.sardis.application_template.database.DatabaseHelper
 import com.tokeninc.sardis.application_template.database.DatabaseInfo
 import com.tokeninc.sardis.application_template.database.DatabaseOperations
+/**
 
 /**
  * This class includes methods of Activation table, it inherits from databaseHelper.
@@ -119,3 +120,4 @@ class ActivationDB(context: Context?) : DatabaseHelper(context) {
         return DatabaseOperations.query(readableSQLite!!, query)
     }
 }
+*/

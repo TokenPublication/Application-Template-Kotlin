@@ -13,6 +13,7 @@ import java.util.*
 /**
  * This is a class that holds Transaction Table's operations. It is inherited from Database Helper.
  */
+/**
 class TransactionDB(context: Context?) : DatabaseHelper(context) {
 
     private var tblTransaction: Map<String, String>? = null
@@ -170,3 +171,4 @@ class TransactionDB(context: Context?) : DatabaseHelper(context) {
 
 
 }
+ */

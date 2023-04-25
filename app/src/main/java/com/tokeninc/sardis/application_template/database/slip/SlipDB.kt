@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import com.tokeninc.sardis.application_template.database.DatabaseHelper
 import com.tokeninc.sardis.application_template.database.DatabaseInfo
 import com.tokeninc.sardis.application_template.database.DatabaseOperations
+/**
 
 class SlipDB(context: Context): DatabaseHelper(context) {
 
@@ -53,3 +54,4 @@ class SlipDB(context: Context): DatabaseHelper(context) {
     }
 
 }
+ */

@@ -8,7 +8,7 @@ import android.util.Log;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+/**
 public class DatabaseOperations {
 
     /**
@@ -22,7 +22,7 @@ public class DatabaseOperations {
      */
 
     // TODO Egecan: Convert to Kotlin
-
+/**
     public static void createTable(String tableName,Map<String,String> columns,SQLiteDatabase sqLiteDatabase){
         StringBuilder createTableQuery = new StringBuilder();
         createTableQuery.append("CREATE TABLE IF NOT EXISTS " + tableName + " (");
@@ -74,7 +74,7 @@ public class DatabaseOperations {
      * @param contentValues Map that contains values to be inserted, Column names as keys
      * @return Id of the row that was inserted if successful, false otherwise
      */
-
+/**
     public static boolean insert(String tableName, SQLiteDatabase sqLiteDatabase, ContentValues contentValues){
         long rowId = sqLiteDatabase.insert(tableName, null, contentValues);
         return rowId != -1; // -1 geliyordu o yüzden buna döndürdü 1 geldi ilkinde
@@ -123,6 +123,7 @@ public class DatabaseOperations {
      * @param sqLiteDatabase
      */
 
+/**
     public static void dropTable(String tableName, SQLiteDatabase sqLiteDatabase){
         String dropTableQuery = "DROP TABLE IF EXISTS '" + tableName + "';";
         sqLiteDatabase.execSQL(dropTableQuery);
@@ -136,6 +137,7 @@ public class DatabaseOperations {
      * @param sqLiteDatabase SQLiteDatabase Instance
      * @return Number of rows that were deleted
      */
+/**
     public static int deleteRecordsWithCondition(String tableName, String selection, String[] selectionArguments, SQLiteDatabase sqLiteDatabase){
         int deletedRows = sqLiteDatabase.delete(tableName,selection + " LIKE ?",selectionArguments);
         return deletedRows;
@@ -147,6 +149,8 @@ public class DatabaseOperations {
      * @param sqLiteDatabase SQLiteDatabase Instance
      * @return Number of rows that were deleted
      */
+
+    /**
     public static int deleteAllRecords(String tableName, SQLiteDatabase sqLiteDatabase ){
         int deletedRows = 0;
 
@@ -159,3 +163,4 @@ public class DatabaseOperations {
         return deletedRows;
     }
 }
+     */

@@ -12,6 +12,7 @@ import java.util.*
 /**
  * This an abstract class for helping other Database Table classes. It includes some methods that implementing all the tables.
  */
+/**
 abstract class DatabaseHelper(@Nullable context: Context?) : SQLiteOpenHelper(context, DatabaseInfo.DATABASENAME, null, DatabaseInfo.DATABASEVERSION) {
 
     protected var writableSQLite: SQLiteDatabase? = writableDatabase
@@ -96,3 +97,4 @@ abstract class DatabaseHelper(@Nullable context: Context?) : SQLiteOpenHelper(co
         DatabaseOperations.deleteAllRecords(getTableName(), writableSQLite!!)
     }
 }
+ */
