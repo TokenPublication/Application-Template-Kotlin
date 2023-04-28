@@ -22,21 +22,13 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.*
-import com.tokeninc.sardis.application_template.database.activation.ActivationDB
-import com.tokeninc.sardis.application_template.database.batch.BatchDB
-import com.tokeninc.sardis.application_template.database.slip.SlipDB
-import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
-import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
+import com.tokeninc.sardis.application_template.database.entities.*
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.services.BatchCloseService
 import com.tokeninc.sardis.application_template.services.TransactionService
-import com.tokeninc.sardis.application_template.viewmodels.ActivationVMFactory
-import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
-import com.tokeninc.sardis.application_template.viewmodels.TransactionVMFactory
-import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import kotlinx.coroutines.*
 import org.json.JSONException
 import org.json.JSONObject
@@ -56,6 +48,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     //initializing bindings
     private lateinit var cardServiceBinding: CardServiceBinding
     //initializing databases
+    /**
     private var actDB: ActivationDB? = null
     private var transactionDB: TransactionDB? = null
     private var batchDB: BatchDB? = null
@@ -63,6 +56,23 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     //initializing viewModels
     private lateinit var transactionViewModel: TransactionViewModel
     lateinit var activationViewModel: ActivationViewModel
+     */
+
+    // Room Entities
+    private lateinit var database : AppTempDB
+    private lateinit var activationDao : ActivationDao
+    private lateinit var activationRepository : ActivationRepository
+    private lateinit var activationViewModelFactory : ActivationViewModelFactory
+    lateinit var activationViewModel : ActivationViewModel
+    private lateinit var batchDao : BatchDao
+    private lateinit var batchRepository : BatchRepository
+    private lateinit var batchViewModelFactory : BatchViewModelFactory
+    private lateinit var batchViewModel : BatchViewModel
+    private lateinit var transactionDao : TransactionDao
+    private lateinit var transactionRepository : TransactionRepository
+    private lateinit var transactionViewModelFactory : TransactionViewModelFactory
+    private lateinit var transactionViewModel : TransactionViewModel
+
     //initializing fragments
     private val transactionService = TransactionService()
     private val batchCloseService = BatchCloseService()
@@ -103,12 +113,29 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      */
     private fun startActivity(){
         val binding = ActivityMainBinding.inflate(layoutInflater)
+        /**
         actDB = ActivationDB(this).getInstance(this)
         transactionDB = TransactionDB(this).getInstance(this)
         batchDB = BatchDB(this).getInstance(this)
         slipDB = SlipDB(this).getInstance(this)
         transactionViewModel = ViewModelProvider(this,TransactionVMFactory(transactionDB!!))[TransactionViewModel::class.java]
         activationViewModel = ViewModelProvider(this,ActivationVMFactory(actDB!!))[ActivationViewModel::class.java]
+        */
+        // Room Entities
+        database = AppTempDB.getInstance(this)
+        activationDao = database.activationDao
+        activationRepository = ActivationRepository(activationDao)
+        activationViewModelFactory = ActivationViewModelFactory(activationRepository)
+        activationViewModel = ViewModelProvider(this,activationViewModelFactory)[ActivationViewModel::class.java]
+        batchDao = database.batchDao
+        batchRepository = BatchRepository(batchDao)
+        batchViewModelFactory = BatchViewModelFactory(batchRepository)
+        batchViewModel = ViewModelProvider(this,batchViewModelFactory)[BatchViewModel::class.java]
+        transactionDao = database.transactionDao
+        transactionRepository = TransactionRepository(transactionDao)
+        transactionViewModelFactory = TransactionViewModelFactory(transactionRepository)
+        transactionViewModel = ViewModelProvider(this,transactionViewModelFactory)[TransactionViewModel::class.java]
+
         dummySaleFragment = DummySaleFragment(transactionViewModel)
         cardServiceBinding = CardServiceBinding(this, this)
         startTransactionService()
@@ -159,7 +186,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
             }
             getString(R.string.Settings_Action) ->  startSettingsFragment(settingsFragment)
             getString(R.string.BatchClose_Action) ->  {
-                if (transactionViewModel.getAllTransactions().isEmpty()){ //if it is empty just show no transaction dialog
+                if (transactionViewModel.allTransactions.value == null){ //if it is empty just show no transaction dialog
                     callbackMessage(ResponseCode.ERROR)
                 }else{ //else implementing batch closing and finish that activity
                     startPostTxnFragment(postTxnFragment)
@@ -197,7 +224,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
             val refAmount = json.getString("Amount")
             amount = refAmount.toInt()
             val batchNo = json.getInt("BatchNo")
-            if (batchNo == batchDB!!.getBatchNo()){ //void
+            if (batchNo == batchViewModel.batchNo.value){ //void
                 transactionCode = TransactionCode.VOID.type
                 readCard()
             } else{
@@ -246,21 +273,21 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      * This function is setting some variables in fragment
      */
     private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
-        postTxnFragment.setter(this,transactionViewModel,transactionService,refundFragment,batchCloseService,slipDB!!)
+        postTxnFragment.setter(this,transactionViewModel,transactionService,refundFragment,batchCloseService,batchViewModel)
     }
 
     /**
      * This is for initializing some variables in Transaction Service
      */
     private fun startTransactionService(){
-        transactionService.setter(this,batchDB!!,transactionViewModel)
+        transactionService.setter(this,batchViewModel,transactionViewModel)
     }
 
     /**
      * This is for initializing some variables in Batch Service
      */
     private fun startBatchService(){
-        batchCloseService.setter(this,batchDB!!,transactionViewModel,slipDB!!)
+        batchCloseService.setter(this,batchViewModel,transactionViewModel)
     }
 
     /** This function is getting amount from intent and pass that amount and other variables to fragment.
@@ -268,7 +295,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      */
     private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
         amount = intent.extras!!.getInt("Amount")
-        dummySaleFragment.setter(this, bundleOf(),Intent(),activationViewModel,batchDB!!, transactionService,amount)
+        dummySaleFragment.setter(this, bundleOf(),Intent(),activationViewModel,batchViewModel, transactionService,amount)
     }
 
     /**
@@ -331,6 +358,10 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         ft.replace(R.id.container, fragment)
         ft.addToBackStack(null)
         ft.commit()
+    }
+
+    fun popFragment(){
+        supportFragmentManager.popBackStack()
     }
 
     /**
@@ -453,7 +484,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
 
 
     override fun onCardServiceConnected() {
-        setEMVConfiguration()
+        setEMVConfiguration() //TODO doğru yere taşınacak
     }
 
     /** This method is implemented after card data is received. It makes card data JSON parse easily.
@@ -513,10 +544,10 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                     if (autoTransaction) {
                         autoTransaction = false
                         transactionCode = 0
-                        val transactionList: List<ContentValues?> = transactionDB!!.getTransactionsByRefNo(refNo!!)
+                        val transactionList: List<Transaction?> = transactionViewModel.getTransactionsByRefNo(refNo!!).value!!
                         val transaction = transactionList[0] //2 tane geldi??
                         Log.d("Refund Info", "Satış İptali: $transaction")
-                        if (card.mCardNumber == transaction!!.getAsString(TransactionCol.Col_PAN.name)) {
+                        if (card.mCardNumber == transaction!!.Col_PAN) {
                             postTxnFragment.card = card
                             postTxnFragment.voidOperation(transaction)
                         } else {

@@ -3,13 +3,12 @@ package com.tokeninc.sardis.application_template.services
 import android.util.Log
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.ui.MainActivity
-import com.tokeninc.sardis.application_template.database.slip.SlipDB
-import com.tokeninc.sardis.application_template.database.batch.BatchDB
+import com.tokeninc.sardis.application_template.database.entities.BatchViewModel
+import com.tokeninc.sardis.application_template.database.entities.TransactionViewModel
 import com.tokeninc.sardis.application_template.enums.BatchResult
 import com.tokeninc.sardis.application_template.helpers.printHelpers.BatchClosePrintHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import com.tokeninc.sardis.application_template.responses.BatchCloseResponse
-import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -21,16 +20,14 @@ class BatchCloseService {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private lateinit var mainActivity: MainActivity
-    private lateinit var batchDB: BatchDB
-    private lateinit var slipDB: SlipDB
+    private lateinit var batchViewModel: BatchViewModel
     private lateinit var transactionViewModel: TransactionViewModel
     private var downloadNumber: Int = 0
 
-    fun setter(mainActivity: MainActivity, batchDB: BatchDB, transactionViewModel: TransactionViewModel,slipDB: SlipDB){
+    fun setter(mainActivity: MainActivity, batchViewModel: BatchViewModel, transactionViewModel: TransactionViewModel){
         this.mainActivity = mainActivity
-        this.batchDB = batchDB //TODO batch viewModel olacak
+        this.batchViewModel = batchViewModel
         this.transactionViewModel = transactionViewModel
-        this.slipDB = slipDB
     }
 
     /** It runs functions in parallel while ui updating dynamically in main thread
@@ -68,23 +65,19 @@ class BatchCloseService {
      * with Success Message. Lastly, update Batch number and resets group number and delete all transactions from Transaction Table.
      */
     private fun finishBatchClose(dialog: InfoDialog): BatchCloseResponse{
-        val transactions = transactionViewModel.getAllTransactions()
+        val transactions = transactionViewModel.allTransactions.value
 
         val printService = BatchClosePrintHelper()
         val printServiceBinding = PrintServiceBinding()
-        val slip = printService.batchText(batchDB.getBatchNo().toString(),transactions,mainActivity,true)
+        val slip = printService.batchText(batchViewModel.batchNo.value.toString(),transactions!!,mainActivity,true)
         Log.d("Repetition",slip)
-        var batchResult = BatchResult.ERROR
-        if (slipDB.insertSlip(slip)){
-            batchResult = BatchResult.SUCCESS
-            coroutineScope.async(Dispatchers.Main) {
-                dialog.update(InfoDialog.InfoType.Confirmed, "Grup Kapama Başarılı")
-            }
-        }
+        batchViewModel.updateBatchSlip(slip,batchViewModel.batchNo.value!!)
+        dialog.update(InfoDialog.InfoType.Confirmed, "Grup Kapama Başarılı")
+
         printServiceBinding.print(slip)
-        batchDB.updateBatchNo(batchDB.getBatchNo()!! + 1)
+        batchViewModel.updateBatchNo(batchViewModel.batchNo.value!! + 1)
         transactionViewModel.deleteAll()
-        return BatchCloseResponse(batchResult, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()))
+        return BatchCloseResponse(BatchResult.SUCCESS, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()))
     }
 
 }

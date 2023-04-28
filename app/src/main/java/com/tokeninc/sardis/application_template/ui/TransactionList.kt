@@ -7,8 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tokeninc.sardis.application_template.adapters.TransactionAdapter
+import com.tokeninc.sardis.application_template.database.entities.ContentValHelper
+import com.tokeninc.sardis.application_template.database.entities.TransactionViewModel
 import com.tokeninc.sardis.application_template.databinding.ListTransactionBinding
-import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 
 /**
  * This is the Fragment that holds all the Void transactions in recyclerView, transactions one by one are set in TransactionAdapter
@@ -32,6 +33,7 @@ class TransactionList : Fragment() {
         binding =ListTransactionBinding.inflate(inflater,container,false)
         val recyclerView = binding.recyclerViewTransactions
         recyclerView.layoutManager =LinearLayoutManager(requireContext())
+        val contentValHelper = ContentValHelper()
         //TODO iadede iade tutarı değil org tutarı bastırıyor
         viewModel!!.createLiveData() //in here list = getTransactionsByCardNo(cardNo)
         viewModel!!.list.observe(viewLifecycleOwner) {

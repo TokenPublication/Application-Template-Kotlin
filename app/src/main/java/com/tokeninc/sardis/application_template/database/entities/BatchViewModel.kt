@@ -9,6 +9,7 @@ class BatchViewModel(private val batchRepository: BatchRepository): ViewModel() 
 
     val groupSN = batchRepository.groupSN
     val batchNo = batchRepository.batchNo
+    val previousBatchSlip = batchRepository.previousBatchSlip
 
     fun updateBatchNo(batchNo: Int){
         viewModelScope.launch(Dispatchers.IO) {
@@ -16,7 +17,13 @@ class BatchViewModel(private val batchRepository: BatchRepository): ViewModel() 
         }
     }
 
-    fun updateGUPSN(groupSn: Int){
+    fun updateBatchSlip(batchSlip: String?,batchNo: Int){
+        viewModelScope.launch(Dispatchers.IO){
+            batchRepository.updateBatchSlip(batchSlip, batchNo)
+        }
+    }
+
+    fun updateGUPSN(groupSn: Int?){
         viewModelScope.launch(Dispatchers.IO) {
             batchRepository.updateGUPSN(groupSn)
         }

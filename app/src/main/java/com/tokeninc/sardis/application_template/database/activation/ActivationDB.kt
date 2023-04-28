@@ -1,5 +1,5 @@
 package com.tokeninc.sardis.application_template.database.activation
-
+/**
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase

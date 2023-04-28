@@ -8,14 +8,14 @@ import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.tokeninc.sardis.application_template.ui.PostTxnFragment
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
+import com.tokeninc.sardis.application_template.database.entities.Transaction
 import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 
 /**
  * This adapter arranges Void transactions one by one.
  */
-class TransactionAdapter(private val transactionList: MutableList<ContentValues?>): RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
+class TransactionAdapter(private val transactionList: MutableList<Transaction?>): RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
 
     inner class TransactionViewHolder(val binding: TransactionItemsBinding): RecyclerView.ViewHolder(binding.root)
 
@@ -33,14 +33,14 @@ class TransactionAdapter(private val transactionList: MutableList<ContentValues?
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
         val transaction = transactionList[position]
         val hb = holder.binding
-        hb.textCardNo.text = StringHelper().MaskTheCardNo(transaction!!.getAsString(TransactionCol.Col_PAN.name))
-        hb.textDate.text = transaction.getAsString(TransactionCol.Col_TranDate.name)
-        if (transaction.getAsString(TransactionCol.Col_TransCode.name).toInt() == 4 || transaction.getAsString(TransactionCol.Col_TransCode.name).toInt() == 6)
-            hb.textAmount.text = StringHelper().getAmount(transaction.getAsString(TransactionCol.Col_Amount2.name).toInt())
+        hb.textCardNo.text = StringHelper().MaskTheCardNo(transaction!!.Col_PAN)
+        hb.textDate.text = transaction.Col_TranDate
+        if (transaction.Col_TransCode == 4 || transaction.Col_TransCode == 6)
+            hb.textAmount.text = StringHelper().getAmount(transaction.Col_Amount2)
         else
-            hb.textAmount.text = StringHelper().getAmount(transaction.getAsString(TransactionCol.Col_Amount.name).toInt())
-        hb.textApprovalCode.text = transaction.getAsString(TransactionCol.Col_AuthCode.name)
-        hb.tvSN.text = transaction.getAsString(TransactionCol.Col_GUP_SN.name)
+            hb.textAmount.text = StringHelper().getAmount(transaction.Col_Amount)
+        hb.textApprovalCode.text = transaction.Col_AuthCode
+        hb.tvSN.text = transaction.Col_GUP_SN.toString()
         holder.itemView.setOnClickListener {
             postTxnFragment!!.voidOperation(transaction)
             Log.d("RecyclerView/onClick","ContentVal: $transaction ")

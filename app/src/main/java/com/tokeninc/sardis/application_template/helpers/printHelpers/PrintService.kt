@@ -6,9 +6,9 @@ import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.AppTemp
+import com.tokeninc.sardis.application_template.database.entities.TransactionCols
 import com.tokeninc.sardis.application_template.ui.MainActivity
 import com.tokeninc.sardis.application_template.responses.OnlineTransactionResponse
-import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
@@ -50,7 +50,7 @@ class PrintService:BasePrintHelper() {
         }
         if (transactionCode == TransactionCode.VOID.type){
             var transactionType = ""
-            when(contentValues.getAsString(TransactionCol.Col_TransCode.name).toInt()){
+            when(contentValues.getAsString(TransactionCols.Col_TransCode).toInt()){
                 1 -> transactionType = "SATIŞ İPTALİ"
                 3 -> transactionType = "İPTAL İŞLEMİ"
                 4 -> transactionType = "E. İADE İPTALİ"
@@ -66,7 +66,7 @@ class PrintService:BasePrintHelper() {
         if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type){
             styledText.addTextToLine("T. SATIŞ İADE", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
-            styledText.addTextToLine("${contentValues.getAsString(TransactionCol.Col_InstCnt.name)} TAKSİT", PrinterDefinitions.Alignment.Center)
+            styledText.addTextToLine("${contentValues.getAsString(TransactionCols.Col_InstCnt)} TAKSİT", PrinterDefinitions.Alignment.Center)
         }
         if (transactionCode == TransactionCode.CASH_REFUND.type)
             styledText.addTextToLine("NAKİT İADE", PrinterDefinitions.Alignment.Center)
@@ -82,7 +82,7 @@ class PrintService:BasePrintHelper() {
         styledText.newLine()
         styledText.addTextToLine(lineTime, PrinterDefinitions.Alignment.Center )
         styledText.newLine()
-        styledText.addTextToLine(stringHelper.maskCardNumber(contentValues.getAsString(TransactionCol.Col_PAN.name)), PrinterDefinitions.Alignment.Center)
+        styledText.addTextToLine(stringHelper.maskCardNumber(contentValues.getAsString(TransactionCols.Col_PAN)), PrinterDefinitions.Alignment.Center)
         styledText.newLine()
         val ddMMyy = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
         val date = ddMMyy.format(Calendar.getInstance().time)
@@ -98,9 +98,9 @@ class PrintService:BasePrintHelper() {
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type)
             styledText.addTextToLine(stringHelper.getAmount(extraContentValues!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()), PrinterDefinitions.Alignment.Right)
         if (transactionCode == TransactionCode.CASH_REFUND.type)
-            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCol.Col_Amount2.name).toInt()), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCols.Col_Amount2).toInt()), PrinterDefinitions.Alignment.Right)
         else
-            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCol.Col_Amount.name).toInt()), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCols.Col_Amount).toInt()), PrinterDefinitions.Alignment.Right)
         styledText.setLineSpacing(0.5f)
         styledText.setFontSize(10)
         styledText.newLine()
@@ -125,7 +125,7 @@ class PrintService:BasePrintHelper() {
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TARİHİ: ${extraContentValues!!.getAsString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
-            styledText.addTextToLine("ORJ. İŞ YERİ NO: ${mainActivity.activationViewModel.getMerchantId() }",PrinterDefinitions.Alignment.Center)
+            styledText.addTextToLine("ORJ. İŞ YERİ NO: ${mainActivity.activationViewModel.merchantID }",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TEMASSIZ TAMAMLANMIŞTIR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
@@ -155,18 +155,18 @@ class PrintService:BasePrintHelper() {
         styledText.setFontSize(12)
         styledText.newLine()
         if (transactionCode == TransactionCode.VOID.type)
-            styledText.addTextToLine("SN: " + extraContentValues!!.getAsString(TransactionCol.Col_GUP_SN.name))
+            styledText.addTextToLine("SN: " + extraContentValues!!.getAsString(TransactionCols.Col_GUP_SN))
         else
-            styledText.addTextToLine("SN: " + contentValues.getAsString(TransactionCol.Col_GUP_SN.name))
-        styledText.addTextToLine("ONAY KODU: " + contentValues.getAsString(TransactionCol.Col_AuthCode.name), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine("SN: " + contentValues.getAsString(TransactionCols.Col_GUP_SN))
+        styledText.addTextToLine("ONAY KODU: " + contentValues.getAsString(TransactionCols.Col_AuthCode), PrinterDefinitions.Alignment.Right)
         styledText.setFontSize(8)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.newLine()
-        styledText.addTextToLine("GRUP NO: " + contentValues.getAsString(TransactionCol.Col_BatchNo.name))
-        styledText.addTextToLine("REF NO: " + contentValues.getAsString(TransactionCol.Col_HostLogKey.name), PrinterDefinitions.Alignment.Right)
+        styledText.addTextToLine("GRUP NO: " + contentValues.getAsString(TransactionCols.Col_BatchNo))
+        styledText.addTextToLine("REF NO: " + contentValues.getAsString(TransactionCols.Col_HostLogKey), PrinterDefinitions.Alignment.Right)
         styledText.newLine()
-        styledText.addTextToLine("AID: " + contentValues.getAsString(TransactionCol.Col_Aid.name))
-        styledText.addTextToLine(contentValues.getAsString(TransactionCol.Col_AidLabel.name), PrinterDefinitions.Alignment.Right)
+        styledText.addTextToLine("AID: " + contentValues.getAsString(TransactionCols.Col_Aid))
+        styledText.addTextToLine(contentValues.getAsString(TransactionCols.Col_AidLabel), PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.addTextToLine("Ver: 92.12.05")
         if (transactionCode == TransactionCode.SALE.type){

@@ -1,5 +1,6 @@
 package com.tokeninc.sardis.application_template.viewmodels
 
+/**
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 /** This connects view with Models
  * It is the interlayer between UI and Activation Table
  */
+/**
 class ActivationViewModel(val database: ActivationDB):ViewModel() {
 
     var menuItemList = mutableListOf<IListMenuItem>()
@@ -55,3 +57,4 @@ class ActivationViewModel(val database: ActivationDB):ViewModel() {
     }
 
 }
+*/

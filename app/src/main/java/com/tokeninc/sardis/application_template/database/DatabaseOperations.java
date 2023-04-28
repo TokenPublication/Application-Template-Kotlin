@@ -1,5 +1,5 @@
 package com.tokeninc.sardis.application_template.database;
-
+/**
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;

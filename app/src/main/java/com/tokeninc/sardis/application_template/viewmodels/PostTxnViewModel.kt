@@ -1,5 +1,4 @@
 package com.tokeninc.sardis.application_template.viewmodels
-
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

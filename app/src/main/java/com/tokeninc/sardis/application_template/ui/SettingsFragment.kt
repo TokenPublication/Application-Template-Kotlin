@@ -12,8 +12,8 @@ import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.tokeninc.sardis.application_template.database.entities.ActivationViewModel
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
-import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
 import org.apache.commons.lang3.StringUtils
 
 
@@ -29,7 +29,7 @@ class SettingsFragment : Fragment() {
     private lateinit var intent: Intent
 
     private var isBankActivateAction = true
-    var activationViewModel: ActivationViewModel? = null
+    private lateinit var activationViewModel: ActivationViewModel
 
     private var terminalId: String? = null
     private var merchantId: String? = null
@@ -76,8 +76,8 @@ class SettingsFragment : Fragment() {
         menuItems.add(MenuItem("Host Settings", {
             addIPFragment()
         }))
-        activationViewModel!!.menuItemList = menuItems
-        activationViewModel!!.replaceFragment(mainActivity)
+        activationViewModel.menuItemList = menuItems
+        activationViewModel.replaceFragment(mainActivity)
     }
 
     /**
@@ -96,13 +96,18 @@ class SettingsFragment : Fragment() {
             "Port", EditTextInputType.Number, 4, "Invalid Port!"
         ) { customInputFormat -> customInputFormat.text.length >= 2 && customInputFormat.text.toInt() > 0 })
 
-        inputList[0].text = activationViewModel!!.getHostIP()
-        inputList[1].text = activationViewModel!!.getHostPort()
+         activationViewModel.hostIP.observe(mainActivity) {//to see the changes in UI
+             inputList[0].text = it
+         }
+        activationViewModel.hostPort.observe(mainActivity){
+            inputList[1].text = it
+        }
         val hostFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 val ipNo = inputList[0].text
                 val portNo = inputList[1].text
-                activationViewModel!!.updateConnection(ipNo, portNo)
+                activationViewModel.updateConnection(ipNo, portNo,activationViewModel.hostIP.value)
+                mainActivity.popFragment()
             })
 
         mainActivity.addFragment(hostFragment as Fragment)
@@ -146,14 +151,18 @@ class SettingsFragment : Fragment() {
             "Invalid Terminal No!"
         ) { input -> input.text.length == 8 })
 
-        inputList[0].text = activationViewModel!!.getMerchantId()
-        inputList[1].text = activationViewModel!!.getTerminalId()
-
+        activationViewModel.merchantID.observe(mainActivity){
+            inputList[0].text = it
+        }
+        activationViewModel.terminalID.observe(mainActivity){
+            inputList[1].text = it
+        }
         val tidMidFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 merchantId = inputList[0].text
                 terminalId = inputList[1].text
-                activationViewModel!!.updateActivation(terminalId, merchantId)
+                activationViewModel.updateActivation(terminalId, merchantId,activationViewModel.hostIP.value)
+                mainActivity.popFragment()
             })
 
         mainActivity.addFragment(tidMidFragment as Fragment)

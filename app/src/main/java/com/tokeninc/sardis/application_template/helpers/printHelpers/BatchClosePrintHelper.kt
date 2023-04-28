@@ -4,8 +4,8 @@ import android.content.ContentValues
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
+import com.tokeninc.sardis.application_template.database.entities.Transaction
 import com.tokeninc.sardis.application_template.ui.MainActivity
-import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 
 /**
@@ -13,13 +13,13 @@ import com.tokeninc.sardis.application_template.helpers.StringHelper
  */
 class BatchClosePrintHelper(): BasePrintHelper() {
 
-    fun batchText(batch_no: String, transactions: List<ContentValues?>, mainActivity: MainActivity, isCopy: Boolean): String {
+    fun batchText(batch_no: String, transactions: List<Transaction?>, mainActivity: MainActivity, isCopy: Boolean): String {
         var styledText = StyledString()
         val stringHelper = StringHelper()
         val printHelper = PrintHelper()
         var totalAmount = 0
-        val MID = mainActivity.activationViewModel.getMerchantId()
-        val TID = mainActivity.activationViewModel.getTerminalId()
+        val MID = mainActivity.activationViewModel.merchantID.value
+        val TID = mainActivity.activationViewModel.terminalID.value
         addTextToNewLine(styledText, "TOKEN", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "FINTECH", PrinterDefinitions.Alignment.Center)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)
@@ -38,22 +38,22 @@ class BatchClosePrintHelper(): BasePrintHelper() {
         addTextToNewLine(styledText,"===========================",PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText,"PEŞİN İŞLEMLER",PrinterDefinitions.Alignment.Left)
         transactions.forEach {
-            addTextToNewLine(styledText,it!!.getAsString(TransactionCol.Col_TranDate.name),PrinterDefinitions.Alignment.Left)
+            addTextToNewLine(styledText,it!!.Col_TranDate,PrinterDefinitions.Alignment.Left)
             var transactionType = ""
-            when(it.getAsString(TransactionCol.Col_TransCode.name).toInt()){
+            when(it.Col_TransCode){
                 1 -> transactionType = "SATIŞ "
                 4 -> transactionType = "E. İADE "
                 5 -> transactionType = "N. İADE "
                 6 -> transactionType = "T. İADE "
             }
-            if (it.getAsString(TransactionCol.Col_IsVoid.name).toInt() == 1){
+            if (it.Col_IsVoid == 1){
                 transactionType = "İPTAL "  //TODO punto küçültüp += yap
             }
-            addText(styledText,transactionType+it.getAsString(TransactionCol.Col_GUP_SN.name), PrinterDefinitions.Alignment.Right)
-            addTextToNewLine(styledText,stringHelper.MaskTheCardNo(it.getAsString(TransactionCol.Col_PAN.name)),PrinterDefinitions.Alignment.Left)
-            addText(styledText,it.getAsString(TransactionCol.Col_ExpDate.name),PrinterDefinitions.Alignment.Right)
-            addTextToNewLine(styledText,it.getAsString(TransactionCol.Col_HostLogKey.name),PrinterDefinitions.Alignment.Left)
-            val amount = it.getAsString(TransactionCol.Col_Amount.name).toInt()
+            addText(styledText,transactionType+it.Col_GUP_SN, PrinterDefinitions.Alignment.Right)
+            addTextToNewLine(styledText,stringHelper.MaskTheCardNo(it.Col_PAN),PrinterDefinitions.Alignment.Left)
+            addText(styledText,it.Col_ExpDate,PrinterDefinitions.Alignment.Right)
+            addTextToNewLine(styledText,it.Col_HostLogKey,PrinterDefinitions.Alignment.Left)
+            val amount = it.Col_Amount
             totalAmount += amount
             addText(styledText,stringHelper.getAmount(amount),PrinterDefinitions.Alignment.Right)
             styledText.newLine()

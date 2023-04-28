@@ -1,5 +1,5 @@
 package com.tokeninc.sardis.application_template.viewmodels
-
+/**
 import android.content.ContentValues
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,6 +13,7 @@ import kotlinx.coroutines.async
 /** This connects view with Models
  * It is the interlayer between UI and Transaction Table
  */
+/**
 class TransactionViewModel(val database: TransactionDB): ViewModel() {
 
     val list = MutableLiveData<List<ContentValues?>>()
@@ -50,3 +51,4 @@ class TransactionViewModel(val database: TransactionDB): ViewModel() {
     }
 
 }
+*/
