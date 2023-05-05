@@ -1,8 +1,14 @@
 package com.tokeninc.sardis.application_template.repositories
 
 import com.tokeninc.sardis.application_template.database.dao.ActivationDao
+import javax.inject.Inject
 
-class ActivationRepository(private val activationDao: ActivationDao) {
+/**
+ * @param database is database class, it's coming from Dependency Injection thanks to Inject annotation,
+ * I define it in AppModule
+ */
+
+class ActivationRepository @Inject constructor(private val activationDao: ActivationDao) {
     val merchantID = activationDao.getMerchantId()
     val terminalID = activationDao.getTerminalId()
     val hostIP = activationDao.getHostIP()

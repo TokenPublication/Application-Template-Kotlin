@@ -8,10 +8,18 @@ import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.repositories.ActivationRepository
 import com.tokeninc.sardis.application_template.ui.MainActivity
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ActivationViewModel(private val activationRepository: ActivationRepository): ViewModel() {
+/**
+ * We annotate with HiltViewModel to tell Hilt (Dependency Injection) to it's our viewModel
+ * lately we call this viewModel without passing its parameter thanks to  hilt like in the repository here
+ * We won't call repository while we call ViewModel class because we define our repository in AppModule with Hilt.
+ */
+@HiltViewModel
+class ActivationViewModel @Inject constructor(private val activationRepository: ActivationRepository): ViewModel() {
 
     val merchantID = activationRepository.merchantID
     val terminalID = activationRepository.terminalID

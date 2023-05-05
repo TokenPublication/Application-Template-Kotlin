@@ -2,8 +2,9 @@ package com.tokeninc.sardis.application_template.repositories
 
 import com.tokeninc.sardis.application_template.database.dao.TransactionDao
 import com.tokeninc.sardis.application_template.database.entities.Transaction
+import javax.inject.Inject
 
-class TransactionRepository(private val transactionDao: TransactionDao) {
+class TransactionRepository @Inject constructor(private val transactionDao: TransactionDao) {
 
     var allTransactions: List<Transaction?>? = transactionDao.getAllTransactions()
 

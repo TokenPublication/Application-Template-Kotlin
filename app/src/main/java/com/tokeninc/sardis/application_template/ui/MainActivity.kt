@@ -11,10 +11,10 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
-import androidx.lifecycle.ViewModelProvider
 import com.google.gson.Gson
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
@@ -26,17 +26,13 @@ import com.tokeninc.sardis.application_template.database.entities.*
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.database.AppTempDB
-import com.tokeninc.sardis.application_template.database.dao.ActivationDao
-import com.tokeninc.sardis.application_template.database.dao.BatchDao
-import com.tokeninc.sardis.application_template.database.dao.TransactionDao
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.examples.ExampleActivity
-import com.tokeninc.sardis.application_template.repositories.ActivationRepository
-import com.tokeninc.sardis.application_template.repositories.BatchRepository
-import com.tokeninc.sardis.application_template.repositories.TransactionRepository
 import com.tokeninc.sardis.application_template.services.BatchCloseService
 import com.tokeninc.sardis.application_template.services.TransactionService
+import com.tokeninc.sardis.application_template.ui.*
 import com.tokeninc.sardis.application_template.viewmodels.*
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import org.json.JSONException
 import org.json.JSONObject
@@ -47,8 +43,10 @@ import java.util.*
 
 /** This is the Main Activity class,
  *  all operations are run here because this application is designed as a single-activity architecture
+ * It's @AndroidEntryPoint because, we get ViewModel inside of class,
  */
-class MainActivity : TimeOutActivity(), CardServiceListener {
+@AndroidEntryPoint
+public class MainActivity : TimeOutActivity(), CardServiceListener {
 
 
     //menu items is mutable list which we can add and delete
@@ -66,19 +64,9 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     lateinit var activationViewModel: ActivationViewModel
      */
 
-    // Room Entities
-    private lateinit var database : AppTempDB
-    private lateinit var activationDao : ActivationDao
-    private lateinit var activationRepository : ActivationRepository
-    private lateinit var activationViewModelFactory : ActivationViewModelFactory
+    //initializing View Models
     lateinit var activationViewModel : ActivationViewModel
-    private lateinit var batchDao : BatchDao
-    private lateinit var batchRepository : BatchRepository
-    private lateinit var batchViewModelFactory : BatchViewModelFactory
     private lateinit var batchViewModel : BatchViewModel
-    private lateinit var transactionDao : TransactionDao
-    private lateinit var transactionRepository : TransactionRepository
-    private lateinit var transactionViewModelFactory : TransactionViewModelFactory
     private lateinit var transactionViewModel : TransactionViewModel
 
     //initializing fragments
@@ -144,29 +132,15 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      */
     private fun startActivity(){
         val binding = ActivityMainBinding.inflate(layoutInflater)
-        /**
-        actDB = ActivationDB(this).getInstance(this)
-        transactionDB = TransactionDB(this).getInstance(this)
-        batchDB = BatchDB(this).getInstance(this)
-        slipDB = SlipDB(this).getInstance(this)
-        transactionViewModel = ViewModelProvider(this,TransactionVMFactory(transactionDB!!))[TransactionViewModel::class.java]
-        activationViewModel = ViewModelProvider(this,ActivationVMFactory(actDB!!))[ActivationViewModel::class.java]
-        */
-        // Room Entities
-        database = AppTempDB.getInstance(this)
-        AppTempDB.getInstance(this) //addCallBack için
-        activationDao = database.activationDao
-        activationRepository = ActivationRepository(activationDao)
-        activationViewModelFactory = ActivationViewModelFactory(activationRepository)
-        activationViewModel = ViewModelProvider(this,activationViewModelFactory)[ActivationViewModel::class.java]
-        batchDao = database.batchDao
-        batchRepository = BatchRepository(batchDao)
-        batchViewModelFactory = BatchViewModelFactory(batchRepository)
-        batchViewModel = ViewModelProvider(this,batchViewModelFactory)[BatchViewModel::class.java]
-        transactionDao = database.transactionDao
-        transactionRepository = TransactionRepository(transactionDao)
-        transactionViewModelFactory = TransactionViewModelFactory(transactionRepository)
-        transactionViewModel = ViewModelProvider(this,transactionViewModelFactory)[TransactionViewModel::class.java]
+        AppTempDB.getInstance(this)
+
+        //get ViewModels from Dagger-Hilt easily, but to make this easy you need to implement each dependency clearly
+        val getActivationViewModel : ActivationViewModel by viewModels()
+        activationViewModel = getActivationViewModel
+        val getBatchViewModel : BatchViewModel by viewModels()
+        batchViewModel = getBatchViewModel
+        val getTransactionViewModel : TransactionViewModel by viewModels()
+        transactionViewModel = getTransactionViewModel
 
         dummySaleFragment = DummySaleFragment(transactionViewModel)
         cardServiceBinding = CardServiceBinding(this, this)
@@ -423,7 +397,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     /**
      * This function only works in installation, it calls setConfig and setCLConfig
      */
-    private fun setEMVConfiguration () {
+    private fun setEMVConfiguration() {
         val sharedPreference = getSharedPreferences("myprefs",Context.MODE_PRIVATE)
         val editor = sharedPreference.edit()
         val firstTimeBoolean = sharedPreference.getBoolean("FIRST_RUN",false)

@@ -3,10 +3,13 @@ package com.tokeninc.sardis.application_template.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tokeninc.sardis.application_template.repositories.BatchRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class BatchViewModel(private val batchRepository: BatchRepository): ViewModel() {
+@HiltViewModel
+class BatchViewModel @Inject constructor(private val batchRepository: BatchRepository): ViewModel() {
 
     val groupSN = batchRepository.groupSN
     val batchNo = batchRepository.batchNo

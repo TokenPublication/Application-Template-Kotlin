@@ -1,6 +1,5 @@
 package com.tokeninc.sardis.application_template.helpers.printHelpers
 
-import android.content.ContentValues
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo

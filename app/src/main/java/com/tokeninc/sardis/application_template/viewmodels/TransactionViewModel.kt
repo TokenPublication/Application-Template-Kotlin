@@ -6,10 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.tokeninc.sardis.application_template.database.entities.Transaction
 import com.tokeninc.sardis.application_template.repositories.TransactionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class TransactionViewModel(private val transactionRepository: TransactionRepository): ViewModel() {
+@HiltViewModel
+class TransactionViewModel @Inject constructor(private val transactionRepository: TransactionRepository): ViewModel() {
 
     var allTransactions: List<Transaction?>? = transactionRepository.allTransactions
 

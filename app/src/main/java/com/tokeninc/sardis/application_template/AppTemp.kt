@@ -2,8 +2,11 @@ package com.tokeninc.sardis.application_template
 
 import android.app.Application
 import com.tokeninc.deviceinfo.DeviceInfo
+import dagger.hilt.android.HiltAndroidApp
 
-class AppTemp: Application() {
+//Because Hilt needs to know application, Application should be annotated with @HiltAndroidApp
+@HiltAndroidApp
+public class AppTemp constructor(): Application() {
     private var currentDeviceMode = DeviceInfo.PosModeEnum.VUK507.name
     private var currentFiscalID: String? = null
     private var currentCardRedirection = DeviceInfo.CardRedirect.NOT_ASSIGNED.name
