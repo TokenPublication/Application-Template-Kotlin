@@ -5,16 +5,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
-import com.tokeninc.sardis.application_template.ui.MainActivity
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.database.activation.ActivationDB
+import com.tokeninc.sardis.application_template.repositories.ActivationRepository
+import com.tokeninc.sardis.application_template.ui.MainActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-/** This connects view with Models
- * It is the interlayer between UI and Activation Table
- */
-class ActivationViewModel(val database: ActivationDB):ViewModel() {
+class ActivationViewModel(private val activationRepository: ActivationRepository): ViewModel() {
+
+    val merchantID = activationRepository.merchantID
+    val terminalID = activationRepository.terminalID
+    val hostIP = activationRepository.hostIP
+    val hostPort = activationRepository.hostPort
 
     var menuItemList = mutableListOf<IListMenuItem>()
 
@@ -26,32 +28,19 @@ class ActivationViewModel(val database: ActivationDB):ViewModel() {
         }
     }
 
-    fun insertConnection(IP: String?, port: String?): Boolean {
-        return database.insertConnection(IP, port)
+    fun updateActivation(terminalId: String?, merchantId: String?, ip: String?){
+        viewModelScope.launch(Dispatchers.IO){
+            activationRepository.updateActivation(terminalId,merchantId,ip)
+        }
     }
 
-    fun updateConnection(IP: String?, port: String?) {
-        database.updateConnection(IP, port)
+    fun updateConnection(ip: String?, port: String?, old_ip: String?){
+        viewModelScope.launch(Dispatchers.IO){
+            activationRepository.updateConnection(ip,port,old_ip)
+        }
     }
 
-    fun updateActivation(terminalId: String?, merchantId: String?) {
-        database.updateActivation(terminalId,merchantId)
+    fun deleteAll(){
+        activationRepository.deleteAll()
     }
-
-    fun getMerchantId(): String?{
-        return database.getMerchantId()
-    }
-
-    fun getTerminalId(): String? {
-        return database.getTerminalId()
-    }
-
-    fun getHostIP(): String? {
-        return database.getHostIP()
-    }
-
-    fun getHostPort(): String? {
-        return database.getHostPort()
-    }
-
 }

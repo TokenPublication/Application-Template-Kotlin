@@ -22,21 +22,21 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.*
-import com.tokeninc.sardis.application_template.database.activation.ActivationDB
-import com.tokeninc.sardis.application_template.database.batch.BatchDB
-import com.tokeninc.sardis.application_template.database.slip.SlipDB
-import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
-import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
+import com.tokeninc.sardis.application_template.database.entities.*
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
-import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.database.AppTempDB
+import com.tokeninc.sardis.application_template.database.dao.ActivationDao
+import com.tokeninc.sardis.application_template.database.dao.BatchDao
+import com.tokeninc.sardis.application_template.database.dao.TransactionDao
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.examples.ExampleActivity
+import com.tokeninc.sardis.application_template.repositories.ActivationRepository
+import com.tokeninc.sardis.application_template.repositories.BatchRepository
+import com.tokeninc.sardis.application_template.repositories.TransactionRepository
 import com.tokeninc.sardis.application_template.services.BatchCloseService
 import com.tokeninc.sardis.application_template.services.TransactionService
-import com.tokeninc.sardis.application_template.viewmodels.ActivationVMFactory
-import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
-import com.tokeninc.sardis.application_template.viewmodels.TransactionVMFactory
-import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
+import com.tokeninc.sardis.application_template.viewmodels.*
 import kotlinx.coroutines.*
 import org.json.JSONException
 import org.json.JSONObject
@@ -56,6 +56,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     //initializing bindings
     private lateinit var cardServiceBinding: CardServiceBinding
     //initializing databases
+    /**
     private var actDB: ActivationDB? = null
     private var transactionDB: TransactionDB? = null
     private var batchDB: BatchDB? = null
@@ -63,6 +64,23 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     //initializing viewModels
     private lateinit var transactionViewModel: TransactionViewModel
     lateinit var activationViewModel: ActivationViewModel
+     */
+
+    // Room Entities
+    private lateinit var database : AppTempDB
+    private lateinit var activationDao : ActivationDao
+    private lateinit var activationRepository : ActivationRepository
+    private lateinit var activationViewModelFactory : ActivationViewModelFactory
+    lateinit var activationViewModel : ActivationViewModel
+    private lateinit var batchDao : BatchDao
+    private lateinit var batchRepository : BatchRepository
+    private lateinit var batchViewModelFactory : BatchViewModelFactory
+    private lateinit var batchViewModel : BatchViewModel
+    private lateinit var transactionDao : TransactionDao
+    private lateinit var transactionRepository : TransactionRepository
+    private lateinit var transactionViewModelFactory : TransactionViewModelFactory
+    private lateinit var transactionViewModel : TransactionViewModel
+
     //initializing fragments
     private val transactionService = TransactionService()
     private val batchCloseService = BatchCloseService()
@@ -78,9 +96,32 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     private var autoTransaction = false
     private var gibSale = false
     private var refundInfo: String? = null
-    private var refNo: String? = null
+    private lateinit var refNo: String
 
     private var extraContents : ContentValues? = null
+
+    //This is for holding MID and TID, Because this values are LiveData, instead of writing this functions everywhere it is used
+    //I only call this functions and hold the last updated values in there.
+    var currentMID: String? = ""
+    var currentTID: String? = ""
+    fun setMID(MerchantID: String?) {
+        currentMID = MerchantID
+    }
+
+    fun setTID(TerminalID: String?) {
+        currentTID = TerminalID
+    }
+
+    //After TID and MID is changed, it is called from there and hold data for it.
+    //It also called everytime whenever MainActivity is created.
+    fun observeTIDandMID(){
+        activationViewModel.merchantID.observe(this){
+            setMID(it)
+        }
+        activationViewModel.terminalID.observe(this){
+            setTID(it)
+        }
+    }
 
     /**
      * This function is overwritten to continue the activity where it was left when
@@ -103,12 +144,30 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      */
     private fun startActivity(){
         val binding = ActivityMainBinding.inflate(layoutInflater)
+        /**
         actDB = ActivationDB(this).getInstance(this)
         transactionDB = TransactionDB(this).getInstance(this)
         batchDB = BatchDB(this).getInstance(this)
         slipDB = SlipDB(this).getInstance(this)
         transactionViewModel = ViewModelProvider(this,TransactionVMFactory(transactionDB!!))[TransactionViewModel::class.java]
         activationViewModel = ViewModelProvider(this,ActivationVMFactory(actDB!!))[ActivationViewModel::class.java]
+        */
+        // Room Entities
+        database = AppTempDB.getInstance(this)
+        AppTempDB.getInstance(this) //addCallBack için
+        activationDao = database.activationDao
+        activationRepository = ActivationRepository(activationDao)
+        activationViewModelFactory = ActivationViewModelFactory(activationRepository)
+        activationViewModel = ViewModelProvider(this,activationViewModelFactory)[ActivationViewModel::class.java]
+        batchDao = database.batchDao
+        batchRepository = BatchRepository(batchDao)
+        batchViewModelFactory = BatchViewModelFactory(batchRepository)
+        batchViewModel = ViewModelProvider(this,batchViewModelFactory)[BatchViewModel::class.java]
+        transactionDao = database.transactionDao
+        transactionRepository = TransactionRepository(transactionDao)
+        transactionViewModelFactory = TransactionViewModelFactory(transactionRepository)
+        transactionViewModel = ViewModelProvider(this,transactionViewModelFactory)[TransactionViewModel::class.java]
+
         dummySaleFragment = DummySaleFragment(transactionViewModel)
         cardServiceBinding = CardServiceBinding(this, this)
         startTransactionService()
@@ -116,6 +175,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
         textFragment.mainActivity = this
+        observeTIDandMID()
 
         /*
         //this is for preventing some errors while using Gib with Postman
@@ -159,7 +219,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
             }
             getString(R.string.Settings_Action) ->  startSettingsFragment(settingsFragment)
             getString(R.string.BatchClose_Action) ->  {
-                if (transactionViewModel.getAllTransactions().isEmpty()){ //if it is empty just show no transaction dialog
+                if (transactionViewModel.allTransactions == null){ //if it is empty just show no transaction dialog
                     callbackMessage(ResponseCode.ERROR)
                 }else{ //else implementing batch closing and finish that activity
                     startPostTxnFragment(postTxnFragment)
@@ -197,7 +257,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
             val refAmount = json.getString("Amount")
             amount = refAmount.toInt()
             val batchNo = json.getInt("BatchNo")
-            if (batchNo == batchDB!!.getBatchNo()){ //void
+            if (batchNo == batchViewModel.batchNo){ //void
                 transactionCode = TransactionCode.VOID.type
                 readCard()
             } else{
@@ -246,21 +306,21 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      * This function is setting some variables in fragment
      */
     private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
-        postTxnFragment.setter(this,transactionViewModel,transactionService,refundFragment,batchCloseService,slipDB!!)
+        postTxnFragment.setter(this,transactionViewModel,transactionService,refundFragment,batchCloseService,batchViewModel)
     }
 
     /**
      * This is for initializing some variables in Transaction Service
      */
     private fun startTransactionService(){
-        transactionService.setter(this,batchDB!!,transactionViewModel)
+        transactionService.setter(this,batchViewModel,transactionViewModel)
     }
 
     /**
      * This is for initializing some variables in Batch Service
      */
     private fun startBatchService(){
-        batchCloseService.setter(this,batchDB!!,transactionViewModel,slipDB!!)
+        batchCloseService.setter(this,batchViewModel,transactionViewModel)
     }
 
     /** This function is getting amount from intent and pass that amount and other variables to fragment.
@@ -268,7 +328,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
      */
     private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
         amount = intent.extras!!.getInt("Amount")
-        dummySaleFragment.setter(this, bundleOf(),Intent(),activationViewModel,batchDB!!, transactionService,amount)
+        dummySaleFragment.setter(this, bundleOf(),Intent(),activationViewModel,batchViewModel, transactionService,amount)
     }
 
     /**
@@ -331,6 +391,10 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
         ft.replace(R.id.container, fragment)
         ft.addToBackStack(null)
         ft.commit()
+    }
+
+    fun popFragment(){
+        supportFragmentManager.popBackStack()
     }
 
     /**
@@ -453,7 +517,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
 
 
     override fun onCardServiceConnected() {
-        setEMVConfiguration()
+        setEMVConfiguration() //TODO doğru yere taşınacak
     }
 
     /** This method is implemented after card data is received. It makes card data JSON parse easily.
@@ -469,6 +533,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
     override fun onCardDataReceived(cardData: String?) {
         try {
             val json = JSONObject(cardData!!)
+            //var card: ICard = Gson().fromJson(cardData, ICard::class.java) //whole methods is designed for ICCCard, converting them needs an extra effort
             var card: ICCCard = Gson().fromJson(cardData, ICCCard::class.java)
             if (card.resultCode == CardServiceResult.USER_CANCELLED.resultCode()) { //if user pressed back button in GiB operation
                 Log.d("CardDataReceived","Card Result Code: User Cancelled")
@@ -478,12 +543,12 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                 Log.d("CardDataReceived","Card Result Code: TIMEOUT")
                 callbackMessage(ResponseCode.CANCELED)
             }
-            val type = json.getInt("mCardReadType")
+            val type = json.getInt("mCardReadType") //get type
             if (card.resultCode == CardServiceResult.ERROR.resultCode()) {
                 Log.d("CardDataReceived","Card Result Code: ERROR")
             }
-            if (card.resultCode == CardServiceResult.SUCCESS.resultCode()) {
-                when (type) {
+            if (card.resultCode == CardServiceResult.SUCCESS.resultCode()) { //if card reads is successful
+                when (type) { // implementing methods to card read types
                     CardReadType.QrPay.type -> {
                         //QrSale()
                         return
@@ -505,7 +570,7 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                         }
                     }
                     CardReadType.ICC2MSR.type, CardReadType.MSR.type, CardReadType.KeyIn.type -> {
-                        //card = Gson().fromJson(cardData, ICCCard::class.java)
+                        //card = Gson().fromJson(cardData, MSRCard::class.java)
                         //cardServiceBinding!!.getOnlinePIN(amount, card?.cardNumber, 0x0A01, 0, 4, 8, 30)
                     }
                 }
@@ -513,10 +578,10 @@ class MainActivity : TimeOutActivity(), CardServiceListener {
                     if (autoTransaction) {
                         autoTransaction = false
                         transactionCode = 0
-                        val transactionList: List<ContentValues?> = transactionDB!!.getTransactionsByRefNo(refNo!!)
-                        val transaction = transactionList[0] //2 tane geldi??
+                        val transactionList: List<Transaction?>? = transactionViewModel.getTransactionsByRefNo(refNo)
+                        val transaction = transactionList!![0] //2 tane geldi??
                         Log.d("Refund Info", "Satış İptali: $transaction")
-                        if (card.mCardNumber == transaction!!.getAsString(TransactionCol.Col_PAN.name)) {
+                        if (card.mCardNumber == transaction!!.Col_PAN) {
                             postTxnFragment.card = card
                             postTxnFragment.voidOperation(transaction)
                         } else {

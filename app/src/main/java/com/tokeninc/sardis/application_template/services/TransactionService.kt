@@ -4,17 +4,18 @@ import android.content.ContentValues
 import android.content.Context
 import android.util.Log
 import com.token.uicomponents.infodialog.InfoDialog
-import com.tokeninc.sardis.application_template.ui.MainActivity
-import com.tokeninc.sardis.application_template.database.batch.BatchDB
-import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
-import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.viewmodels.BatchViewModel
+import com.tokeninc.sardis.application_template.helpers.ContentValHelper
+import com.tokeninc.sardis.application_template.entities.col_names.TransactionCols
+import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
+import com.tokeninc.sardis.application_template.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.helpers.printHelpers.DateUtil
-import com.tokeninc.sardis.application_template.responses.OnlineTransactionResponse
-import com.tokeninc.sardis.application_template.responses.TransactionResponse
-import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
+import com.tokeninc.sardis.application_template.entities.responses.OnlineTransactionResponse
+import com.tokeninc.sardis.application_template.entities.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.ui.MainActivity
 import kotlinx.coroutines.*
 
 /**
@@ -26,13 +27,13 @@ class TransactionService  {
     private var downloadNumber: Int = 0
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private lateinit var mainActivity: MainActivity
-    private lateinit var batchDB: BatchDB
+    private lateinit var batchViewModel: BatchViewModel
     private lateinit var transactionViewModel: TransactionViewModel
     private val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
 
-    fun setter(mainActivity: MainActivity, batchDB: BatchDB, transactionViewModel: TransactionViewModel){
+    fun setter(mainActivity: MainActivity, batchViewModel: BatchViewModel, transactionViewModel: TransactionViewModel){
         this.mainActivity = mainActivity
-        this.batchDB = batchDB
+        this.batchViewModel = batchViewModel
         this.transactionViewModel = transactionViewModel
     }
 
@@ -74,7 +75,7 @@ class TransactionService  {
     /**
      * This is dummy, parsing response with respect to parameters.
      */
-    private fun parseResponse(card: ICCCard, contentVal: ContentValues?, transactionCode: Int): OnlineTransactionResponse{
+    private fun parseResponse(card: ICCCard, contentVal: ContentValues?, transactionCode: Int): OnlineTransactionResponse {
         val onlineTransactionResponse = OnlineTransactionResponse()
         onlineTransactionResponse.mResponseCode = ResponseCode.SUCCESS
         onlineTransactionResponse.mTextPrintCode1 = "Test Print 1"
@@ -97,91 +98,114 @@ class TransactionService  {
      * Update dialog with success message if database operations result without an error.
      */
     private fun finishTransaction(context: Context, amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues?, onlinePin: String?,
-                                  isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse): TransactionResponse {
+                                  isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse
+    ): TransactionResponse {
 
         val content = ContentValues()
-        content.put(TransactionCol.Col_UUID.name, uuid)
-        content.put(TransactionCol.Col_BatchNo.name, batchDB.getBatchNo())
+        content.put(TransactionCols.Col_UUID, uuid)
+        content.put(TransactionCols.Col_BatchNo, batchViewModel.batchNo)
         if (transactionCode != TransactionCode.VOID.type) {
-            content.put(TransactionCol.Col_GUP_SN.name, batchDB.updateGUPSN())
+            batchViewModel.updateGUPSN(batchViewModel.groupSN)
+            val lst = batchViewModel.allBatch
+            val groupSn = batchViewModel.groupSN
+            Log.d("groupSn",groupSn.toString())
+            content.put(TransactionCols.Col_GUP_SN,groupSn)
+            /**
+            batchViewModel.groupSN.observe(mainActivity){ //backGroundda observeleyemiyor.
+                val groupSN = it
+                Log.d("GROUPSN",it.toString())
+                content.put(TransactionCols.Col_GUP_SN,groupSN)
+            }
+            */
         }
-        content.put(TransactionCol.Col_ReceiptNo.name, 2) // TODO Check Receipt NO 1000TR
-        content.put(TransactionCol.Col_CardReadType.name, card.mCardReadType)
-        content.put(TransactionCol.Col_PAN.name, card.mCardNumber)
-        content.put(TransactionCol.Col_CardSequenceNumber.name, card.CardSeqNum)
-        content.put(TransactionCol.Col_TransCode.name, transactionCode)
-        content.put(TransactionCol.Col_Amount.name, amount)
+        content.put(TransactionCols.Col_ReceiptNo, 2) // TODO Check Receipt NO 1000TR
+        content.put(TransactionCols.Col_CardReadType, card.mCardReadType)
+        content.put(TransactionCols.Col_PAN, card.mCardNumber)
+        content.put(TransactionCols.Col_CardSequenceNumber, card.CardSeqNum)
+        content.put(TransactionCols.Col_TransCode, transactionCode)
+        content.put(TransactionCols.Col_Amount, amount)
         when (transactionCode) {
             TransactionCode.MATCHED_REFUND.type -> {
-                content.put(TransactionCol.Col_Amount2.name,extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
-                content.put(TransactionCol.Col_Ext_Conf.name,extraContent.getAsString(ExtraKeys.AUTH_CODE.name).toInt())
-                content.put(TransactionCol.Col_Ext_Ref.name,extraContent.getAsString(ExtraKeys.REF_NO.name).toInt())
-                content.put(TransactionCol.Col_Ext_RefundDateTime.name,extraContent.getAsString(ExtraKeys.TRAN_DATE.name))
+                content.put(TransactionCols.Col_Amount2,extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
+                content.put(TransactionCols.Col_Ext_Conf,extraContent.getAsString(ExtraKeys.AUTH_CODE.name).toInt())
+                content.put(TransactionCols.Col_Ext_Ref,extraContent.getAsString(ExtraKeys.REF_NO.name).toInt())
+                content.put(TransactionCols.Col_Ext_RefundDateTime,extraContent.getAsString(ExtraKeys.TRAN_DATE.name))
             }
             TransactionCode.INSTALLMENT_REFUND.type -> {
-                content.put(TransactionCol.Col_Amount2.name,extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
-                content.put(TransactionCol.Col_Ext_RefundDateTime.name,extraContent.getAsString(ExtraKeys.TRAN_DATE.name))
+                content.put(TransactionCols.Col_Amount2,extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
+                content.put(TransactionCols.Col_Ext_RefundDateTime,extraContent.getAsString(ExtraKeys.TRAN_DATE.name))
+                content.put(TransactionCols.Col_Ext_Conf,0)
+                content.put(TransactionCols.Col_Ext_Ref,0)
             }
             TransactionCode.CASH_REFUND.type -> {
-                content.put(TransactionCol.Col_Amount2.name, extraContent!!.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt() )
+                content.put(TransactionCols.Col_Amount2, extraContent!!.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt() )
+                content.put(TransactionCols.Col_Ext_Conf,0)
+                content.put(TransactionCols.Col_Ext_Ref,0)
+                content.put(TransactionCols.Col_Ext_RefundDateTime,"")
             }
             else -> {
-                content.put(TransactionCol.Col_Amount2.name,0)
-                content.put(TransactionCol.Col_Ext_Conf.name,0)
-                content.put(TransactionCol.Col_Ext_Ref.name,0)
-                content.put(TransactionCol.Col_Ext_RefundDateTime.name,"")
+                content.put(TransactionCols.Col_Amount2,0)
+                content.put(TransactionCols.Col_Ext_Conf,0)
+                content.put(TransactionCols.Col_Ext_Ref,0)
+                content.put(TransactionCols.Col_Ext_RefundDateTime,"")
             }
         }
-        content.put(TransactionCol.Col_ExpDate.name, card.mExpireDate)
-        content.put(TransactionCol.Col_Track2.name, card.mTrack2Data)
-        content.put(TransactionCol.Col_CustName.name, card.ownerName)
-        content.put(TransactionCol.Col_IsVoid.name, 0)
-        content.put(TransactionCol.Col_isPinByPass.name, isPinByPass)
-        content.put(TransactionCol.Col_isOffline.name, isOffline)
-        content.put(TransactionCol.Col_InstCnt.name, onlineTransactionResponse.insCount)
+        content.put(TransactionCols.Col_ExpDate, card.mExpireDate)
+        content.put(TransactionCols.Col_Track2, card.mTrack2Data)
+        content.put(TransactionCols.Col_CustName, card.ownerName)
+        content.put(TransactionCols.Col_IsVoid, 0)
+        if (isPinByPass)
+            content.put(TransactionCols.Col_isPinByPass, 1)
+        else
+            content.put(TransactionCols.Col_isPinByPass, 0)
+        if (isOffline)
+            content.put(TransactionCols.Col_isOffline, 1)
+        else
+            content.put(TransactionCols.Col_isOffline, 0)
+        content.put(TransactionCols.Col_InstCnt, onlineTransactionResponse.insCount)
         Log.d("Inst cnt","${onlineTransactionResponse.insCount}")
-        content.put(TransactionCol.Col_InstAmount.name, onlineTransactionResponse.instAmount)
-        content.put(TransactionCol.Col_TranDate.name, "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}")
-        content.put(TransactionCol.Col_HostLogKey.name, onlineTransactionResponse.mHostLogKey)
-        content.put(TransactionCol.Col_VoidDateTime.name, "")
-        content.put(TransactionCol.Col_AuthCode.name, onlineTransactionResponse.mAuthCode)
-        content.put(TransactionCol.Col_Aid.name, card.AID2)
-        content.put(TransactionCol.Col_AidLabel.name, card.AIDLabel)
-        content.put(TransactionCol.Col_TextPrintCode1.name, onlineTransactionResponse.mTextPrintCode1)
-        content.put(TransactionCol.Col_TextPrintCode2.name, onlineTransactionResponse.mTextPrintCode2)
-        content.put(TransactionCol.Col_DisplayData.name, onlineTransactionResponse.mDisplayData)
-        content.put(TransactionCol.Col_KeySequenceNumber.name, onlineTransactionResponse.mKeySequenceNumber)
-        content.put(TransactionCol.Col_AC.name, card.AC)
-        content.put(TransactionCol.Col_CID.name, card.CID)
-        content.put(TransactionCol.Col_ATC.name, card.ATC)
-        content.put(TransactionCol.Col_TVR.name, card.TVR)
-        content.put(TransactionCol.Col_TSI.name, card.TSI)
-        content.put(TransactionCol.Col_AIP.name, card.AIP)
-        content.put(TransactionCol.Col_CVM.name, card.CVM)
-        content.put(TransactionCol.Col_AID2.name, card.AID2)
-        content.put(TransactionCol.Col_UN.name, card.UN)
-        content.put(TransactionCol.Col_IAD.name, card.IAD)
-        content.put(TransactionCol.Col_SID.name, card.SID)
+        content.put(TransactionCols.Col_InstAmount, onlineTransactionResponse.instAmount)
+        content.put(TransactionCols.Col_TranDate, "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}")
+        content.put(TransactionCols.Col_HostLogKey, onlineTransactionResponse.mHostLogKey)
+        content.put(TransactionCols.Col_VoidDateTime, "")
+        content.put(TransactionCols.Col_AuthCode, onlineTransactionResponse.mAuthCode)
+        content.put(TransactionCols.Col_Aid, card.AID2)
+        content.put(TransactionCols.Col_AidLabel, card.AIDLabel)
+        content.put(TransactionCols.Col_TextPrintCode1, onlineTransactionResponse.mTextPrintCode1)
+        content.put(TransactionCols.Col_TextPrintCode2, onlineTransactionResponse.mTextPrintCode2)
+        content.put(TransactionCols.Col_DisplayData, onlineTransactionResponse.mDisplayData)
+        content.put(TransactionCols.Col_KeySequenceNumber, onlineTransactionResponse.mKeySequenceNumber)
+        content.put(TransactionCols.Col_AC, card.AC)
+        content.put(TransactionCols.Col_CID, card.CID)
+        content.put(TransactionCols.Col_ATC, card.ATC)
+        content.put(TransactionCols.Col_TVR, card.TVR)
+        content.put(TransactionCols.Col_TSI, card.TSI)
+        content.put(TransactionCols.Col_AIP, card.AIP)
+        content.put(TransactionCols.Col_CVM, card.CVM)
+        content.put(TransactionCols.Col_AID2, card.AID2)
+        content.put(TransactionCols.Col_UN, card.UN)
+        content.put(TransactionCols.Col_IAD, card.IAD)
+        content.put(TransactionCols.Col_SID, card.SID)
         Log.d("Service","Transaction Code: $transactionCode")
         var success = false
         var responseCode = ResponseCode.ERROR
         if (transactionCode == TransactionCode.VOID.type){
-            success = transactionViewModel.setVoid(extraContent!!.getAsString(TransactionCol.Col_GUP_SN.name).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card)
+            transactionViewModel.setVoid(extraContent!!.getAsString(TransactionCols.Col_GUP_SN).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card.SID)
         }
         else if (transactionCode != 0){
-            success = transactionViewModel.insertTransaction(content)
-            Log.d("Service","Success: $success")
+            transactionViewModel.insertTransaction(ContentValHelper().getTransaction(content))
+            Log.d("Service","Success: ")
         }
-
-        if (success) {
-            responseCode = ResponseCode.SUCCESS
-            coroutineScope.async(Dispatchers.Main) {
-                dialog.update(InfoDialog.InfoType.Confirmed, "İşlem Tamamlandı")
-            }
-            return TransactionResponse(responseCode, onlineTransactionResponse, content, extraContent, transactionCode)
-        } // TODO: Detailed response will be implemented
-
+        //TODO CONTROLLER EKLE
+        //if (success) {
+        responseCode = ResponseCode.SUCCESS
+        coroutineScope.launch(Dispatchers.Main) {
+            dialog.update(InfoDialog.InfoType.Confirmed, "İşlem Tamamlandı")
+        } //TODO join gerekiyor mu ?
         return TransactionResponse(responseCode, onlineTransactionResponse, content, extraContent, transactionCode)
+        //} // TODO: Detailed response will be implemented
+
+        //return TransactionResponse(responseCode, onlineTransactionResponse, content, extraContent, transactionCode)
         //return null // TODO: if error DB insert, return error...
     }
 }

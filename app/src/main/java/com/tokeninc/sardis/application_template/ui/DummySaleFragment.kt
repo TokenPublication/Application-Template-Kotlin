@@ -15,17 +15,17 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.database.batch.BatchDB
-import com.tokeninc.sardis.application_template.database.transaction.TransactionCol
+import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
+import com.tokeninc.sardis.application_template.viewmodels.BatchViewModel
+import com.tokeninc.sardis.application_template.entities.col_names.TransactionCols
+import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
-import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintService
-import com.tokeninc.sardis.application_template.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.entities.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.services.TransactionService
-import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
-import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import kotlinx.coroutines.*
 import org.json.JSONException
 import org.json.JSONObject
@@ -43,7 +43,7 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
     private lateinit var bundle: Bundle
     private lateinit var intent: Intent
     private lateinit var activationViewModel: ActivationViewModel
-    private lateinit var batchDB: BatchDB
+    private lateinit var batchViewModel: BatchViewModel
     private lateinit var mainActivity: MainActivity
     private lateinit var transactionService: TransactionService
     var card: ICCCard? = null
@@ -86,14 +86,14 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
     /**
      * This is for initializing some variables on that class, it is called from mainActivity before this class is called
      */
-    fun setter(mainActivity: MainActivity, bundle: Bundle, intent:Intent, activationViewModel: ActivationViewModel, batchDB: BatchDB, transactionService: TransactionService, amount:Int ){
+    fun setter(mainActivity: MainActivity, bundle: Bundle, intent:Intent, activationViewModel: ActivationViewModel, batchViewModel: BatchViewModel, transactionService: TransactionService, amount:Int ){
         this.mainActivity = mainActivity
         this.bundle = bundle
         this.intent = intent
         this.amount = amount
         this.transactionService = transactionService
         this.activationViewModel = activationViewModel
-        this.batchDB = batchDB
+        this.batchViewModel = batchViewModel
     }
 
     /** Flow: Clicking Sale Button > Read Card > On Card Data Received > (if card is ICC) -> here
@@ -189,11 +189,11 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
             bundle.putInt("Amount", amount ) // #3 Amount
             bundle.putInt("Amount2", 0)
             bundle.putBoolean("IsSlip", true)
-            bundle.putInt("BatchNo", batchDB.getBatchNo()!!)
+            bundle.putInt("BatchNo", batchViewModel.batchNo)
             bundle.putString("CardNo", StringHelper().maskCardForBundle(card!!.mCardNumber!!))
-            bundle.putString("MID", activationViewModel.getMerchantId())
-            bundle.putString("TID", activationViewModel.getTerminalId())
-            bundle.putInt("TxnNo",batchDB.getGUPSN()!!)
+            bundle.putString("MID", mainActivity.currentMID)
+            bundle.putString("TID", mainActivity.currentTID)
+            bundle.putInt("TxnNo",batchViewModel.groupSN)
             bundle.putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
 
             var slipType: SlipType = SlipType.NO_SLIP
@@ -207,8 +207,10 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
                     bundle.putString("merchantSlipData", printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
                     bundle.putString("RefundInfo", getRefundInfo(transactionResponse))
                     if(transactionResponse.contentVal != null) {
-                        bundle.putString("RefNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_HostLogKey.name))
-                        bundle.putString("AuthNo", transactionResponse.contentVal!!.getAsString(TransactionCol.Col_AuthCode.name))
+                        bundle.putString("RefNo", transactionResponse.contentVal!!.getAsString(
+                            TransactionCols.Col_HostLogKey))
+                        bundle.putString("AuthNo", transactionResponse.contentVal!!.getAsString(
+                            TransactionCols.Col_AuthCode))
                     }
                 }
             }
@@ -225,19 +227,20 @@ class DummySaleFragment(private val viewModel: TransactionViewModel) : Fragment(
         val json = JSONObject()
         val transaction = transactionResponse.contentVal
         try {
-            json.put("BatchNo", batchDB.getBatchNo())
-            json.put("TxnNo", batchDB.getGUPSN())
+            json.put("BatchNo", batchViewModel.batchNo)
+            json.put("TxnNo", batchViewModel.groupSN)
             json.put("Amount", amount)
-            json.put("RefNo", transaction!!.getAsString(TransactionCol.Col_HostLogKey.name))
-            json.put("AuthCode", transaction.getAsString(TransactionCol.Col_AuthCode.name))
-            json.put("TranDate", transaction.getAsString(TransactionCol.Col_TranDate.name))
-            json.put("MID",activationViewModel.getMerchantId())
-            json.put("TID",activationViewModel.getTerminalId())
+            json.put("RefNo", transaction!!.getAsString(TransactionCols.Col_HostLogKey))
+            json.put("AuthCode", transaction.getAsString(TransactionCols.Col_AuthCode))
+            json.put("TranDate", transaction.getAsString(TransactionCols.Col_TranDate))
+            json.put("MID",mainActivity.currentMID)
+            json.put("TID",mainActivity.currentTID)
             json.put("CardNo",card!!.mCardNumber!!)
-            if (transaction.getAsInteger(TransactionCol.Col_InstCnt.name) != null && transaction.getAsInteger(TransactionCol.Col_InstCnt.name) > 0) {
+            if (transaction.getAsInteger(TransactionCols.Col_InstCnt) != null && transaction.getAsInteger(
+                    TransactionCols.Col_InstCnt) > 0) {
                 //val installment = JSONObject()
-                json.put("InstCount", transaction.getAsInteger(TransactionCol.Col_InstCnt.name))
-                json.put("InstAmount", transaction.getAsInteger(TransactionCol.Col_InstAmount.name))
+                json.put("InstCount", transaction.getAsInteger(TransactionCols.Col_InstCnt))
+                json.put("InstAmount", transaction.getAsInteger(TransactionCols.Col_InstAmount))
                 //json.put("Installment", installment)
             }
             else{
