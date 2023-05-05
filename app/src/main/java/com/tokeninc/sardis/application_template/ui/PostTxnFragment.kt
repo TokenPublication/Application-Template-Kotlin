@@ -15,18 +15,18 @@ import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.database.entities.BatchViewModel
-import com.tokeninc.sardis.application_template.database.entities.ContentValHelper
+import com.tokeninc.sardis.application_template.viewmodels.BatchViewModel
+import com.tokeninc.sardis.application_template.helpers.ContentValHelper
 import com.tokeninc.sardis.application_template.database.entities.Transaction
-import com.tokeninc.sardis.application_template.database.entities.TransactionViewModel
+import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
-import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintService
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
-import com.tokeninc.sardis.application_template.responses.BatchCloseResponse
-import com.tokeninc.sardis.application_template.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.entities.responses.BatchCloseResponse
+import com.tokeninc.sardis.application_template.entities.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.services.BatchCloseService
 import com.tokeninc.sardis.application_template.services.TransactionService
 import com.tokeninc.sardis.application_template.viewmodels.PostTxnViewModel
@@ -66,7 +66,8 @@ class PostTxnFragment : Fragment() {
      * This is for initializing some variables on that class, it is called from mainActivity before this class is called
      */
     fun setter(mainActivity: MainActivity, transactionViewModel: TransactionViewModel, transactionService: TransactionService,
-    refundFragment: RefundFragment, batchCloseService: BatchCloseService, batchViewModel: BatchViewModel){
+               refundFragment: RefundFragment, batchCloseService: BatchCloseService, batchViewModel: BatchViewModel
+    ){
         this.mainActivity = mainActivity
         this.transactionViewModel = transactionViewModel
         this.transactionService = transactionService
@@ -89,7 +90,7 @@ class PostTxnFragment : Fragment() {
             mainActivity.addFragment(refundFragment) //burada stacke ekliyor
         }))
         menuItems.add(MenuItem(getStrings(R.string.batch_close), {
-            if (transactionViewModel.allTransactions.value == null){
+            if (transactionViewModel.allTransactions == null){
                 val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(
                     R.string.batch_empty
                 ),false)
@@ -113,7 +114,7 @@ class PostTxnFragment : Fragment() {
             mainActivity.startExampleActivity()
         }))
         menuItems.add(MenuItem("Slip Tekrarı",{
-            val slip = batchViewModel.previousBatchSlip.value
+            val slip = batchViewModel.previousBatchSlip
             PrintServiceBinding().print(slip)
         }))
         viewModel.list = menuItems
@@ -156,7 +157,7 @@ class PostTxnFragment : Fragment() {
      */
     fun cardNumberReceived(mCard: ICCCard?){
         mainActivity.transactionCode = 0
-        if (transactionViewModel.getTransactionsByCardNo(mCard!!.mCardNumber.toString()).value == null){
+        if (transactionViewModel.getTransactionsByCardNo(mCard!!.mCardNumber.toString()) == null){
             val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
             Handler(Looper.getMainLooper()).postDelayed({
                 infoDialog!!.dismiss()

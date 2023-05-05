@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.tokeninc.sardis.application_template.database.DatabaseInfo
+import com.tokeninc.sardis.application_template.entities.col_names.ActivationCols
 
 
 @Entity(tableName = DatabaseInfo.ACTTABLE)

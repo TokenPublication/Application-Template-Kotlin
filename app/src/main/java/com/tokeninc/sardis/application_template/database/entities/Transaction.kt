@@ -5,12 +5,13 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.tokeninc.sardis.application_template.database.DatabaseInfo
+import com.tokeninc.sardis.application_template.entities.col_names.TransactionCols
 
 @Entity(tableName = DatabaseInfo.TRANSACTIONTABLE,
 indices = [Index(value = [TransactionCols.Col_GUP_SN],unique = true)])
 data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_UUID)
-    var Col_UUID: String,
+    var Col_UUID: String?,
     @ColumnInfo(name = TransactionCols.Col_GUP_SN)
     @PrimaryKey
     var Col_GUP_SN: Int,
@@ -35,7 +36,7 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_Track2)
     var Col_Track2: String,
     @ColumnInfo(name = TransactionCols.Col_CustName)
-    var Col_CustName: String,
+    var Col_CustName: String?,
     @ColumnInfo(name = TransactionCols.Col_IsVoid)
     var Col_IsVoid: Int,
     @ColumnInfo(name = TransactionCols.Col_InstCnt)
@@ -53,7 +54,7 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_Aid)
     var Col_Aid: String,
     @ColumnInfo(name = TransactionCols.Col_AidLabel)
-    var Col_AidLabel: String,
+    var Col_AidLabel: String?,
     @ColumnInfo(name = TransactionCols.Col_TextPrintCode1)
     var Col_TextPrintCode1: String,
     @ColumnInfo(name = TransactionCols.Col_TextPrintCode2)
@@ -87,7 +88,7 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_IAD)
     var Col_IAD: String,
     @ColumnInfo(name = TransactionCols.Col_SID)
-    var Col_SID: String,
+    var Col_SID: String?,
     @ColumnInfo(name = TransactionCols.Col_Ext_Conf)
     var Col_Ext_Conf: Int = 0,
     @ColumnInfo(name = TransactionCols.Col_Ext_Ref)

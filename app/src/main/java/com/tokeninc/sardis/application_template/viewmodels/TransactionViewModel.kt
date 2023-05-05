@@ -1,54 +1,56 @@
 package com.tokeninc.sardis.application_template.viewmodels
-/**
-import android.content.ContentValues
+
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
-import com.tokeninc.sardis.application_template.database.transaction.TransactionDB
-import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.database.entities.Transaction
+import com.tokeninc.sardis.application_template.repositories.TransactionRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
-/** This connects view with Models
- * It is the interlayer between UI and Transaction Table
- */
-/**
-class TransactionViewModel(val database: TransactionDB): ViewModel() {
+class TransactionViewModel(private val transactionRepository: TransactionRepository): ViewModel() {
 
-    val list = MutableLiveData<List<ContentValues?>>()
+    var allTransactions: List<Transaction?>? = transactionRepository.allTransactions
+
+    val list = MutableLiveData<List<Transaction?>>()
     var cardNumber: String? = null
 
     var menuItemList = mutableListOf<IListMenuItem>()
 
-
-    fun insertTransaction(contentValues: ContentValues?): Boolean {
-        return database.insertTransaction(contentValues)
-    }
-
-    fun deleteAll(){
-        database.deleteAll()
-    }
-
-    fun getTransactionsByCardNo(cardNo: String): List<ContentValues?> {
-        return database.getTransactionsByCardNo(cardNo)
-    }
-
-    fun getAllTransactions(): List<ContentValues?> {
-        return database.getAllTransactions()
-    }
-
     /**
      * It is for getting transactions with card number from database for recycler view on Void Operations.
      */
-    fun createLiveData(): MutableList<ContentValues?> {
-        list.value = getTransactionsByCardNo(cardNumber!!)
+    fun createLiveData(): MutableList<Transaction?> {
+        list.value = getTransactionsByCardNo(cardNumber!!)!!
         return list.value!!.toMutableList()
     }
 
-    fun setVoid(gupSN: Int, date: String?, card: ICCCard): Boolean {
-        return database.setVoid(gupSN, date, card) == 1
+    fun getTransactionsByRefNo(refNo: String): List<Transaction?>?{
+        return transactionRepository.getTransactionsByRefNo(refNo)
     }
 
+    fun getTransactionsByCardNo(cardNo: String): List<Transaction?>?{
+        return transactionRepository.getTransactionsByCardNo(cardNo)
+    }
+
+    fun insertTransaction(transaction: Transaction){
+        viewModelScope.launch(Dispatchers.IO){
+            transactionRepository.insertTransaction(transaction)
+        }
+    }
+
+    fun setVoid(gupSN: Int, date: String?, card_SID: String?){
+        viewModelScope.launch(Dispatchers.IO) {
+            transactionRepository.setVoid(gupSN, date, card_SID)
+        }
+    }
+
+    fun deleteAll(){
+        viewModelScope.launch(Dispatchers.IO) {
+            transactionRepository.deleteAll()
+        }
+    }
+
+
 }
-*/

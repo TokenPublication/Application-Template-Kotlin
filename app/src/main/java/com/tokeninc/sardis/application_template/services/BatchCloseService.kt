@@ -3,12 +3,12 @@ package com.tokeninc.sardis.application_template.services
 import android.util.Log
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.ui.MainActivity
-import com.tokeninc.sardis.application_template.database.entities.BatchViewModel
-import com.tokeninc.sardis.application_template.database.entities.TransactionViewModel
+import com.tokeninc.sardis.application_template.viewmodels.BatchViewModel
+import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import com.tokeninc.sardis.application_template.enums.BatchResult
 import com.tokeninc.sardis.application_template.helpers.printHelpers.BatchClosePrintHelper
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
-import com.tokeninc.sardis.application_template.responses.BatchCloseResponse
+import com.tokeninc.sardis.application_template.entities.responses.BatchCloseResponse
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -64,18 +64,18 @@ class BatchCloseService {
      * Lastly insert this slip to database, to print it again in next day. If it inserts it successfully, ui is updating
      * with Success Message. Lastly, update Batch number and resets group number and delete all transactions from Transaction Table.
      */
-    private fun finishBatchClose(dialog: InfoDialog): BatchCloseResponse{
-        val transactions = transactionViewModel.allTransactions.value
+    private fun finishBatchClose(dialog: InfoDialog): BatchCloseResponse {
+        val transactions = transactionViewModel.allTransactions
 
         val printService = BatchClosePrintHelper()
         val printServiceBinding = PrintServiceBinding()
-        val slip = printService.batchText(batchViewModel.batchNo.value.toString(),transactions!!,mainActivity,true)
+        val slip = printService.batchText(batchViewModel.batchNo.toString(),transactions!!,mainActivity,true)
         Log.d("Repetition",slip)
-        batchViewModel.updateBatchSlip(slip,batchViewModel.batchNo.value!!)
+        batchViewModel.updateBatchSlip(slip,batchViewModel.batchNo)
         dialog.update(InfoDialog.InfoType.Confirmed, "Grup Kapama Başarılı")
 
         printServiceBinding.print(slip)
-        batchViewModel.updateBatchNo(batchViewModel.batchNo.value!! + 1)
+        batchViewModel.updateBatchNo(batchViewModel.batchNo)
         transactionViewModel.deleteAll()
         return BatchCloseResponse(BatchResult.SUCCESS, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()))
     }

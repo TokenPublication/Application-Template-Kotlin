@@ -20,13 +20,13 @@ import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentRefundBinding
-import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
 import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintService
-import com.tokeninc.sardis.application_template.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.entities.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.services.TransactionService
 import com.tokeninc.sardis.application_template.viewmodels.RefundViewModel
 import kotlinx.coroutines.CoroutineScope

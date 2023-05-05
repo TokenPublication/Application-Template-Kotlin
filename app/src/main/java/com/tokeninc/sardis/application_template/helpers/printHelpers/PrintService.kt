@@ -6,9 +6,9 @@ import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.AppTemp
-import com.tokeninc.sardis.application_template.database.entities.TransactionCols
+import com.tokeninc.sardis.application_template.entities.col_names.TransactionCols
 import com.tokeninc.sardis.application_template.ui.MainActivity
-import com.tokeninc.sardis.application_template.responses.OnlineTransactionResponse
+import com.tokeninc.sardis.application_template.entities.responses.OnlineTransactionResponse
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
@@ -20,7 +20,10 @@ import java.util.*
  * This class forms slips with respect to type of Transaction, it can arrange slip for
  * Sale, Void and all types of refund.
  */
+
+
 class PrintService:BasePrintHelper() {
+
 
     //TODO installment ve cash refunda göre de düzenleme yap
     fun getFormattedText(slipType: SlipType, contentValues: ContentValues, extraContentValues: ContentValues?, onlineTransactionResponse: OnlineTransactionResponse,
@@ -82,7 +85,8 @@ class PrintService:BasePrintHelper() {
         styledText.newLine()
         styledText.addTextToLine(lineTime, PrinterDefinitions.Alignment.Center )
         styledText.newLine()
-        styledText.addTextToLine(stringHelper.maskCardNumber(contentValues.getAsString(TransactionCols.Col_PAN)), PrinterDefinitions.Alignment.Center)
+        styledText.addTextToLine(stringHelper.maskCardNumber(contentValues.getAsString(
+            TransactionCols.Col_PAN)), PrinterDefinitions.Alignment.Center)
         styledText.newLine()
         val ddMMyy = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
         val date = ddMMyy.format(Calendar.getInstance().time)
@@ -98,9 +102,11 @@ class PrintService:BasePrintHelper() {
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type)
             styledText.addTextToLine(stringHelper.getAmount(extraContentValues!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()), PrinterDefinitions.Alignment.Right)
         if (transactionCode == TransactionCode.CASH_REFUND.type)
-            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCols.Col_Amount2).toInt()), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(
+                TransactionCols.Col_Amount2).toInt()), PrinterDefinitions.Alignment.Right)
         else
-            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCols.Col_Amount).toInt()), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(
+                TransactionCols.Col_Amount).toInt()), PrinterDefinitions.Alignment.Right)
         styledText.setLineSpacing(0.5f)
         styledText.setFontSize(10)
         styledText.newLine()
@@ -125,7 +131,7 @@ class PrintService:BasePrintHelper() {
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TARİHİ: ${extraContentValues!!.getAsString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
-            styledText.addTextToLine("ORJ. İŞ YERİ NO: ${mainActivity.activationViewModel.merchantID }",PrinterDefinitions.Alignment.Center)
+            styledText.addTextToLine("ORJ. İŞ YERİ NO: ${mainActivity.currentMID }",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TEMASSIZ TAMAMLANMIŞTIR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()

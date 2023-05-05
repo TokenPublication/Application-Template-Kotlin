@@ -3,6 +3,7 @@ package com.tokeninc.sardis.application_template.ui
 import MenuItem
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +13,7 @@ import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
-import com.tokeninc.sardis.application_template.database.entities.ActivationViewModel
+import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
 import org.apache.commons.lang3.StringUtils
 
@@ -106,7 +107,9 @@ class SettingsFragment : Fragment() {
             InputListFragment.ButtonListener{
                 val ipNo = inputList[0].text
                 val portNo = inputList[1].text
-                activationViewModel.updateConnection(ipNo, portNo,activationViewModel.hostIP.value)
+                activationViewModel.hostIP.observe(mainActivity){//to get the current Val
+                    activationViewModel.updateConnection(ipNo, portNo,it)
+                }
                 mainActivity.popFragment()
             })
 
@@ -160,8 +163,13 @@ class SettingsFragment : Fragment() {
         val tidMidFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 merchantId = inputList[0].text
+                Log.d("MMMMM",merchantId.toString())
                 terminalId = inputList[1].text
-                activationViewModel.updateActivation(terminalId, merchantId,activationViewModel.hostIP.value)
+                Log.d("MMMMM",terminalId.toString())
+                activationViewModel.hostIP.observe(mainActivity){//to get the current Val
+                    activationViewModel.updateActivation(terminalId, merchantId,it)
+                }
+                mainActivity.observeTIDandMID()
                 mainActivity.popFragment()
             })
 

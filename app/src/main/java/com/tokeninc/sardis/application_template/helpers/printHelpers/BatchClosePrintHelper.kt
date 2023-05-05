@@ -13,13 +13,16 @@ import com.tokeninc.sardis.application_template.helpers.StringHelper
  */
 class BatchClosePrintHelper(): BasePrintHelper() {
 
+
     fun batchText(batch_no: String, transactions: List<Transaction?>, mainActivity: MainActivity, isCopy: Boolean): String {
         var styledText = StyledString()
         val stringHelper = StringHelper()
         val printHelper = PrintHelper()
         var totalAmount = 0
-        val MID = mainActivity.activationViewModel.merchantID.value
-        val TID = mainActivity.activationViewModel.terminalID.value
+        val MID = mainActivity.currentMID
+        val TID = mainActivity.currentTID
+        //val MID = mainActivity.activationViewModel.merchantID.value
+        //val TID = mainActivity.activationViewModel.terminalID.value
         addTextToNewLine(styledText, "TOKEN", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "FINTECH", PrinterDefinitions.Alignment.Center)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)

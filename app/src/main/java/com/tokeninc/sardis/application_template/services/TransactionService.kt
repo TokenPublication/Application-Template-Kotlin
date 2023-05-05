@@ -4,18 +4,18 @@ import android.content.ContentValues
 import android.content.Context
 import android.util.Log
 import com.token.uicomponents.infodialog.InfoDialog
-import com.tokeninc.sardis.application_template.ui.MainActivity
-import com.tokeninc.sardis.application_template.database.entities.BatchViewModel
-import com.tokeninc.sardis.application_template.database.entities.ContentValHelper
-import com.tokeninc.sardis.application_template.database.entities.TransactionCols
-import com.tokeninc.sardis.application_template.database.entities.TransactionViewModel
-import com.tokeninc.sardis.application_template.entities.ICCCard
+import com.tokeninc.sardis.application_template.viewmodels.BatchViewModel
+import com.tokeninc.sardis.application_template.helpers.ContentValHelper
+import com.tokeninc.sardis.application_template.entities.col_names.TransactionCols
+import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
+import com.tokeninc.sardis.application_template.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.helpers.printHelpers.DateUtil
-import com.tokeninc.sardis.application_template.responses.OnlineTransactionResponse
-import com.tokeninc.sardis.application_template.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.entities.responses.OnlineTransactionResponse
+import com.tokeninc.sardis.application_template.entities.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.ui.MainActivity
 import kotlinx.coroutines.*
 
 /**
@@ -75,7 +75,7 @@ class TransactionService  {
     /**
      * This is dummy, parsing response with respect to parameters.
      */
-    private fun parseResponse(card: ICCCard, contentVal: ContentValues?, transactionCode: Int): OnlineTransactionResponse{
+    private fun parseResponse(card: ICCCard, contentVal: ContentValues?, transactionCode: Int): OnlineTransactionResponse {
         val onlineTransactionResponse = OnlineTransactionResponse()
         onlineTransactionResponse.mResponseCode = ResponseCode.SUCCESS
         onlineTransactionResponse.mTextPrintCode1 = "Test Print 1"
@@ -98,15 +98,25 @@ class TransactionService  {
      * Update dialog with success message if database operations result without an error.
      */
     private fun finishTransaction(context: Context, amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues?, onlinePin: String?,
-                                  isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse): TransactionResponse {
+                                  isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse
+    ): TransactionResponse {
 
         val content = ContentValues()
         content.put(TransactionCols.Col_UUID, uuid)
-        content.put(TransactionCols.Col_BatchNo, batchViewModel.batchNo.value)
+        content.put(TransactionCols.Col_BatchNo, batchViewModel.batchNo)
         if (transactionCode != TransactionCode.VOID.type) {
-            batchViewModel.updateGUPSN(batchViewModel.groupSN.value)
-            val groupSN = batchViewModel.groupSN.value
-            content.put(TransactionCols.Col_GUP_SN,groupSN)
+            batchViewModel.updateGUPSN(batchViewModel.groupSN)
+            val lst = batchViewModel.allBatch
+            val groupSn = batchViewModel.groupSN
+            Log.d("groupSn",groupSn.toString())
+            content.put(TransactionCols.Col_GUP_SN,groupSn)
+            /**
+            batchViewModel.groupSN.observe(mainActivity){ //backGroundda observeleyemiyor.
+                val groupSN = it
+                Log.d("GROUPSN",it.toString())
+                content.put(TransactionCols.Col_GUP_SN,groupSN)
+            }
+            */
         }
         content.put(TransactionCols.Col_ReceiptNo, 2) // TODO Check Receipt NO 1000TR
         content.put(TransactionCols.Col_CardReadType, card.mCardReadType)
@@ -124,9 +134,14 @@ class TransactionService  {
             TransactionCode.INSTALLMENT_REFUND.type -> {
                 content.put(TransactionCols.Col_Amount2,extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
                 content.put(TransactionCols.Col_Ext_RefundDateTime,extraContent.getAsString(ExtraKeys.TRAN_DATE.name))
+                content.put(TransactionCols.Col_Ext_Conf,0)
+                content.put(TransactionCols.Col_Ext_Ref,0)
             }
             TransactionCode.CASH_REFUND.type -> {
                 content.put(TransactionCols.Col_Amount2, extraContent!!.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt() )
+                content.put(TransactionCols.Col_Ext_Conf,0)
+                content.put(TransactionCols.Col_Ext_Ref,0)
+                content.put(TransactionCols.Col_Ext_RefundDateTime,"")
             }
             else -> {
                 content.put(TransactionCols.Col_Amount2,0)
@@ -139,8 +154,14 @@ class TransactionService  {
         content.put(TransactionCols.Col_Track2, card.mTrack2Data)
         content.put(TransactionCols.Col_CustName, card.ownerName)
         content.put(TransactionCols.Col_IsVoid, 0)
-        content.put(TransactionCols.Col_isPinByPass, isPinByPass)
-        content.put(TransactionCols.Col_isOffline, isOffline)
+        if (isPinByPass)
+            content.put(TransactionCols.Col_isPinByPass, 1)
+        else
+            content.put(TransactionCols.Col_isPinByPass, 0)
+        if (isOffline)
+            content.put(TransactionCols.Col_isOffline, 1)
+        else
+            content.put(TransactionCols.Col_isOffline, 0)
         content.put(TransactionCols.Col_InstCnt, onlineTransactionResponse.insCount)
         Log.d("Inst cnt","${onlineTransactionResponse.insCount}")
         content.put(TransactionCols.Col_InstAmount, onlineTransactionResponse.instAmount)
