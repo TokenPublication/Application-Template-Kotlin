@@ -13,6 +13,7 @@ import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
 import org.apache.commons.lang3.StringUtils

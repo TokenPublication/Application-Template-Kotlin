@@ -14,7 +14,7 @@ import com.tokeninc.sardis.application_template.databinding.ListTransactionBindi
 /**
  * This is the Fragment that holds all the Void transactions in recyclerView, transactions one by one are set in TransactionAdapter
  */
-class TransactionList : Fragment() {
+class TransactionList(var cardNumber: String?) : Fragment() {
 
     private lateinit var adapter: TransactionAdapter
     private lateinit var binding: ListTransactionBinding
@@ -35,7 +35,7 @@ class TransactionList : Fragment() {
         recyclerView.layoutManager =LinearLayoutManager(requireContext())
         val contentValHelper = ContentValHelper()
         //TODO iadede iade tutarı değil org tutarı bastırıyor
-        viewModel!!.createLiveData() //in here list = getTransactionsByCardNo(cardNo)
+        viewModel!!.createLiveData(cardNumber) //in here list = getTransactionsByCardNo(cardNo)
         viewModel!!.list.observe(viewLifecycleOwner) {
             adapter = TransactionAdapter(it.toMutableList())
             adapter.postTxnFragment = postTxnFragment

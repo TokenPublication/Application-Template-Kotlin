@@ -15,7 +15,7 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.deviceinfo.DeviceInfo
-import com.tokeninc.sardis.application_template.ui.MainActivity
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.examples.viewmodels.ExampleViewModel
 import com.tokeninc.sardis.application_template.helpers.StringHelper
@@ -144,16 +144,6 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
                 DeviceInfo.Field.OPERATION_MODE
             )
         }))
-        //TODO  showQR, barcode scanner açılmıyor
-        /**
-        menuItems.add(MenuItem("Barcode Scanner", {
-           TokenBarcodeScanner(WeakReference< AppCompatActivity>(this), {
-               //listener eklenmiyor
-           }
-        )
-        }
-        ))
-        */
         menuItems.add(MenuItem("Num Pad", { menuItem ->
             val dialog = NumPadDialog.newInstance(object : NumPadListener {
                 override fun enter(pin: String) {}

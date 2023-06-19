@@ -4,7 +4,7 @@ import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.database.entities.Transaction
-import com.tokeninc.sardis.application_template.ui.MainActivity
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.helpers.StringHelper
 
 /**

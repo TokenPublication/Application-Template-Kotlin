@@ -2,7 +2,7 @@ package com.tokeninc.sardis.application_template.helpers.printHelpers
 
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
-import com.tokeninc.sardis.application_template.ui.MainActivity
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 
 /**

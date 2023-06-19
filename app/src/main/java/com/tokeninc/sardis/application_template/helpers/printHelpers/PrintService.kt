@@ -7,7 +7,7 @@ import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.AppTemp
 import com.tokeninc.sardis.application_template.entities.col_names.TransactionCols
-import com.tokeninc.sardis.application_template.ui.MainActivity
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.entities.responses.OnlineTransactionResponse
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.SlipType
