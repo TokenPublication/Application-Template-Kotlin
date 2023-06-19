@@ -1,8 +1,11 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-android'
     id 'kotlin-kapt'
     id 'org.jetbrains.dokka'
+    id 'dagger.hilt.android.plugin'
+    id 'com.google.dagger.hilt.android'
 }
 kapt {
     correctErrorTypes = true
@@ -26,6 +29,7 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -96,6 +100,18 @@ dependencies {
     //apache for string utils
     implementation 'org.apache.commons:commons-text:1.9'
 
+    //dagger-hilt
+    implementation("com.google.dagger:hilt-android:2.46")
+    //because it gives an error with hilt-android 2.46 it's older version. I wastes my 2 hours..
+    kapt("com.google.dagger:hilt-android-compiler:2.44")
+    //to add dagger-hilt by viewModel()
+    implementation "androidx.fragment:fragment-ktx:1.5.7"
+
     //Gson
     implementation 'com.google.code.gson:gson:2.8.9'
+}
+
+// Allow references to generated code
+kapt {
+    correctErrorTypes true
 }
