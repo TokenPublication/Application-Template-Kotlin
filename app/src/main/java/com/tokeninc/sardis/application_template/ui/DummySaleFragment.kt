@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
 import com.tokeninc.sardis.application_template.viewmodels.BatchViewModel

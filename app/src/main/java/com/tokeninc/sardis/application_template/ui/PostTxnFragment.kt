@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.viewmodels.BatchViewModel
 import com.tokeninc.sardis.application_template.helpers.ContentValHelper
@@ -90,7 +91,7 @@ class PostTxnFragment : Fragment() {
             mainActivity.addFragment(refundFragment) //burada stacke ekliyor
         }))
         menuItems.add(MenuItem(getStrings(R.string.batch_close), {
-            if (transactionViewModel.allTransactions == null){
+            if (transactionViewModel.allTransactions() == null){
                 val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(
                     R.string.batch_empty
                 ),false)
@@ -166,8 +167,8 @@ class PostTxnFragment : Fragment() {
         else{
             card = mCard
             val cardNumber = card!!.mCardNumber
-            transactionViewModel.cardNumber = cardNumber
-            val transactionList = TransactionList()
+            //transactionViewModel.cardNumber = cardNumber
+            val transactionList = TransactionList(cardNumber)
             transactionList.postTxnFragment = this@PostTxnFragment
             transactionList.viewModel = transactionViewModel
             mainActivity.addFragment(transactionList)

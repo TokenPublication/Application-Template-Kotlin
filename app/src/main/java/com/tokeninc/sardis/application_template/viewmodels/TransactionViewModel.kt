@@ -8,23 +8,33 @@ import com.tokeninc.sardis.application_template.database.entities.Transaction
 import com.tokeninc.sardis.application_template.repositories.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
 class TransactionViewModel @Inject constructor(private val transactionRepository: TransactionRepository): ViewModel() {
 
-    var allTransactions: List<Transaction?>? = transactionRepository.allTransactions
+    //TODO check for a better design but it figures out the problem of missing the last transaction in batch close.
+    fun allTransactions(): List<Transaction?>? {
+        var returnList: List<Transaction?>?
+        runBlocking {
+            val deferred = viewModelScope.async(Dispatchers.IO){
+                transactionRepository.allTransactions()
+            }
+            returnList = deferred.await()
+        }
+        return returnList
+    }
 
     val list = MutableLiveData<List<Transaction?>>()
-    var cardNumber: String? = null
-
     var menuItemList = mutableListOf<IListMenuItem>()
 
     /**
      * It is for getting transactions with card number from database for recycler view on Void Operations.
      */
-    fun createLiveData(): MutableList<Transaction?> {
+    fun createLiveData(cardNumber: String?): MutableList<Transaction?> {
         list.value = getTransactionsByCardNo(cardNumber!!)!!
         return list.value!!.toMutableList()
     }

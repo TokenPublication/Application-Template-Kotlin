@@ -7,7 +7,7 @@ import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.repositories.ActivationRepository
-import com.tokeninc.sardis.application_template.ui.MainActivity
+import com.tokeninc.sardis.application_template.MainActivity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

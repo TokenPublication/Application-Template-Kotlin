@@ -12,11 +12,13 @@ kapt {
 }
 
 android {
+    namespace 'com.tokeninc.sardis.application_template'
     compileSdk 33
     // I added this for binding
     buildFeatures {
         viewBinding = true
         dataBinding true
+        aidl true
     }
     packagingOptions {
         exclude 'META-INF/retrofit.kotlin_module'
@@ -39,14 +41,37 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
+    }
+
+    flavorDimensions "default"
+    productFlavors{
+        TR400{
+            manifestPlaceholders = [
+                    APP_LABEL:"Application Template",
+                    MODEL_NAME:"400TR",
+                    APP_NAME:"BNK_000_TMPLT"
+            ]
+        }
+        TR1000{
+            manifestPlaceholders = [
+                    APP_LABEL:"Application Template",
+                    MODEL_NAME:"1000TR",
+                    APP_NAME:"BNK_000_TMPLT"
+            ]
+        }
     }
 }
 
+
+configurations {
+    TR400
+    TR1000
+}
 
 dependencies {
 
@@ -73,7 +98,7 @@ dependencies {
     kapt("androidx.lifecycle:lifecycle-compiler:$lifecycle_version")
 
     def room_version = "2.5.1"
-    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-runtime:2.5.1")
     annotationProcessor("androidx.room:room-compiler:$room_version")
     // To use Kotlin annotation processing tool (kapt)
     kapt("androidx.room:room-compiler:$room_version")

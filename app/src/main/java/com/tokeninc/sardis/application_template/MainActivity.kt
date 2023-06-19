@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.ui
+package com.tokeninc.sardis.application_template
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
@@ -19,13 +19,15 @@ import com.google.gson.Gson
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
+import com.tokeninc.cardservicebinding.BuildConfig
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
+import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.*
+import com.tokeninc.sardis.application_template.database.AppTempDB
 import com.tokeninc.sardis.application_template.database.entities.*
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.entities.card_entities.ICCCard
-import com.tokeninc.sardis.application_template.database.AppTempDB
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.services.BatchCloseService
@@ -48,24 +50,11 @@ import java.util.*
 @AndroidEntryPoint
 public class MainActivity : TimeOutActivity(), CardServiceListener {
 
-
-    //menu items is mutable list which we can add and delete
-    var amount: Int = 0 //this is for holding amount
     //initializing bindings
     private lateinit var cardServiceBinding: CardServiceBinding
-    //initializing databases
-    /**
-    private var actDB: ActivationDB? = null
-    private var transactionDB: TransactionDB? = null
-    private var batchDB: BatchDB? = null
-    private var slipDB: SlipDB? = null //TODO no need to database just append string to batch database
-    //initializing viewModels
-    private lateinit var transactionViewModel: TransactionViewModel
-    lateinit var activationViewModel: ActivationViewModel
-     */
 
     //initializing View Models
-    lateinit var activationViewModel : ActivationViewModel
+    private lateinit var activationViewModel : ActivationViewModel
     private lateinit var batchViewModel : BatchViewModel
     private lateinit var transactionViewModel : TransactionViewModel
 
@@ -77,6 +66,7 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
     private val refundFragment = RefundFragment()
     private val textFragment = TextFragment()
     private lateinit var dummySaleFragment : DummySaleFragment
+    private lateinit var triggerFragment: TriggerFragment
     private val exampleActivity = ExampleActivity()
 
     //initializing other variables
@@ -85,31 +75,12 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
     private var gibSale = false
     private var refundInfo: String? = null
     private lateinit var refNo: String
-
+    var amount: Int = 0 //this is for holding amount
     private var extraContents : ContentValues? = null
 
     //This is for holding MID and TID, Because this values are LiveData, instead of writing this functions everywhere it is used
-    //I only call this functions and hold the last updated values in there.
     var currentMID: String? = ""
     var currentTID: String? = ""
-    fun setMID(MerchantID: String?) {
-        currentMID = MerchantID
-    }
-
-    fun setTID(TerminalID: String?) {
-        currentTID = TerminalID
-    }
-
-    //After TID and MID is changed, it is called from there and hold data for it.
-    //It also called everytime whenever MainActivity is created.
-    fun observeTIDandMID(){
-        activationViewModel.merchantID.observe(this){
-            setMID(it)
-        }
-        activationViewModel.terminalID.observe(this){
-            setTID(it)
-        }
-    }
 
     /**
      * This function is overwritten to continue the activity where it was left when
@@ -127,10 +98,25 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
     }
 
     /**
+    Firstly, added TR1000 and TR400 configurations to build.gradle file. After that,
+    related to Build Variant (400TRDebug or 1000TRDebug) the manifest file created with apk
+    and the appname in manifest file will be 1000TR or 400TR.
+     */
+    private fun buildConfigs(){
+        if (BuildConfig.FLAVOR.equals("TR1000")) {
+            Log.d("TR1000 APP","Application Template for 1000TR")
+        }
+        if(BuildConfig.FLAVOR.equals("TR400")) {
+            Log.d("TR400 APP","Application Template for 400TR")
+        }
+    }
+
+    /**
      * This is for starting the activity, databases which are created with respect to context and viewModels which are created
      * wrt to databases and services are created here. After that, some functions are called with respect to action of the current intent
      */
     private fun startActivity(){
+        buildConfigs()
         val binding = ActivityMainBinding.inflate(layoutInflater)
         AppTempDB.getInstance(this)
 
@@ -143,6 +129,7 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         transactionViewModel = getTransactionViewModel
 
         dummySaleFragment = DummySaleFragment(transactionViewModel)
+        triggerFragment = TriggerFragment(this)
         cardServiceBinding = CardServiceBinding(this, this)
         startTransactionService()
         startBatchService()
@@ -179,6 +166,12 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
             getString(R.string.Sale_Action) ->  {
                 transactionCode = TransactionCode.SALE.type
                 startDummySaleFragment(dummySaleFragment)
+                val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.GIB.name)
+                val bundle = intent.extras
+                val cardData: String? = bundle?.getString("CardData")
+                if (!isGIB && cardData != null && !cardData.equals("CardData") && !cardData.equals(" ")) {
+                    onCardDataReceived(cardData)
+                }
                 if (intent.extras != null){
                     val cardReadType = intent.extras!!.getInt("CardReadType")
                     if(cardReadType == CardReadType.ICC.type){
@@ -193,7 +186,7 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
             }
             getString(R.string.Settings_Action) ->  startSettingsFragment(settingsFragment)
             getString(R.string.BatchClose_Action) ->  {
-                if (transactionViewModel.allTransactions == null){ //if it is empty just show no transaction dialog
+                if (transactionViewModel.allTransactions() == null){ //if it is empty just show no transaction dialog
                     callbackMessage(ResponseCode.ERROR)
                 }else{ //else implementing batch closing and finish that activity
                     startPostTxnFragment(postTxnFragment)
@@ -201,7 +194,7 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
                 }
 
             }
-            getString(R.string.Parameter_Action) ->  textFragment.setActionName(getString(R.string.Parameter_Action))
+            getString(R.string.Parameter_Action) ->  replaceFragment(triggerFragment)
             getString(R.string.Refund_Action) ->  {
                 startPostTxnFragment(postTxnFragment)
                 refundActionReceived()
@@ -393,6 +386,29 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
     }
 
 
+    /**
+     * I only call this functions and hold the last updated values in there
+     */
+    private fun setMID(MerchantID: String?) {
+        currentMID = MerchantID
+    }
+
+    private fun setTID(TerminalID: String?) {
+        currentTID = TerminalID
+    }
+
+    /**
+     * After TID and MID is changed, it is called from there and hold data for it. It also called everytime whenever MainActivity is created.
+     */
+    fun observeTIDandMID(){
+        activationViewModel.merchantID.observe(this){
+            setMID(it)
+        }
+        activationViewModel.terminalID.observe(this){
+            setTID(it)
+        }
+    }
+
 
     /**
      * This function only works in installation, it calls setConfig and setCLConfig
@@ -552,7 +568,7 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
                     if (autoTransaction) {
                         autoTransaction = false
                         transactionCode = 0
-                        val transactionList: List<Transaction?>? = transactionViewModel.getTransactionsByRefNo(refNo)
+                        val transactionList: List<Transaction?>? = transactionViewModel.getTransactionsByRefNo(refNo) //TODO check whether it gives a correct result
                         val transaction = transactionList!![0] //2 tane geldi??
                         Log.d("Refund Info", "Satış İptali: $transaction")
                         if (card.mCardNumber == transaction!!.Col_PAN) {
@@ -615,7 +631,5 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
     override fun onICCTakeOut() {
         TODO("Not yet implemented")
     }
-
-
 
 }

@@ -15,7 +15,7 @@ import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.helpers.printHelpers.DateUtil
 import com.tokeninc.sardis.application_template.entities.responses.OnlineTransactionResponse
 import com.tokeninc.sardis.application_template.entities.responses.TransactionResponse
-import com.tokeninc.sardis.application_template.ui.MainActivity
+import com.tokeninc.sardis.application_template.MainActivity
 import kotlinx.coroutines.*
 
 /**

@@ -2,7 +2,7 @@ package com.tokeninc.sardis.application_template.services
 
 import android.util.Log
 import com.token.uicomponents.infodialog.InfoDialog
-import com.tokeninc.sardis.application_template.ui.MainActivity
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.viewmodels.BatchViewModel
 import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import com.tokeninc.sardis.application_template.enums.BatchResult
@@ -65,7 +65,7 @@ class BatchCloseService {
      * with Success Message. Lastly, update Batch number and resets group number and delete all transactions from Transaction Table.
      */
     private fun finishBatchClose(dialog: InfoDialog): BatchCloseResponse {
-        val transactions = transactionViewModel.allTransactions
+        val transactions = transactionViewModel.allTransactions()
 
         val printService = BatchClosePrintHelper()
         val printServiceBinding = PrintServiceBinding()

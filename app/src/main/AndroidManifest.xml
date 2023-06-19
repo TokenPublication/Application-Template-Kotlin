@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.tokeninc.sardis.application_template">
-
-
+    xmlns:tools="http://schemas.android.com/tools">
     <application
         android:name=".AppTemp"
         android:usesCleartextTraffic="true"
@@ -19,7 +16,7 @@
         <activity android:name=".examples.ExampleActivity"/>
 
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:screenOrientation="fullSensor">
@@ -66,15 +63,14 @@
 
         </activity>
         <meta-data
-            android:name="app_name"
-            android:value="BNK_000_TMPLT"/>
-        <meta-data
             android:name="app_version"
             android:value="1" />
         <meta-data
             android:name="app_model_type"
-            android:value="400TR"/>
-        />
+            android:value="${MODEL_NAME}"/>
+        <meta-data
+            android:name="app_name"
+            android:value="${APP_NAME}"/>
     </application>
 
 </manifest>

@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.databinding.FragmentTextBinding
 
 

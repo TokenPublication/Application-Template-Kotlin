@@ -6,7 +6,7 @@ import javax.inject.Inject
 
 class TransactionRepository @Inject constructor(private val transactionDao: TransactionDao) {
 
-    var allTransactions: List<Transaction?>? = transactionDao.getAllTransactions()
+    suspend fun allTransactions(): List<Transaction?>? = transactionDao.getAllTransactions()
 
     fun getTransactionsByRefNo(refNo: String): List<Transaction?>?{
         return transactionDao.getTransactionsByRefNo(refNo)

@@ -14,7 +14,7 @@ import com.tokeninc.sardis.application_template.database.entities.Batch
 import com.tokeninc.sardis.application_template.database.entities.Transaction
 import kotlinx.coroutines.*
 
-@Database(entities = [Activation::class, Batch::class, Transaction::class], version = 1)
+@Database(entities = [Activation::class, Batch::class, Transaction::class], version = 1, exportSchema = false)
 abstract class AppTempDB: RoomDatabase() {
 
     abstract val activationDao: ActivationDao
