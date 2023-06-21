@@ -25,7 +25,6 @@ import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCC
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
-import com.tokeninc.sardis.application_template.utils.printHelpers.PrintServiceBinding
 import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
 import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.services.BatchCloseService
@@ -47,7 +46,6 @@ class PostTxnFragment : Fragment() {
     private lateinit var mainActivity: MainActivity
     private lateinit var transactionService: TransactionService
     private lateinit var refundFragment: RefundFragment
-    private var printService = PrintServiceBinding()
     private lateinit var viewModel: PostTxnViewModel
     private lateinit var transactionViewModel: TransactionViewModel
     private lateinit var batchCloseService: BatchCloseService
@@ -117,7 +115,7 @@ class PostTxnFragment : Fragment() {
         }))
         menuItems.add(MenuItem("Slip Tekrarı",{
             val slip = batchViewModel.previousBatchSlip
-            PrintServiceBinding().print(slip)
+            mainActivity.print(slip)
         }))
         viewModel.list = menuItems
         viewModel.replaceFragment(mainActivity)
@@ -198,8 +196,8 @@ class PostTxnFragment : Fragment() {
         val printService = PrintService()
         val customerSlip = printService.getFormattedText(SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         val merchantSlip = printService.getFormattedText(SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
-        this.printService.print(customerSlip)
-        this.printService.print(merchantSlip)
+        mainActivity.print(customerSlip)
+        mainActivity.print(merchantSlip)
         val responseCode = transactionResponse.responseCode
         val intent = Intent()
         val bundle = Bundle()

@@ -16,6 +16,8 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import com.google.gson.Gson
+import com.token.printerlib.PrinterService
+import com.token.printerlib.StyledString
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
@@ -26,15 +28,15 @@ import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.*
 import com.tokeninc.sardis.application_template.data.database.AppTempDB
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
-import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.enums.*
-import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.services.BatchCloseService
 import com.tokeninc.sardis.application_template.services.TransactionService
 import com.tokeninc.sardis.application_template.ui.*
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.activation.SettingsFragment
+import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.ui.posttxn.PostTxnFragment
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.posttxn.refund.RefundFragment
@@ -49,6 +51,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
+
 
 /** This is the Main Activity class,
  *  all operations are run here because this application is designed as a single-activity architecture
@@ -629,6 +632,13 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         } else{
             setResult(intent)
         }
+    }
+
+    fun print(printText: String?) {
+        val styledText = StyledString()
+        styledText.addStyledText(printText)
+        styledText.finishPrintingProcedure()
+        styledText.print(PrinterService.getService(applicationContext))
     }
 
     override fun onPinReceived(p0: String?) {
