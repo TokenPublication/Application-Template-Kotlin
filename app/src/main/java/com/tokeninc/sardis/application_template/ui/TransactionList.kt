@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.tokeninc.sardis.application_template.adapters.TransactionAdapter
+import com.tokeninc.sardis.application_template.ui.adapters.TransactionAdapter
 import com.tokeninc.sardis.application_template.helpers.ContentValHelper
 import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
 import com.tokeninc.sardis.application_template.databinding.ListTransactionBinding

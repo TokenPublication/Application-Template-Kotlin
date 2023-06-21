@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.adapters
+package com.tokeninc.sardis.application_template.ui.adapters
 
 import android.content.ContentValues
 import android.util.Log
