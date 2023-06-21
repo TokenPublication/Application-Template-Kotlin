@@ -24,16 +24,23 @@ import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.*
-import com.tokeninc.sardis.application_template.database.AppTempDB
-import com.tokeninc.sardis.application_template.database.entities.*
+import com.tokeninc.sardis.application_template.data.database.AppTempDB
+import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
-import com.tokeninc.sardis.application_template.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.*
-import com.tokeninc.sardis.application_template.examples.ExampleActivity
+import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.services.BatchCloseService
 import com.tokeninc.sardis.application_template.services.TransactionService
 import com.tokeninc.sardis.application_template.ui.*
-import com.tokeninc.sardis.application_template.viewmodels.*
+import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
+import com.tokeninc.sardis.application_template.ui.activation.SettingsFragment
+import com.tokeninc.sardis.application_template.ui.posttxn.PostTxnFragment
+import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.posttxn.refund.RefundFragment
+import com.tokeninc.sardis.application_template.ui.sale.SaleFragment
+import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
+import com.tokeninc.sardis.application_template.ui.trigger.TriggerFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import org.json.JSONException
@@ -65,7 +72,7 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
     private val settingsFragment = SettingsFragment()
     private val refundFragment = RefundFragment()
     private val textFragment = TextFragment()
-    private lateinit var dummySaleFragment : DummySaleFragment
+    private lateinit var saleFragment : SaleFragment
     private lateinit var triggerFragment: TriggerFragment
     private val exampleActivity = ExampleActivity()
 
@@ -128,7 +135,7 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         val getTransactionViewModel : TransactionViewModel by viewModels()
         transactionViewModel = getTransactionViewModel
 
-        dummySaleFragment = DummySaleFragment(transactionViewModel)
+        saleFragment = SaleFragment(transactionViewModel)
         triggerFragment = TriggerFragment(this)
         cardServiceBinding = CardServiceBinding(this, this)
         startTransactionService()
@@ -165,7 +172,7 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
             }
             getString(R.string.Sale_Action) ->  {
                 transactionCode = TransactionCode.SALE.type
-                startDummySaleFragment(dummySaleFragment)
+                startDummySaleFragment(saleFragment)
                 val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.GIB.name)
                 val bundle = intent.extras
                 val cardData: String? = bundle?.getString("CardData")
@@ -178,10 +185,10 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
                         gibSale = true
                         readCard()
                     } else{
-                        replaceFragment(dummySaleFragment)
+                        replaceFragment(saleFragment)
                     }
                 } else{
-                    replaceFragment(dummySaleFragment)
+                    replaceFragment(saleFragment)
                 }
             }
             getString(R.string.Settings_Action) ->  startSettingsFragment(settingsFragment)
@@ -293,9 +300,9 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
     /** This function is getting amount from intent and pass that amount and other variables to fragment.
      * Then replace that fragment to current view.
      */
-    private fun startDummySaleFragment(dummySaleFragment: DummySaleFragment){
+    private fun startDummySaleFragment(saleFragment: SaleFragment){
         amount = intent.extras!!.getInt("Amount")
-        dummySaleFragment.setter(this, bundleOf(),Intent(),activationViewModel,batchViewModel, transactionService,amount)
+        saleFragment.setter(this, bundleOf(),Intent(),activationViewModel,batchViewModel, transactionService,amount)
     }
 
     /**
@@ -547,16 +554,16 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
                         card = Gson().fromJson(cardData, ICCCard::class.java)
                         if (transactionCode == TransactionCode.SALE.type && !gibSale){
                             transactionCode = 0
-                            dummySaleFragment.card = card
+                            saleFragment.card = card
                             textFragment.setActionName("")
                             replaceFragment(textFragment)
-                            dummySaleFragment.doSale()
+                            saleFragment.doSale()
                         }
                     }
                     CardReadType.ICC.type -> {
                         card = Gson().fromJson(cardData, ICCCard::class.java)
                         if (transactionCode == TransactionCode.SALE.type && !gibSale){
-                            dummySaleFragment.prepareSaleMenu(card)
+                            saleFragment.prepareSaleMenu(card)
                         }
                     }
                     CardReadType.ICC2MSR.type, CardReadType.MSR.type, CardReadType.KeyIn.type -> {
@@ -585,8 +592,8 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
                 else if (gibSale){
                     gibSale = false
                     transactionCode = 0
-                    dummySaleFragment.card = card
-                    dummySaleFragment.doSale()
+                    saleFragment.card = card
+                    saleFragment.doSale()
                 }
                 else if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type){
                     if (autoTransaction){

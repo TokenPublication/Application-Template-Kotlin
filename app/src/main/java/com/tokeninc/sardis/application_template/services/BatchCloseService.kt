@@ -3,12 +3,12 @@ package com.tokeninc.sardis.application_template.services
 import android.util.Log
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.viewmodels.BatchViewModel
-import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
+import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import com.tokeninc.sardis.application_template.enums.BatchResult
-import com.tokeninc.sardis.application_template.helpers.printHelpers.BatchClosePrintHelper
-import com.tokeninc.sardis.application_template.helpers.printHelpers.PrintServiceBinding
-import com.tokeninc.sardis.application_template.entities.responses.BatchCloseResponse
+import com.tokeninc.sardis.application_template.utils.printHelpers.BatchClosePrintHelper
+import com.tokeninc.sardis.application_template.utils.printHelpers.PrintServiceBinding
+import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*

@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar"
         tools:targetApi="s"> <!-- Token theme without Actionbar -->
-        <activity android:name=".examples.ExampleActivity"/>
+        <activity android:name=".ui.examples.ExampleActivity"/>
 
         <activity
             android:name=".MainActivity"

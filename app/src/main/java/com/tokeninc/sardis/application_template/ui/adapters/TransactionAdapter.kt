@@ -1,16 +1,15 @@
 package com.tokeninc.sardis.application_template.ui.adapters
 
-import android.content.ContentValues
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.tokeninc.sardis.application_template.ui.PostTxnFragment
+import com.tokeninc.sardis.application_template.ui.posttxn.PostTxnFragment
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.database.entities.Transaction
+import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding
-import com.tokeninc.sardis.application_template.helpers.StringHelper
+import com.tokeninc.sardis.application_template.utils.StringHelper
 
 /**
  * This adapter arranges Void transactions one by one.
