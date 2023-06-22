@@ -1,6 +1,5 @@
 package com.tokeninc.sardis.application_template.ui.sale
 
-import com.tokeninc.sardis.application_template.ui.MenuItem
 import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Color
@@ -12,21 +11,30 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
+import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
+import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
+import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
+import com.tokeninc.sardis.application_template.enums.CardReadResult
+import com.tokeninc.sardis.application_template.enums.PaymentTypes
+import com.tokeninc.sardis.application_template.enums.ResponseCode
+import com.tokeninc.sardis.application_template.enums.SlipType
+import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.services.TransactionService
+import com.tokeninc.sardis.application_template.ui.MenuItem
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
-import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
-import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
-import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
-import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
-import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
-import com.tokeninc.sardis.application_template.services.TransactionService
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
 import java.lang.String.valueOf
@@ -48,6 +56,10 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
     private lateinit var transactionService: TransactionService
     var card: ICCCard? = null
     private var amount = 0
+
+    private lateinit var cardViewModel: CardViewModel
+
+    var infoDialog: InfoDialog? = null
 
     companion object{
         var cardOwner =""
@@ -86,14 +98,13 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
     /**
      * This is for initializing some variables on that class, it is called from mainActivity before this class is called
      */
-    fun setter(mainActivity: MainActivity, bundle: Bundle, intent:Intent, activationViewModel: ActivationViewModel, batchViewModel: BatchViewModel, transactionService: TransactionService, amount:Int ){
+    fun setter(mainActivity: MainActivity, activationViewModel: ActivationViewModel, batchViewModel: BatchViewModel, transactionService: TransactionService, amount:Int, cardViewModel: CardViewModel ){
         this.mainActivity = mainActivity
-        this.bundle = bundle
-        this.intent = intent
         this.amount = amount
         this.transactionService = transactionService
         this.activationViewModel = activationViewModel
         this.batchViewModel = batchViewModel
+        this.cardViewModel = cardViewModel
     }
 
     /** Flow: Clicking Sale Button > Read Card > On Card Data Received > (if card is ICC) -> here
@@ -101,7 +112,7 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
      */
     fun prepareSaleMenu(mCard: ICCCard?) {
         card = mCard
-        mainActivity.transactionCode = 0
+        cardViewModel.setTransactionCode(0)
         val menuItemList = viewModel.menuItemList
         menuItemList.add(MenuItem( getStrings(R.string.sale), {
             doSale()
@@ -139,8 +150,8 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
      */
     private fun clickButtons(){
         binding.btnSale.setOnClickListener {
-            mainActivity.transactionCode = TransactionCode.SALE.type
-            mainActivity.readCard()
+            mainActivity.connectCardService()
+            startSaleAfterConnected() //after it connects to the cardService
         }
         binding.btnSuccess.setOnClickListener {
             prepareDummyResponse(ResponseCode.SUCCESS)
@@ -162,12 +173,35 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
         }
     }
 
+    fun startSaleAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
+        cardViewModel.setTransactionCode(TransactionCode.SALE.type)  //make its transactionCode Sale
+        cardViewModel.setAmount(amount) // set its sale amount
+        cardViewModel.getCardLiveData().observe(viewLifecycleOwner) { card -> //firstly observing cardData
+            if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
+                Log.d("CardResult", card.mCardNumber.toString())
+                this.card = card
+                cardViewModel.resetCard() // make it clear for the next operations
+                cardViewModel.getCardReadResult().observe(viewLifecycleOwner){cardReadResult ->
+                    if (cardReadResult != null){
+                        Toast.makeText(mainActivity,"Card Read Successfully",Toast.LENGTH_SHORT).show()
+                        if (cardReadResult.name == CardReadResult.SALE_NOT_GIB_CL.name || cardReadResult.name == CardReadResult.SALE_GIB.name){
+                            doSale()
+                        }
+                        else if (cardReadResult.name == CardReadResult.SALE_NOT_GIB_ICC.name){
+                            prepareSaleMenu(card)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /** Flow: Clicking Sale Button > Read Card > On Card Data Received > (if card is Contactless) -> here
      *  else -> Prepare Sale Menu > Click Sale > here
      * It creates a transaction response in Default Coroutine Thread with doInBackGround method on Transaction Service
      * after transactionResponse is returning, it calls finishSale method
      */
-    fun doSale() {
+    private fun doSale() {
         CoroutineScope(Dispatchers.Default).launch {
         val transactionResponse = transactionService.doInBackground(mainActivity, amount, card!!,TransactionCode.SALE.type,
             ContentValues(), null,false,null ,false)
@@ -184,6 +218,7 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
 
         val responseCode = transactionResponse.responseCode
         if (responseCode == ResponseCode.SUCCESS){
+            val bundle = Bundle()
             bundle.putInt("ResponseCode", responseCode.ordinal) //TODO bunu diğerlerinde de yap
             bundle.putInt("PaymentStatus", 0) // #2 Payment Status
             bundle.putInt("Amount", amount ) // #3 Amount
@@ -215,6 +250,7 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
                 }
             }
             bundle.putInt("SlipType", slipType.value) //TODO fail receipt yap
+            val intent = Intent()
             intent.putExtras(bundle)
             mainActivity.setResult(intent)
         }

@@ -1,5 +1,6 @@
 package com.tokeninc.sardis.application_template.ui.posttxn.batch
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
@@ -13,7 +14,7 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
 
     val groupSN = batchRepository.groupSN
     val batchNo = batchRepository.batchNo
-    val previousBatchSlip = batchRepository.previousBatchSlip
+    fun getPreviousBatchSlip(): LiveData<String?> = batchRepository.getPreviousBatchSlip()
     val allBatch = batchRepository.allBatch
 
     fun updateBatchNo(batchNo: Int){

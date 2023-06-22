@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.tokeninc.sardis.application_template.ui.adapters.TransactionAdapter
 import com.tokeninc.sardis.application_template.utils.ContentValHelper
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import com.tokeninc.sardis.application_template.databinding.ListTransactionBinding
@@ -17,7 +16,7 @@ import com.tokeninc.sardis.application_template.ui.posttxn.PostTxnFragment
  */
 class TransactionList(var cardNumber: String?) : Fragment() {
 
-    private lateinit var adapter: TransactionAdapter
+    private lateinit var adapter: VoidAdapter
     private lateinit var binding: ListTransactionBinding
     var viewModel: TransactionViewModel? = null
     var postTxnFragment: PostTxnFragment? = null
@@ -38,7 +37,7 @@ class TransactionList(var cardNumber: String?) : Fragment() {
         //TODO iadede iade tutarı değil org tutarı bastırıyor
         viewModel!!.createLiveData(cardNumber) //in here list = getTransactionsByCardNo(cardNo)
         viewModel!!.list.observe(viewLifecycleOwner) {
-            adapter = TransactionAdapter(it.toMutableList())
+            adapter = VoidAdapter(it.toMutableList())
             adapter.postTxnFragment = postTxnFragment
             binding.adapter = adapter
         }

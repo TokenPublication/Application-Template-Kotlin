@@ -1,14 +1,21 @@
 package com.tokeninc.sardis.application_template.ui.sale
 
+import android.content.ContentValues
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
+import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.data.repositories.TransactionRepository
+import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
@@ -16,7 +23,6 @@ import javax.inject.Inject
 @HiltViewModel
 class TransactionViewModel @Inject constructor(private val transactionRepository: TransactionRepository): ViewModel() {
 
-    //TODO check for a better design but it figures out the problem of missing the last transaction in batch close.
     fun allTransactions(): List<Transaction?>? {
         var returnList: List<Transaction?>?
         runBlocking {
@@ -65,5 +71,5 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         }
     }
 
-
 }
+

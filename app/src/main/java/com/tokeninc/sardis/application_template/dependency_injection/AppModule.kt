@@ -1,9 +1,11 @@
 package com.tokeninc.sardis.application_template.dependency_injection
 
 import android.app.Application
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.AppTempDB
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
+import com.tokeninc.sardis.application_template.data.repositories.CardRepository
 import com.tokeninc.sardis.application_template.data.repositories.TransactionRepository
 import dagger.Module
 import dagger.Provides
@@ -52,5 +54,8 @@ object AppModule {
     @Singleton
     fun provideTransactionRepository(database: AppTempDB): TransactionRepository = TransactionRepository(database.transactionDao)
 
+    @Provides
+    @Singleton
+    fun provideCardRepository(): CardRepository = CardRepository()
 
 }

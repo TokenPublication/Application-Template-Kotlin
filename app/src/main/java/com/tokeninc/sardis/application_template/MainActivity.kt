@@ -7,15 +7,14 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
-import com.google.gson.Gson
 import com.token.printerlib.PrinterService
 import com.token.printerlib.StyledString
 import com.token.uicomponents.infodialog.InfoDialog
@@ -23,12 +22,8 @@ import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.BuildConfig
 import com.tokeninc.cardservicebinding.CardServiceBinding
-import com.tokeninc.cardservicebinding.CardServiceListener
-import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.*
 import com.tokeninc.sardis.application_template.data.database.AppTempDB
-import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
-import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.services.BatchCloseService
@@ -40,12 +35,12 @@ import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.ui.posttxn.PostTxnFragment
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.posttxn.refund.RefundFragment
+import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.SaleFragment
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import com.tokeninc.sardis.application_template.ui.trigger.TriggerFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
-import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -58,7 +53,7 @@ import java.util.*
  * It's @AndroidEntryPoint because, we get ViewModel inside of class,
  */
 @AndroidEntryPoint
-public class MainActivity : TimeOutActivity(), CardServiceListener {
+public class MainActivity : TimeOutActivity() {
 
     //initializing bindings
     private lateinit var cardServiceBinding: CardServiceBinding
@@ -74,23 +69,20 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
     private val postTxnFragment = PostTxnFragment()
     private val settingsFragment = SettingsFragment()
     private val refundFragment = RefundFragment()
-    private val textFragment = TextFragment()
+    val textFragment = TextFragment()
     private lateinit var saleFragment : SaleFragment
     private lateinit var triggerFragment: TriggerFragment
     private val exampleActivity = ExampleActivity()
 
+
     //initializing other variables
     var transactionCode: Int = 0
-    private var autoTransaction = false
-    private var gibSale = false
-    private var refundInfo: String? = null
-    private lateinit var refNo: String
     var amount: Int = 0 //this is for holding amount
-    private var extraContents : ContentValues? = null
 
-    //This is for holding MID and TID, Because this values are LiveData, instead of writing this functions everywhere it is used
-    var currentMID: String? = ""
-    var currentTID: String? = ""
+    //private lateinit var cardRepository: CardRepository
+    //private lateinit var cardViewModelFactory: CardViewModelFactory
+    lateinit var cardViewModel: CardViewModel
+    var infoDialog: InfoDialog? = null
 
     /**
      * This function is overwritten to continue the activity where it was left when
@@ -137,29 +129,20 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         batchViewModel = getBatchViewModel
         val getTransactionViewModel : TransactionViewModel by viewModels()
         transactionViewModel = getTransactionViewModel
+        val getCardViewModel : CardViewModel by viewModels()
+        cardViewModel = getCardViewModel
 
         saleFragment = SaleFragment(transactionViewModel)
         triggerFragment = TriggerFragment(this)
-        cardServiceBinding = CardServiceBinding(this, this)
+        //cardServiceBinding = CardServiceBinding(this, this)
         startTransactionService()
         startBatchService()
+        observeTIDandMID()
+        textFragment.mainActivity = this
+
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-        textFragment.mainActivity = this
-        observeTIDandMID()
 
-        /*
-        //this is for preventing some errors while using Gib with Postman
-        val deviceInfo: DeviceInfo = DeviceInfo(this)
-        deviceInfo.setBankParams(DeviceInfoBankParamsSetterHandler{ var1 ->
-            if (var1) {
-                Log.i("setBankParams", "Success")
-            } else {
-                Log.i("setBankParams", "Error")
-            }
-            deviceInfo.unbind()
-        }, "12345", "12345678")
-         */
 
         actionChanged(intent.action)
     }
@@ -176,17 +159,21 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
             getString(R.string.Sale_Action) ->  {
                 transactionCode = TransactionCode.SALE.type
                 startDummySaleFragment(saleFragment)
+
+                /** TODO bak
                 val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.GIB.name)
                 val bundle = intent.extras
                 val cardData: String? = bundle?.getString("CardData")
                 if (!isGIB && cardData != null && !cardData.equals("CardData") && !cardData.equals(" ")) {
                     onCardDataReceived(cardData)
                 }
+                */
                 if (intent.extras != null){
                     val cardReadType = intent.extras!!.getInt("CardReadType")
                     if(cardReadType == CardReadType.ICC.type){
-                        gibSale = true
-                        readCard()
+                        cardViewModel.setGibSale(true)
+                        connectCardService()
+                        saleFragment.startSaleAfterConnected()
                     } else{
                         replaceFragment(saleFragment)
                     }
@@ -213,6 +200,40 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         }
     }
 
+    fun connectCardService(){
+        val isCancelled = booleanArrayOf(false)
+        //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
+        infoDialog = showInfoDialog(InfoDialog.InfoType.Processing, "Processing", false)
+        val timer: CountDownTimer = object : CountDownTimer(10000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {}
+            override fun onFinish() { //when it's finished, (after 10 seconds)
+                isCancelled[0] = true //make isCancelled true (because cardService couldn't be connected)
+                infoDialog!!.update(InfoDialog.InfoType.Declined, "Connect Failed")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (infoDialog != null) {
+                        infoDialog!!.dismiss()
+                        finish()
+                    }
+                }, 2000)
+            }
+        }
+        timer.start()
+        cardViewModel.initializeCardServiceBinding(this)
+
+        cardViewModel.getCardServiceConnected().observe(this) { isConnected ->
+            // cardService is connected before 10 seconds (which is the limit of the timer)
+            if (isConnected && !isCancelled[0]) {
+                timer.cancel() // stop timer
+                infoDialog!!.update(InfoDialog.InfoType.Confirmed, "Connected to Service")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    cardViewModel.readCard() //reads the Card
+                    Handler(Looper.getMainLooper())
+                        .postDelayed({ infoDialog!!.dismiss() }, 1000)
+                }, 2000) //to show card Service is connected.
+            }
+        }
+    }
+
     //batchclose biterken ui güncelleyince 2 kez geri basınca düz ui geliyor
     //refundda da 2 kez geri basmak lazım cancelled için ?
     //voidde kart okuturken tutar çıkmıyor doğru mu ?
@@ -227,48 +248,47 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         if (intent.extras == null || intent.extras!!.getString("RefundInfo") == null){
             callbackMessage(ResponseCode.ERROR)
         } else{
-            autoTransaction = true
-            refundInfo = intent.extras!!.getString("RefundInfo")
-            val json = JSONObject(refundInfo!!)
-            refNo = json.getString("RefNo")
+            cardViewModel.setGibRefund(true) //update GibRefund
+            val refundInfo = intent.extras!!.getString("RefundInfo")
+            cardViewModel.setRefundInfo(refundInfo!!)
+            val json = JSONObject(refundInfo)
+            val refNo = json.getString("RefNo")
+            cardViewModel.setRefNo(refNo)
             val refAmount = json.getString("Amount")
             amount = refAmount.toInt()
+            cardViewModel.setAmount(amount)
             val batchNo = json.getInt("BatchNo")
             if (batchNo == batchViewModel.batchNo){ //void
                 transactionCode = TransactionCode.VOID.type
-                readCard()
+                cardViewModel.setTransactionCode(transactionCode)
+                connectCardService()
             } else{
                 postTxnFragment.startRefundFragment()
                 val authCode = json.getString("AuthCode")
                 val installmentCount = json.getString("InstCount")
                 val tranDate = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
                 val cardNo = json.getString("CardNo")
-                extraContents = ContentValues()
-                extraContents!!.put(ExtraKeys.ORG_AMOUNT.name, refAmount.toString())
-                extraContents!!.put(ExtraKeys.REFUND_AMOUNT.name, refAmount.toString())
-                extraContents!!.put(ExtraKeys.TRAN_DATE.name, tranDate.toString())
-                extraContents!!.put(ExtraKeys.REF_NO.name,refNo)
-                extraContents!!.put(ExtraKeys.AUTH_CODE.name,authCode)
-                extraContents!!.put(ExtraKeys.CARD_NO.name,cardNo)
+                val extraContents = ContentValues()
+                extraContents.put(ExtraKeys.ORG_AMOUNT.name, refAmount.toString())
+                extraContents.put(ExtraKeys.REFUND_AMOUNT.name, refAmount.toString())
+                extraContents.put(ExtraKeys.TRAN_DATE.name, tranDate.toString())
+                extraContents.put(ExtraKeys.REF_NO.name,refNo)
+                extraContents.put(ExtraKeys.AUTH_CODE.name,authCode)
+                extraContents.put(ExtraKeys.CARD_NO.name,cardNo)
                 if (installmentCount.toInt() > 0){
                     transactionCode = TransactionCode.INSTALLMENT_REFUND.type
-                    extraContents!!.put(ExtraKeys.INST_COUNT.name, installmentCount)
+                    extraContents.put(ExtraKeys.INST_COUNT.name, installmentCount)
                 }
                 else{
                     transactionCode = TransactionCode.MATCHED_REFUND.type
                 }
-                readCard()
+                cardViewModel.setTransactionCode(transactionCode)
+                cardViewModel.setExtraContents(extraContents)
+                connectCardService()
             }
         }
     }
 
-    /**
-     * This is for showing infoDialog
-     * @param infoDialog info dialog that will be showed
-     */
-    fun showDialog(infoDialog: InfoDialog){
-        infoDialog.show(supportFragmentManager,"")
-    }
 
     /**
      * This function is setting a variable in example activity and start that activity with intents
@@ -283,7 +303,7 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
      * This function is setting some variables in fragment
      */
     private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
-        postTxnFragment.setter(this,transactionViewModel,transactionService,refundFragment,batchCloseService,batchViewModel)
+        postTxnFragment.setter(this,transactionViewModel,transactionService,refundFragment,batchCloseService,batchViewModel,cardViewModel)
     }
 
     /**
@@ -305,7 +325,8 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
      */
     private fun startDummySaleFragment(saleFragment: SaleFragment){
         amount = intent.extras!!.getInt("Amount")
-        saleFragment.setter(this, bundleOf(),Intent(),activationViewModel,batchViewModel, transactionService,amount)
+        cardViewModel.setAmount(amount)
+        saleFragment.setter(this,activationViewModel,batchViewModel, transactionService,amount,cardViewModel)
     }
 
     /**
@@ -325,6 +346,13 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         finish()
     }
 
+    /**
+     * This is for showing infoDialog
+     * @param infoDialog info dialog that will be showed
+     */
+    fun showDialog(infoDialog: InfoDialog){
+        infoDialog.show(supportFragmentManager,"")
+    }
 
     /**
      * Shows a dialog to the user which asks for a confirmation.
@@ -344,8 +372,6 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         dialog.show(supportFragmentManager, "")
         return dialog
     }
-
-
 
     /**
      * Returns time out value in seconds for activities which extend
@@ -397,30 +423,6 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
 
 
     /**
-     * I only call this functions and hold the last updated values in there
-     */
-    private fun setMID(MerchantID: String?) {
-        currentMID = MerchantID
-    }
-
-    private fun setTID(TerminalID: String?) {
-        currentTID = TerminalID
-    }
-
-    /**
-     * After TID and MID is changed, it is called from there and hold data for it. It also called everytime whenever MainActivity is created.
-     */
-    fun observeTIDandMID(){
-        activationViewModel.merchantID.observe(this){
-            setMID(it)
-        }
-        activationViewModel.terminalID.observe(this){
-            setTID(it)
-        }
-    }
-
-
-    /**
      * This function only works in installation, it calls setConfig and setCLConfig
      */
     private fun setEMVConfiguration() {
@@ -436,7 +438,7 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
     }
 
     /**
-     * It reads
+     * It set Config.xml
      */
     private fun setConfig() {
         try {
@@ -461,6 +463,9 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         }
     }
 
+    /**
+     * It set cl_config.xml
+     */
     private fun setCLConfig() {
         try {
             val xmlCLStream = applicationContext.assets.open("emv_cl_config.xml")
@@ -483,142 +488,19 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         }
     }
 
+
+
     /**
-     * This reads the card
-     */
-    fun readCard() {
-        val obj = JSONObject()
-        try {
-            obj.put("forceOnline", 0)
-            obj.put("zeroAmount", 1)
-            obj.put("showAmount", if (transactionCode == TransactionCode.VOID.type) 0 else 1) //amountu göstermiyor voidse
-            obj.put("partialEMV", 1)
-            if (gibSale)
-                obj.put("showCardScreen", 0)
-            // TODO Developer: Check from Allowed Operations Parameter
-            val isManEntryAllowed = true
-            val isCVVAskedOnMoto = true
-            val isFallbackAllowed = true
-            val isQrAllowed = true
-            obj.put("keyIn", if (isManEntryAllowed) 1 else 0)
-            obj.put("askCVV", if (isCVVAskedOnMoto) 1 else 0)
-            obj.put("fallback", if (isFallbackAllowed) 1 else 0)
-            obj.put("qrPay", if (isQrAllowed) 1 else 0)
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
-        //runBlocking(Dispatchers.IO) {
-            //GlobalScope.launch(Dispatchers.IO){
-        cardServiceBinding.getCard(amount, 30, obj.toString())
-            //}.join()
-       // }
-
-    }
-
-
     override fun onCardServiceConnected() {
         setEMVConfiguration() //TODO doğru yere taşınacak
     }
+    */
 
-    /** This method is implemented after card data is received. It makes card data JSON parse easily.
-     * After that get card and cardReadType from json. If the resultCode of the card is success make some operations
-     * with respect to card read type. If transactionCode is sale and card read type ICC,
-     * Sale & instalment Sale menu will be opened after reading the card, if it is Contactless Card this menu won't be opened.
-     * After checking card type, it checks transaction Code, if it is VOID ->
-     * first check whether this VOID operation is manual or automatically from GİB (with intents)
-     * if it is from Gib, it gets the transaction from Reference number, if card and card data from that transaction is matching
-     * it continues the void operation, else it warns the user.
-     * If transaction is Refund it opens refund menu.
-     */
-    override fun onCardDataReceived(cardData: String?) {
-        try {
-            val json = JSONObject(cardData!!)
-            //var card: ICard = Gson().fromJson(cardData, ICard::class.java) //whole methods is designed for ICCCard, converting them needs an extra effort
-            var card: ICCCard = Gson().fromJson(cardData, ICCCard::class.java)
-            if (card.resultCode == CardServiceResult.USER_CANCELLED.resultCode()) { //if user pressed back button in GiB operation
-                Log.d("CardDataReceived","Card Result Code: User Cancelled")
-                callbackMessage(ResponseCode.CANCELED)
-            }
-            if (card.resultCode == CardServiceResult.ERROR_TIMEOUT.resultCode()) { //if there is a timeout
-                Log.d("CardDataReceived","Card Result Code: TIMEOUT")
-                callbackMessage(ResponseCode.CANCELED)
-            }
-            val type = json.getInt("mCardReadType") //get type
-            if (card.resultCode == CardServiceResult.ERROR.resultCode()) {
-                Log.d("CardDataReceived","Card Result Code: ERROR")
-            }
-            if (card.resultCode == CardServiceResult.SUCCESS.resultCode()) { //if card reads is successful
-                when (type) { // implementing methods to card read types
-                    CardReadType.QrPay.type -> {
-                        //QrSale()
-                        return
-                    }
-                    CardReadType.CLCard.type -> {
-                        card = Gson().fromJson(cardData, ICCCard::class.java)
-                        if (transactionCode == TransactionCode.SALE.type && !gibSale){
-                            transactionCode = 0
-                            saleFragment.card = card
-                            textFragment.setActionName("")
-                            replaceFragment(textFragment)
-                            saleFragment.doSale()
-                        }
-                    }
-                    CardReadType.ICC.type -> {
-                        card = Gson().fromJson(cardData, ICCCard::class.java)
-                        if (transactionCode == TransactionCode.SALE.type && !gibSale){
-                            saleFragment.prepareSaleMenu(card)
-                        }
-                    }
-                    CardReadType.ICC2MSR.type, CardReadType.MSR.type, CardReadType.KeyIn.type -> {
-                        //card = Gson().fromJson(cardData, MSRCard::class.java)
-                        //cardServiceBinding!!.getOnlinePIN(amount, card?.cardNumber, 0x0A01, 0, 4, 8, 30)
-                    }
-                }
-                if (transactionCode == TransactionCode.VOID.type){
-                    if (autoTransaction) {
-                        autoTransaction = false
-                        transactionCode = 0
-                        val transactionList: List<Transaction?>? = transactionViewModel.getTransactionsByRefNo(refNo) //TODO check whether it gives a correct result
-                        val transaction = transactionList!![0] //2 tane geldi??
-                        Log.d("Refund Info", "Satış İptali: $transaction")
-                        if (card.mCardNumber == transaction!!.Col_PAN) {
-                            postTxnFragment.card = card
-                            postTxnFragment.voidOperation(transaction)
-                        } else {
-                            callbackMessage(ResponseCode.OFFLINE_DECLINE)
-                        }
-                    }
-                     else {
-                        postTxnFragment.cardNumberReceived(card)
-                    }
-                }
-                else if (gibSale){
-                    gibSale = false
-                    transactionCode = 0
-                    saleFragment.card = card
-                    saleFragment.doSale()
-                }
-                else if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type){
-                    if (autoTransaction){
-                        autoTransaction = false
-                        if (extraContents!!.getAsString(ExtraKeys.CARD_NO.name).equals(card.mCardNumber))
-                            refundFragment.afterReadCard(card,transactionCode,extraContents)
-                        else
-                            callbackMessage(ResponseCode.OFFLINE_DECLINE)
-                    } else
-                        refundFragment.afterReadCard(card,transactionCode,null)
-                }
-
-            }
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
-    }
 
     /**
      * It passes responseCode as a callBack message with respect to given parameter
      */
-    private fun callbackMessage(responseCode: ResponseCode){
+    fun callbackMessage(responseCode: ResponseCode){
         val intent = Intent()
         val bundle = Bundle()
         bundle.putInt("ResponseCode", responseCode.ordinal)
@@ -634,6 +516,9 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         }
     }
 
+    /**
+     * This function is for printing.
+     */
     fun print(printText: String?) {
         val styledText = StyledString()
         styledText.addStyledText(printText)
@@ -641,12 +526,34 @@ public class MainActivity : TimeOutActivity(), CardServiceListener {
         styledText.print(PrinterService.getService(applicationContext))
     }
 
-    override fun onPinReceived(p0: String?) {
-        TODO("Not yet implemented")
+    //This is for holding MID and TID, Because this values are LiveData,
+    // instead of writing this functions everywhere it is used
+    var currentMID: String? = ""
+    var currentTID: String? = ""
+
+    /**
+     * It holds the last updated values in there
+     */
+    private fun setMID(MerchantID: String?) {
+        currentMID = MerchantID
     }
 
-    override fun onICCTakeOut() {
-        TODO("Not yet implemented")
+    private fun setTID(TerminalID: String?) {
+        currentTID = TerminalID
     }
+    /**
+     * After TID and MID is changed, it is called from there and hold data for it. It also called everytime whenever MainActivity is created.
+     */
+    fun observeTIDandMID(){
+        activationViewModel.merchantID.observe(this){
+            setMID(it)
+        }
+        activationViewModel.terminalID.observe(this){
+            setTID(it)
+        }
+    }
+
+
+
 
 }

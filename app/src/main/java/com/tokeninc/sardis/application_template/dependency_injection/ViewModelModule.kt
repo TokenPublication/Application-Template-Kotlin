@@ -2,9 +2,11 @@ package com.tokeninc.sardis.application_template.dependency_injection
 
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
+import com.tokeninc.sardis.application_template.data.repositories.CardRepository
 import com.tokeninc.sardis.application_template.data.repositories.TransactionRepository
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import dagger.Module
 import dagger.Provides
@@ -38,4 +40,9 @@ object ViewModelModule {
     @ViewModelScoped
     fun provideTransactionViewModel(repository: TransactionRepository): TransactionViewModel =
         TransactionViewModel(repository)
+
+    @Provides
+    @ViewModelScoped
+    fun provideCardViewModel(repository: CardRepository): CardViewModel =
+        CardViewModel(repository)
 }
