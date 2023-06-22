@@ -326,7 +326,7 @@ public class MainActivity : TimeOutActivity() {
     private fun startDummySaleFragment(saleFragment: SaleFragment){
         amount = intent.extras!!.getInt("Amount")
         cardViewModel.setAmount(amount)
-        saleFragment.setter(this,activationViewModel,batchViewModel, transactionService,amount,cardViewModel)
+        saleFragment.setter(this,activationViewModel,batchViewModel, transactionViewModel, transactionService,amount,cardViewModel)
     }
 
     /**

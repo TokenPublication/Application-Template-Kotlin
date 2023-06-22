@@ -35,6 +35,7 @@ import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONException
 import org.json.JSONObject
 import java.lang.String.valueOf
@@ -58,6 +59,7 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
     private var amount = 0
 
     private lateinit var cardViewModel: CardViewModel
+    private lateinit var transactionViewModel: TransactionViewModel
 
     var infoDialog: InfoDialog? = null
 
@@ -98,13 +100,14 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
     /**
      * This is for initializing some variables on that class, it is called from mainActivity before this class is called
      */
-    fun setter(mainActivity: MainActivity, activationViewModel: ActivationViewModel, batchViewModel: BatchViewModel, transactionService: TransactionService, amount:Int, cardViewModel: CardViewModel ){
+    fun setter(mainActivity: MainActivity, activationViewModel: ActivationViewModel, batchViewModel: BatchViewModel, transactionViewModel: TransactionViewModel,transactionService: TransactionService, amount:Int, cardViewModel: CardViewModel ){
         this.mainActivity = mainActivity
         this.amount = amount
         this.transactionService = transactionService
         this.activationViewModel = activationViewModel
         this.batchViewModel = batchViewModel
         this.cardViewModel = cardViewModel
+        this.transactionViewModel = transactionViewModel
     }
 
     /** Flow: Clicking Sale Button > Read Card > On Card Data Received > (if card is ICC) -> here
@@ -203,9 +206,20 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
      */
     private fun doSale() {
         CoroutineScope(Dispatchers.Default).launch {
-        val transactionResponse = transactionService.doInBackground(mainActivity, amount, card!!,TransactionCode.SALE.type,
-            ContentValues(), null,false,null ,false)
-        finishSale(transactionResponse!!)
+            transactionViewModel.transactionRoutine(amount, card!!,TransactionCode.SALE.type,
+            ContentValues(), null,false,null ,false,batchViewModel, mainActivity.currentMID,mainActivity.currentTID,mainActivity)
+        //finishSale(transactionResponse!!)
+        }
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
+        transactionViewModel.getUiState().observe(mainActivity) { state ->
+            when (state) {
+                is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
+                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting ${state.data}")
+                is TransactionViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Progress,{state.message}.toString(),true))
+            }
+        }
+        transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
+            mainActivity.setResult(liveIntent)
         }
     }
 
