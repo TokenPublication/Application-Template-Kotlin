@@ -76,6 +76,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
+            cardViewModel.setTransactionCode(TransactionCode.VOID.type)
             mainActivity.connectCardService()
             startVoidAfterConnected()
         }))

@@ -191,12 +191,11 @@ class MainActivity : TimeOutActivity() {
     fun connectCardService(){
         val isCancelled = booleanArrayOf(false)
         //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
-        infoDialog = showInfoDialog(InfoDialog.InfoType.Processing, "Card Service Connecting..", false)
         val timer: CountDownTimer = object : CountDownTimer(10000, 1000) {
             override fun onTick(millisUntilFinished: Long) {}
             override fun onFinish() { //when it's finished, (after 10 seconds)
                 isCancelled[0] = true //make isCancelled true (because cardService couldn't be connected)
-                infoDialog!!.update(InfoDialog.InfoType.Declined, "Connect Failed")
+                showInfoDialog(InfoDialog.InfoType.Declined, "Connect Failed", false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     if (infoDialog != null) {
                         infoDialog!!.dismiss()
@@ -211,14 +210,18 @@ class MainActivity : TimeOutActivity() {
         cardViewModel.getCardServiceConnected().observe(this) { isConnected ->
             // cardService is connected before 10 seconds (which is the limit of the timer)
             if (isConnected && !isCancelled[0]) {
-                infoDialog!!.dismiss()
                 timer.cancel() // stop timer
                 Handler(Looper.getMainLooper()).postDelayed({
                     cardViewModel.readCard() //reads the Card
                 }, 500) //to show card Service is connected.
                 cardViewModel.getCallBackMessage().observe(this){responseCode ->
-                    if (responseCode == ResponseCode.CANCELED)
+                    if (responseCode == ResponseCode.CANCELED){ //if it is canceled
                         finish()
+                        cardViewModel.getTransactionCode().observe(this) { transactionCode ->
+                            if (transactionCode != TransactionCode.VOID.type)  //if it is not void
+                                finish() //finish the activity
+                        }
+                    }
                 }
             }
         }
