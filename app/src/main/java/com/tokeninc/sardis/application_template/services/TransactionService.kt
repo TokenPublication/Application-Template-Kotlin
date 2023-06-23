@@ -37,6 +37,7 @@ class TransactionService  {
         this.transactionViewModel = transactionViewModel
     }
 
+
     /** It runs functions in parallel while ui updating dynamically in main thread
      * Additionally, in IO coroutine thread it parses the response and make it OnlineTransactionResponse
      * then call Finish Transaction operation with that parameter.
@@ -105,9 +106,9 @@ class TransactionService  {
         content.put(TransactionCols.Col_UUID, uuid)
         content.put(TransactionCols.Col_BatchNo, batchViewModel.batchNo)
         if (transactionCode != TransactionCode.VOID.type) {
-            batchViewModel.updateGUPSN(batchViewModel.groupSN)
+            batchViewModel.updateGUPSN(batchViewModel.getGroupSN())
             val lst = batchViewModel.allBatch
-            val groupSn = batchViewModel.groupSN
+            val groupSn = batchViewModel.getGroupSN()
             Log.d("groupSn",groupSn.toString())
             content.put(TransactionCols.Col_GUP_SN,groupSn)
             /**
@@ -208,4 +209,5 @@ class TransactionService  {
         //return TransactionResponse(responseCode, onlineTransactionResponse, content, extraContent, transactionCode)
         //return null // TODO: if error DB insert, return error...
     }
+
 }

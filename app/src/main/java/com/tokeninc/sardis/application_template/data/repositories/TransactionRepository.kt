@@ -4,8 +4,8 @@ import android.content.ContentValues
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import com.token.printerlib.PrinterService
+import com.token.printerlib.StyledString
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.transaction.TransactionDao
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
@@ -160,7 +160,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
      * After that, this bundle is put to intent and that intent is assigned to mainActivity.
      * This intent ensures IPC between application and GiB.
      */
-    fun prepareIntent(transactionResponse: TransactionResponse, amount: Int, batchNo: Int, groupSN: Int, card: ICCCard,MID: String?, TID: String?,mainActivity:MainActivity)
+    fun prepareSaleIntent(transactionResponse: TransactionResponse, amount: Int, batchNo: Int, groupSN: Int, card: ICCCard, MID: String?, TID: String?, mainActivity:MainActivity)
             : Intent{
         Log.i("Transaction/Response","responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
         val responseCode = transactionResponse.responseCode
@@ -235,6 +235,51 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             e.printStackTrace()
         }
         return json.toString()
+    }
+
+    /**
+     * It prepares refund intent both for gib and normal refund and also print the slip
+     */
+    fun prepareRefundIntent(transactionResponse: TransactionResponse, mainActivity: MainActivity): Intent{
+        Log.d("TransactionResponse/Refund", "responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
+        val printHelper = PrintService()
+        val customerSlip = printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
+        val merchantSlip = printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
+        print(customerSlip, mainActivity)
+        print(merchantSlip, mainActivity)
+        val responseCode = transactionResponse.responseCode
+        val intent = Intent()
+        val bundle = Bundle()
+        bundle.putInt("ResponseCode", responseCode.ordinal)
+        intent.putExtras(bundle)
+        return intent
+    }
+
+    /**
+     * It finishes the void operation via printing slip with respect to achieved data and
+     * passes the response code as a result to mainActivity and finishes void transaction.
+     */
+    //TODO eşlenikli ve taksitli iade iptali slibinde İade miktarı değil, İlk org amount basıldı ona bak
+    fun prepareVoidIntent(transactionResponse: TransactionResponse, mainActivity: MainActivity): Intent {
+        Log.d("TransactionResponse/PostTxn", "responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
+        val printService = PrintService()
+        val customerSlip = printService.getFormattedText(SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
+        val merchantSlip = printService.getFormattedText(SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
+        print(customerSlip,mainActivity)
+        print(merchantSlip,mainActivity)
+        val responseCode = transactionResponse.responseCode
+        val intent = Intent()
+        val bundle = Bundle()
+        bundle.putInt("ResponseCode", responseCode.ordinal)
+        intent.putExtras(bundle)
+        return intent
+    }
+
+    fun print(printText: String?, mainActivity: MainActivity) {
+        val styledText = StyledString()
+        styledText.addStyledText(printText)
+        styledText.finishPrintingProcedure()
+        styledText.print(PrinterService.getService(mainActivity.applicationContext))
     }
 
 }

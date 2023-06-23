@@ -18,6 +18,7 @@ import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
+import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentRefundBinding
@@ -28,7 +29,9 @@ import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
 import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.services.TransactionService
+import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
+import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -52,6 +55,8 @@ class RefundFragment : Fragment() {
     var refNo : String? = null
 
     private lateinit var cardViewModel: CardViewModel
+    private lateinit var transactionViewModel: TransactionViewModel
+    private lateinit var batchViewModel: BatchViewModel
 
     companion object{
         lateinit var inputTranDate: CustomInputFormat
@@ -93,12 +98,28 @@ class RefundFragment : Fragment() {
         if (mExtraContent != null){
             stringExtraContent = mExtraContent
         }
-        cardViewModel.setTransactionCode(0)
+        //cardViewModel.setTransactionCode(0)
         card = mCard!!
         CoroutineScope(Dispatchers.Default).launch {
-            val transactionResponse = transactionService.doInBackground(mainActivity,stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
-                    ,card, transactionCode, stringExtraContent,null,false,null,false)
-            finishRefund(transactionResponse!!)
+            //val transactionResponse = transactionService.doInBackground(mainActivity,stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
+              //      ,card, transactionCode, stringExtraContent,null,false,null,false)
+            //finishRefund(transactionResponse!!)
+                transactionViewModel.transactionRoutine(stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
+                  ,card, transactionCode, stringExtraContent,null,false,null,false, batchViewModel, mainActivity.currentMID
+                ,mainActivity.currentTID, mainActivity)
+        }
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
+        transactionViewModel.getUiState().observe(mainActivity) { state ->
+            when (state) {
+                is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
+                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting ${state.data}")
+                is TransactionViewModel.UIState.Success -> mainActivity.showDialog(
+                    InfoDialog.newInstance(
+                        InfoDialog.InfoType.Progress,"Printing Slip",true))
+            }
+        }
+        transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
+            mainActivity.setResult(liveIntent)
         }
     }
 
@@ -378,10 +399,12 @@ class RefundFragment : Fragment() {
     /**
      * This is for initializing some variables on that class, it is called from PostTxn
      */
-    fun setter(mainActivity: MainActivity, transactionService: TransactionService, cardViewModel: CardViewModel){
+    fun setter(mainActivity: MainActivity, transactionService: TransactionService, cardViewModel: CardViewModel, transactionViewModel: TransactionViewModel, batchViewModel: BatchViewModel){
         this.mainActivity = mainActivity
         this.transactionService = transactionService
         this.cardViewModel = cardViewModel
+        this.transactionViewModel = transactionViewModel
+        this.batchViewModel = batchViewModel
     }
 
 }

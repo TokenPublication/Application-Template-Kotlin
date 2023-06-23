@@ -81,7 +81,6 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     }
 
 
-    private var downloadNumber: Int = 0
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     private val uiState = MutableLiveData<UIState>()
@@ -108,7 +107,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     suspend fun transactionRoutine( amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues,
                                 onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean, batchViewModel: BatchViewModel,
     MID: String?, TID: String?, mainActivity:MainActivity) {
-
+        var downloadNumber: Int = 0
         coroutineScope.launch(Dispatchers.Main){//firstly updating the UI as loading
             uiState.postValue(UIState.Loading)
         }
@@ -123,7 +122,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 }
                 downloadNumber++
                 if (downloadNumber == 10){
-                    val deferred = coroutineScope.launch(Dispatchers.IO) {
+                    coroutineScope.launch(Dispatchers.IO) {
                         val onlineTransactionResponse = transactionRepository.parseResponse(card,extraContent,transactionCode)
                         coroutineScope.launch(Dispatchers.Main) { //update UI with returnin auth Code
                             uiState.postValue(UIState.Success("Preparing The Data"))
@@ -152,10 +151,14 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         if (transactionCode == TransactionCode.VOID.type){ //if it is Void set it is as a void
             setVoid(extraContent!!.getAsString(TransactionCols.Col_GUP_SN).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card.SID)
             responseCode = ResponseCode.SUCCESS
+            transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent,ContentValues(),transactionCode) //it comes from parameters
         } else{
+            groupSn = batchViewModel.getGroupSN()
+            Log.i("GroupSn",groupSn.toString())
             batchNo = batchViewModel.batchNo
-            groupSn = batchViewModel.groupSN
             batchViewModel.updateGUPSN(groupSn)
+            groupSn = batchViewModel.getGroupSN()
+            Log.i("GroupSn",groupSn.toString())
             transactionResponse = transactionRepository.getTransactionResponse(amount,card,
                 transactionCode,extraContent,onlinePin,isPinByPass, uuid,isOffline,onlineTransactionResponse,batchNo,groupSn)
             val responseTransactionCode = transactionResponse.transactionCode
@@ -172,11 +175,17 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             }
         }
         if (transactionCode == TransactionCode.SALE.type){
-            val intent = transactionRepository.prepareIntent(transactionResponse!!,amount, batchNo!!, groupSn!!, card,MID, TID, mainActivity)
+            val intent = transactionRepository.prepareSaleIntent(transactionResponse!!,amount, batchNo!!, groupSn!!, card,MID, TID, mainActivity)
             liveIntent.postValue(intent)
         }
-
-        //repodan slip bastır
+        else if (transactionCode == TransactionCode.CASH_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.MATCHED_REFUND.type){
+            val intent = transactionRepository.prepareRefundIntent(transactionResponse!!,mainActivity)
+            liveIntent.postValue(intent)
+        }
+        else if(transactionCode == TransactionCode.VOID.type){
+            val intent = transactionRepository.prepareVoidIntent(transactionResponse,mainActivity)
+            liveIntent.postValue(intent)
+        }
     }
 
 }

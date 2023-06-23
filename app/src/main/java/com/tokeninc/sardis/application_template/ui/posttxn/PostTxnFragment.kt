@@ -178,7 +178,7 @@ class PostTxnFragment : Fragment() {
      * It starts the refund fragment with initializing variables.
      */
     fun startRefundFragment(){
-        refundFragment.setter(mainActivity,transactionService, cardViewModel)
+        refundFragment.setter(mainActivity,transactionService, cardViewModel,transactionViewModel,batchViewModel)
     }
 
     /** After reading a card, this function is called only for Void operations.
@@ -210,10 +210,22 @@ class PostTxnFragment : Fragment() {
     fun voidOperation(transaction: Transaction){
         val contentValHelper = ContentValHelper()
         CoroutineScope(Dispatchers.Default).launch {
-            val transactionResponse = transactionService.doInBackground(mainActivity, transaction.Col_Amount,
+            //finishVoid(transactionResponse!!)
+            transactionViewModel.transactionRoutine(transaction.Col_Amount,
                 card!!,TransactionCode.VOID.type,
-                contentValHelper.getContentVal(transaction),null,false,null,false)
-            finishVoid(transactionResponse!!)
+                contentValHelper.getContentVal(transaction),null,false,null,false,batchViewModel,
+                mainActivity.currentMID, mainActivity.currentTID,mainActivity)
+        }
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
+        transactionViewModel.getUiState().observe(mainActivity) { state ->
+            when (state) {
+                is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
+                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting ${state.data}")
+                is TransactionViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Printing Slip",true))
+            }
+        }
+        transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
+            mainActivity.setResult(liveIntent)
         }
     }
 

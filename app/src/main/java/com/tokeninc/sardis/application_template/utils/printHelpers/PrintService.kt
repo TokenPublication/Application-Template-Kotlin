@@ -101,12 +101,11 @@ class PrintService:BasePrintHelper() {
         styledText.addTextToLine("TUTAR:")
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type)
             styledText.addTextToLine(stringHelper.getAmount(extraContentValues!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()), PrinterDefinitions.Alignment.Right)
-        if (transactionCode == TransactionCode.CASH_REFUND.type)
+        else if(transactionCode == TransactionCode.CASH_REFUND.type)
             styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(
                 TransactionCols.Col_Amount2).toInt()), PrinterDefinitions.Alignment.Right)
         else
-            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(
-                TransactionCols.Col_Amount).toInt()), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCols.Col_Amount).toInt()), PrinterDefinitions.Alignment.Right)
         styledText.setLineSpacing(0.5f)
         styledText.setFontSize(10)
         styledText.newLine()

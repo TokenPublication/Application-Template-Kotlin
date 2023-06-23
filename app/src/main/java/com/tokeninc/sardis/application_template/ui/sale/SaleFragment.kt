@@ -61,11 +61,7 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
     private lateinit var cardViewModel: CardViewModel
     private lateinit var transactionViewModel: TransactionViewModel
 
-    var infoDialog: InfoDialog? = null
-
     companion object{
-        var cardOwner =""
-        var cardNumber = "**** ****"
         //listener for spinner
         private val listener: AdapterView.OnItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
@@ -207,7 +203,8 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
     private fun doSale() {
         CoroutineScope(Dispatchers.Default).launch {
             transactionViewModel.transactionRoutine(amount, card!!,TransactionCode.SALE.type,
-            ContentValues(), null,false,null ,false,batchViewModel, mainActivity.currentMID,mainActivity.currentTID,mainActivity)
+            ContentValues(), null,false,null ,false,batchViewModel,
+                mainActivity.currentMID,mainActivity.currentTID,mainActivity)
         //finishSale(transactionResponse!!)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
@@ -215,7 +212,7 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
             when (state) {
                 is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
                 is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting ${state.data}")
-                is TransactionViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Progress,{state.message}.toString(),true))
+                is TransactionViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Printing Slip",true))
             }
         }
         transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
@@ -223,85 +220,6 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
         }
     }
 
-    /** This method is called from doSale() method. It puts required values to bundle (something like contentValues for data transferring).
-     * After that, this bundle is put to intent and that intent is assigned to mainActivity.
-     * This intent ensures IPC between application and GiB.
-     */
-    private fun finishSale(transactionResponse: TransactionResponse){
-        Log.d("Transaction/Response","responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
-
-        val responseCode = transactionResponse.responseCode
-        if (responseCode == ResponseCode.SUCCESS){
-            val bundle = Bundle()
-            bundle.putInt("ResponseCode", responseCode.ordinal) //TODO bunu diğerlerinde de yap
-            bundle.putInt("PaymentStatus", 0) // #2 Payment Status
-            bundle.putInt("Amount", amount ) // #3 Amount
-            bundle.putInt("Amount2", 0)
-            bundle.putBoolean("IsSlip", true)
-            bundle.putInt("BatchNo", batchViewModel.batchNo)
-            bundle.putString("CardNo", StringHelper().maskCardForBundle(card!!.mCardNumber!!))
-            bundle.putString("MID", mainActivity.currentMID)
-            bundle.putString("TID", mainActivity.currentTID)
-            bundle.putInt("TxnNo",batchViewModel.groupSN)
-            bundle.putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
-
-            var slipType: SlipType = SlipType.NO_SLIP
-            if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
-                slipType = SlipType.NO_SLIP
-            }
-            else{
-                if (transactionResponse.responseCode == ResponseCode.SUCCESS){
-                    val printHelper = PrintService()
-                    bundle.putString("customerSlipData", printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
-                    bundle.putString("merchantSlipData", printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
-                    bundle.putString("RefundInfo", getRefundInfo(transactionResponse))
-                    if(transactionResponse.contentVal != null) {
-                        bundle.putString("RefNo", transactionResponse.contentVal!!.getAsString(
-                            TransactionCols.Col_HostLogKey))
-                        bundle.putString("AuthNo", transactionResponse.contentVal!!.getAsString(
-                            TransactionCols.Col_AuthCode))
-                    }
-                }
-            }
-            bundle.putInt("SlipType", slipType.value) //TODO fail receipt yap
-            val intent = Intent()
-            intent.putExtras(bundle)
-            mainActivity.setResult(intent)
-        }
-    }
-
-    /** @return refundInfo which is Json with necessary components
-     *
-     */
-    private fun getRefundInfo(transactionResponse: TransactionResponse): String {
-        val json = JSONObject()
-        val transaction = transactionResponse.contentVal
-        try {
-            json.put("BatchNo", batchViewModel.batchNo)
-            json.put("TxnNo", batchViewModel.groupSN)
-            json.put("Amount", amount)
-            json.put("RefNo", transaction!!.getAsString(TransactionCols.Col_HostLogKey))
-            json.put("AuthCode", transaction.getAsString(TransactionCols.Col_AuthCode))
-            json.put("TranDate", transaction.getAsString(TransactionCols.Col_TranDate))
-            json.put("MID",mainActivity.currentMID)
-            json.put("TID",mainActivity.currentTID)
-            json.put("CardNo",card!!.mCardNumber!!)
-            if (transaction.getAsInteger(TransactionCols.Col_InstCnt) != null && transaction.getAsInteger(
-                    TransactionCols.Col_InstCnt) > 0) {
-                //val installment = JSONObject()
-                json.put("InstCount", transaction.getAsInteger(TransactionCols.Col_InstCnt))
-                json.put("InstAmount", transaction.getAsInteger(TransactionCols.Col_InstAmount))
-                //json.put("Installment", installment)
-            }
-            else{
-                json.put("InstCount", 0)
-                json.put("InstAmount", 0)
-            }
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
-        return json.toString()
-    }
 
     /**
      * This is a dummy response, it is doing nothing its only mission is to show how to simulate buttons for now.

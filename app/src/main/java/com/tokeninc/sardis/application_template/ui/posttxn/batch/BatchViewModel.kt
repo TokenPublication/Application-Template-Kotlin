@@ -12,7 +12,8 @@ import javax.inject.Inject
 @HiltViewModel
 class BatchViewModel @Inject constructor(private val batchRepository: BatchRepository): ViewModel() {
 
-    val groupSN = batchRepository.groupSN
+    //val groupSN = batchRepository.groupSN
+    fun getGroupSN()  = batchRepository.getGroupSN()
     val batchNo = batchRepository.batchNo
     fun getPreviousBatchSlip(): LiveData<String?> = batchRepository.getPreviousBatchSlip()
     val allBatch = batchRepository.allBatch

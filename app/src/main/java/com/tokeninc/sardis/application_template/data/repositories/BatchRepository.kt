@@ -6,7 +6,7 @@ import com.tokeninc.sardis.application_template.data.database.batch.Batch
 import javax.inject.Inject
 
 class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
-    val groupSN = batchDao.getGUPSN()
+    fun getGroupSN() = batchDao.getGUPSN()
     val batchNo = batchDao.getBatchNo()
     fun getPreviousBatchSlip(): LiveData<String?> = batchDao.getBatchPreviousSlip()
     var allBatch: List<Batch?> = batchDao.getAllBatch()
