@@ -26,6 +26,7 @@ class PrintService:BasePrintHelper() {
 
 
     //TODO installment ve cash refunda göre de düzenleme yap
+    //TODO eşlenikli ve taksitli iade iptali slibinde İade miktarı değil, İlk org amount basıldı ona bak
     fun getFormattedText(slipType: SlipType, contentValues: ContentValues, extraContentValues: ContentValues?, onlineTransactionResponse: OnlineTransactionResponse,
                          transactionCode: Int, context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
         val styledText = StyledString()

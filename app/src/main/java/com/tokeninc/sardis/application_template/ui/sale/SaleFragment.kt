@@ -17,27 +17,20 @@ import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
-import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
 import com.tokeninc.sardis.application_template.enums.CardReadResult
 import com.tokeninc.sardis.application_template.enums.PaymentTypes
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
-import com.tokeninc.sardis.application_template.services.TransactionService
 import com.tokeninc.sardis.application_template.ui.MenuItem
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
-import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONException
-import org.json.JSONObject
 import java.lang.String.valueOf
 
 /**
@@ -54,7 +47,6 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
     private lateinit var activationViewModel: ActivationViewModel
     private lateinit var batchViewModel: BatchViewModel
     private lateinit var mainActivity: MainActivity
-    private lateinit var transactionService: TransactionService
     var card: ICCCard? = null
     private var amount = 0
 
@@ -96,10 +88,9 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
     /**
      * This is for initializing some variables on that class, it is called from mainActivity before this class is called
      */
-    fun setter(mainActivity: MainActivity, activationViewModel: ActivationViewModel, batchViewModel: BatchViewModel, transactionViewModel: TransactionViewModel,transactionService: TransactionService, amount:Int, cardViewModel: CardViewModel ){
+    fun setter(mainActivity: MainActivity, activationViewModel: ActivationViewModel, batchViewModel: BatchViewModel, transactionViewModel: TransactionViewModel, amount:Int, cardViewModel: CardViewModel ){
         this.mainActivity = mainActivity
         this.amount = amount
-        this.transactionService = transactionService
         this.activationViewModel = activationViewModel
         this.batchViewModel = batchViewModel
         this.cardViewModel = cardViewModel
@@ -211,7 +202,7 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
         transactionViewModel.getUiState().observe(mainActivity) { state ->
             when (state) {
                 is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
-                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting ${state.data}")
+                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting % ${state.data}")
                 is TransactionViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Printing Slip",true))
             }
         }

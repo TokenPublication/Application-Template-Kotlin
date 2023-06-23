@@ -18,13 +18,8 @@ import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
-import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
-import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
-import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
-import com.tokeninc.sardis.application_template.services.BatchCloseService
-import com.tokeninc.sardis.application_template.services.TransactionService
 import com.tokeninc.sardis.application_template.ui.MenuItem
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.posttxn.refund.RefundFragment
@@ -32,7 +27,6 @@ import com.tokeninc.sardis.application_template.ui.posttxn.void_operation.Transa
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import com.tokeninc.sardis.application_template.utils.ContentValHelper
-import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,11 +40,9 @@ class PostTxnFragment : Fragment() {
     private val binding get() = _binding!!
     var card: ICCCard? = null
     private lateinit var mainActivity: MainActivity
-    private lateinit var transactionService: TransactionService
     private lateinit var refundFragment: RefundFragment
     private lateinit var viewModel: PostTxnViewModel
     private lateinit var transactionViewModel: TransactionViewModel
-    private lateinit var batchCloseService: BatchCloseService
     private lateinit var batchViewModel: BatchViewModel
 
     private lateinit var cardViewModel: CardViewModel
@@ -69,15 +61,13 @@ class PostTxnFragment : Fragment() {
     /**
      * This is for initializing some variables on that class, it is called from mainActivity before this class is called
      */
-    fun setter(mainActivity: MainActivity, transactionViewModel: TransactionViewModel, transactionService: TransactionService,
-               refundFragment: RefundFragment, batchCloseService: BatchCloseService, batchViewModel: BatchViewModel,
+    fun setter(mainActivity: MainActivity, transactionViewModel: TransactionViewModel,
+               refundFragment: RefundFragment, batchViewModel: BatchViewModel,
                cardViewModel: CardViewModel
     ){
         this.mainActivity = mainActivity
         this.transactionViewModel = transactionViewModel
-        this.transactionService = transactionService
         this.refundFragment = refundFragment
-        this.batchCloseService = batchCloseService
         this.batchViewModel = batchViewModel
         this.cardViewModel = cardViewModel
     }
@@ -111,10 +101,9 @@ class PostTxnFragment : Fragment() {
             mainActivity.addFragment(refundFragment) //burada stacke ekliyor
         }))
         menuItems.add(MenuItem(getStrings(R.string.batch_close), {
-            if (transactionViewModel.allTransactions() == null){
-                val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(
-                    R.string.batch_empty
-                ),false)
+            if (transactionViewModel.allTransactions().isNullOrEmpty()){
+                val infoDialog = mainActivity.showInfoDialog(
+                    InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     infoDialog!!.dismiss()
                 }, 2000)
@@ -156,29 +145,26 @@ class PostTxnFragment : Fragment() {
      */
     fun startBatchClose() {
         CoroutineScope(Dispatchers.Default).launch {
-            val batchResponse = batchCloseService.doInBackground()
-            finishBatchClose(batchResponse!!)
+            batchViewModel.batchRoutine(mainActivity,transactionViewModel)
         }
-    }
-
-    /**
-     * It finishes the batch close operation with passing the response code as a result to mainActivity and finishing mainActivity.
-     */
-    private fun finishBatchClose(batchCloseResponse: BatchCloseResponse){
-        Log.d("finishBatch","${batchCloseResponse.batchResult}")
-        val responseCode = batchCloseResponse.batchResult
-        val intent = Intent()
-        val bundle = Bundle()
-        bundle.putInt("ResponseCode", responseCode.ordinal)
-        intent.putExtras(bundle)
-        mainActivity.setResult(intent)
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
+        batchViewModel.getUiState().observe(mainActivity) { state ->
+            when (state) {
+                is BatchViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
+                is BatchViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Slip Hazırlanıyor % ${state.data}")
+                is BatchViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Confirmed,"Grup Kapama Başarılı",true))
+            }
+        }
+        batchViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
+            mainActivity.setResult(liveIntent)
+        }
     }
 
     /**
      * It starts the refund fragment with initializing variables.
      */
     fun startRefundFragment(){
-        refundFragment.setter(mainActivity,transactionService, cardViewModel,transactionViewModel,batchViewModel)
+        refundFragment.setter(mainActivity,cardViewModel,transactionViewModel,batchViewModel)
     }
 
     /** After reading a card, this function is called only for Void operations.
@@ -220,7 +206,7 @@ class PostTxnFragment : Fragment() {
         transactionViewModel.getUiState().observe(mainActivity) { state ->
             when (state) {
                 is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
-                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting ${state.data}")
+                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting % ${state.data}")
                 is TransactionViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Printing Slip",true))
             }
         }
@@ -229,24 +215,6 @@ class PostTxnFragment : Fragment() {
         }
     }
 
-    /**
-     * It finishes the void operation via printing slip with respect to achieved data and
-     * passes the response code as a result to mainActivity and finishes void transaction.
-     */
-    private fun finishVoid(transactionResponse: TransactionResponse) {
-        Log.d("TransactionResponse/PostTxn", "responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
-        val printService = PrintService()
-        val customerSlip = printService.getFormattedText(SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
-        val merchantSlip = printService.getFormattedText(SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
-        mainActivity.print(customerSlip)
-        mainActivity.print(merchantSlip)
-        val responseCode = transactionResponse.responseCode
-        val intent = Intent()
-        val bundle = Bundle()
-        bundle.putInt("ResponseCode", responseCode.ordinal)
-        intent.putExtras(bundle)
-        mainActivity.setResult(intent)
-    }
 
     /**
      * Fragment couldn't use getString from res > values > strings, therefore this method call that string from mainActivity.

@@ -28,7 +28,6 @@ import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
 import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
-import com.tokeninc.sardis.application_template.services.TransactionService
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
@@ -46,7 +45,6 @@ class RefundFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var mainActivity: MainActivity
-    private lateinit var transactionService: TransactionService
 
     private lateinit var card: ICCCard
     private var extraContent = ContentValues()  //at the end of every Refund we finish mainActivity so no need to delete it at everytime
@@ -98,12 +96,8 @@ class RefundFragment : Fragment() {
         if (mExtraContent != null){
             stringExtraContent = mExtraContent
         }
-        //cardViewModel.setTransactionCode(0)
         card = mCard!!
         CoroutineScope(Dispatchers.Default).launch {
-            //val transactionResponse = transactionService.doInBackground(mainActivity,stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
-              //      ,card, transactionCode, stringExtraContent,null,false,null,false)
-            //finishRefund(transactionResponse!!)
                 transactionViewModel.transactionRoutine(stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
                   ,card, transactionCode, stringExtraContent,null,false,null,false, batchViewModel, mainActivity.currentMID
                 ,mainActivity.currentTID, mainActivity)
@@ -112,7 +106,7 @@ class RefundFragment : Fragment() {
         transactionViewModel.getUiState().observe(mainActivity) { state ->
             when (state) {
                 is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
-                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting ${state.data}")
+                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting % ${state.data}")
                 is TransactionViewModel.UIState.Success -> mainActivity.showDialog(
                     InfoDialog.newInstance(
                         InfoDialog.InfoType.Progress,"Printing Slip",true))
@@ -399,9 +393,8 @@ class RefundFragment : Fragment() {
     /**
      * This is for initializing some variables on that class, it is called from PostTxn
      */
-    fun setter(mainActivity: MainActivity, transactionService: TransactionService, cardViewModel: CardViewModel, transactionViewModel: TransactionViewModel, batchViewModel: BatchViewModel){
+    fun setter(mainActivity: MainActivity, cardViewModel: CardViewModel, transactionViewModel: TransactionViewModel, batchViewModel: BatchViewModel){
         this.mainActivity = mainActivity
-        this.transactionService = transactionService
         this.cardViewModel = cardViewModel
         this.transactionViewModel = transactionViewModel
         this.batchViewModel = batchViewModel

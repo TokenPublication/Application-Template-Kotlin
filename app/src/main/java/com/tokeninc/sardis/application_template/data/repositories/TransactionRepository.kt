@@ -257,9 +257,8 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
 
     /**
      * It finishes the void operation via printing slip with respect to achieved data and
-     * passes the response code as a result to mainActivity and finishes void transaction.
+     * passes the response code to liveData intent which is observed in its fragment and finishes the mainActivity
      */
-    //TODO eşlenikli ve taksitli iade iptali slibinde İade miktarı değil, İlk org amount basıldı ona bak
     fun prepareVoidIntent(transactionResponse: TransactionResponse, mainActivity: MainActivity): Intent {
         Log.d("TransactionResponse/PostTxn", "responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
         val printService = PrintService()
