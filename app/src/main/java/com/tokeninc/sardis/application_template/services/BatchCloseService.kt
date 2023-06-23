@@ -7,7 +7,6 @@ import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import com.tokeninc.sardis.application_template.enums.BatchResult
 import com.tokeninc.sardis.application_template.utils.printHelpers.BatchClosePrintHelper
-import com.tokeninc.sardis.application_template.utils.printHelpers.PrintServiceBinding
 import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
@@ -52,7 +51,7 @@ class BatchCloseService {
                 downloadNumber++
             }
             val deferred = coroutineScope.async(Dispatchers.IO) {
-                finishBatchClose(dialog)
+                finishBatchClose(mainActivity,dialog)
             }
             batchCloseResponse = deferred.await()
 
@@ -64,17 +63,16 @@ class BatchCloseService {
      * Lastly insert this slip to database, to print it again in next day. If it inserts it successfully, ui is updating
      * with Success Message. Lastly, update Batch number and resets group number and delete all transactions from Transaction Table.
      */
-    private fun finishBatchClose(dialog: InfoDialog): BatchCloseResponse {
+    private fun finishBatchClose(mainActivity: MainActivity, dialog: InfoDialog): BatchCloseResponse {
         val transactions = transactionViewModel.allTransactions()
 
         val printService = BatchClosePrintHelper()
-        val printServiceBinding = PrintServiceBinding()
         val slip = printService.batchText(batchViewModel.batchNo.toString(),transactions!!,mainActivity,true)
         Log.d("Repetition",slip)
         batchViewModel.updateBatchSlip(slip,batchViewModel.batchNo)
         dialog.update(InfoDialog.InfoType.Confirmed, "Grup Kapama Başarılı")
 
-        printServiceBinding.print(slip)
+        mainActivity.print(slip)
         batchViewModel.updateBatchNo(batchViewModel.batchNo)
         transactionViewModel.deleteAll()
         return BatchCloseResponse(BatchResult.SUCCESS, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()))

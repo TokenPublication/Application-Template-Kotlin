@@ -6,6 +6,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
+import com.token.printerlib.PrinterService
+import com.token.printerlib.StyledString
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
@@ -20,7 +22,6 @@ import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.ui.examples.viewmodels.ExampleViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
-import com.tokeninc.sardis.application_template.utils.printHelpers.PrintServiceBinding
 
 /**
  * This is the class for showing how to simulate examples on this device to developers
@@ -31,7 +32,6 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
     private val timeOut = 60
     private var qrAmount = 100
     private var qrString = "QR Code Test"
-    private val printService = PrintServiceBinding()
     private var menuItems = mutableListOf<IListMenuItem>()
     lateinit var mainActivity: MainActivity
     private val viewModel = ExampleViewModel()
@@ -46,6 +46,13 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
         cardServiceBinding = CardServiceBinding(this, this)
         viewModel.list = menuItems
         viewModel.replaceFragment(this)
+    }
+
+    fun print(printText: String?) {
+        val styledText = StyledString()
+        styledText.addStyledText(printText)
+        styledText.finishPrintingProcedure()
+        styledText.print(PrinterService.getService(applicationContext))
     }
 
     fun setter(mainActivity: MainActivity){
@@ -169,10 +176,10 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
         }))
         val subListPrint = mutableListOf<IListMenuItem>()
         subListPrint.add(MenuItem("Print Load Success", {
-            printService.print(PrintHelper().PrintSuccess()) // Message print: Load Success
+            print(PrintHelper().PrintSuccess()) // Message print: Load Success
         }))
         subListPrint.add(MenuItem("Print Load Error", {
-            printService.print(PrintHelper().PrintError()) // Message print: Load Error
+            print(PrintHelper().PrintError()) // Message print: Load Error
         }))
         //subListPrint.add(com.tokeninc.sardis.application_template.ui.MenuItem("Print Bitmap", { }))
         menuItems.add(MenuItem("Print Functions", subListPrint, null))

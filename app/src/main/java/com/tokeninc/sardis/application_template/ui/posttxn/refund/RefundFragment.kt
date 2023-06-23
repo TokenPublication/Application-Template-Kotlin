@@ -25,7 +25,6 @@ import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCC
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
-import com.tokeninc.sardis.application_template.utils.printHelpers.PrintServiceBinding
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
 import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.services.TransactionService
@@ -47,7 +46,6 @@ class RefundFragment : Fragment() {
 
     private lateinit var card: ICCCard
     private var extraContent = ContentValues()  //at the end of every Refund we finish mainActivity so no need to delete it at everytime
-    private var printService = PrintServiceBinding()
     private var stringExtraContent = ContentValues() //this is for switching customInput format type to string
     var amount = 0 //TODO sonra 0 la ?
     var refNo : String? = null
@@ -109,8 +107,8 @@ class RefundFragment : Fragment() {
         val printHelper = PrintService()
         val customerSlip = printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         val merchantSlip = printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
-        printService.print(customerSlip)
-        printService.print(merchantSlip)
+        mainActivity.print(customerSlip)
+        mainActivity.print(merchantSlip)
         val responseCode = transactionResponse.responseCode
         val intent = Intent()
         val bundle = Bundle()
