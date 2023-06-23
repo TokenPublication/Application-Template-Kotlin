@@ -26,8 +26,6 @@ import com.tokeninc.sardis.application_template.*
 import com.tokeninc.sardis.application_template.data.database.AppTempDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.enums.*
-import com.tokeninc.sardis.application_template.services.BatchCloseService
-import com.tokeninc.sardis.application_template.services.TransactionService
 import com.tokeninc.sardis.application_template.ui.*
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.activation.SettingsFragment
@@ -64,8 +62,6 @@ public class MainActivity : TimeOutActivity() {
     private lateinit var transactionViewModel : TransactionViewModel
 
     //initializing fragments
-    private val transactionService = TransactionService()
-    private val batchCloseService = BatchCloseService()
     private val postTxnFragment = PostTxnFragment()
     private val settingsFragment = SettingsFragment()
     private val refundFragment = RefundFragment()
@@ -135,8 +131,6 @@ public class MainActivity : TimeOutActivity() {
         saleFragment = SaleFragment(transactionViewModel)
         triggerFragment = TriggerFragment(this)
         //cardServiceBinding = CardServiceBinding(this, this)
-        startTransactionService()
-        startBatchService()
         observeTIDandMID()
         textFragment.mainActivity = this
 
@@ -183,7 +177,7 @@ public class MainActivity : TimeOutActivity() {
             }
             getString(R.string.Settings_Action) ->  startSettingsFragment(settingsFragment)
             getString(R.string.BatchClose_Action) ->  {
-                if (transactionViewModel.allTransactions() == null){ //if it is empty just show no transaction dialog
+                if (transactionViewModel.allTransactions().isNullOrEmpty()){ //if it is empty just show no transaction dialog
                     callbackMessage(ResponseCode.ERROR)
                 }else{ //else implementing batch closing and finish that activity
                     startPostTxnFragment(postTxnFragment)
@@ -303,22 +297,9 @@ public class MainActivity : TimeOutActivity() {
      * This function is setting some variables in fragment
      */
     private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
-        postTxnFragment.setter(this,transactionViewModel,transactionService,refundFragment,batchCloseService,batchViewModel,cardViewModel)
+        postTxnFragment.setter(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel)
     }
 
-    /**
-     * This is for initializing some variables in Transaction Service
-     */
-    private fun startTransactionService(){
-        transactionService.setter(this,batchViewModel,transactionViewModel)
-    }
-
-    /**
-     * This is for initializing some variables in Batch Service
-     */
-    private fun startBatchService(){
-        batchCloseService.setter(this,batchViewModel,transactionViewModel)
-    }
 
     /** This function is getting amount from intent and pass that amount and other variables to fragment.
      * Then replace that fragment to current view.
@@ -326,7 +307,7 @@ public class MainActivity : TimeOutActivity() {
     private fun startDummySaleFragment(saleFragment: SaleFragment){
         amount = intent.extras!!.getInt("Amount")
         cardViewModel.setAmount(amount)
-        saleFragment.setter(this,activationViewModel,batchViewModel, transactionService,amount,cardViewModel)
+        saleFragment.setter(this,activationViewModel,batchViewModel, transactionViewModel,amount,cardViewModel)
     }
 
     /**
