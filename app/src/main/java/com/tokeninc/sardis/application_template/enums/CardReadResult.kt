@@ -1,6 +1,6 @@
 package com.tokeninc.sardis.application_template.enums
 
-enum class CardReadResult(private val value: Int) {
+enum class CardReadResult(private val value: Int) { //TODO daha iyisi gelir mi
     SALE_NOT_GIB_CL(0),
     SALE_NOT_GIB_ICC(1),
     VOID_GIB(2),

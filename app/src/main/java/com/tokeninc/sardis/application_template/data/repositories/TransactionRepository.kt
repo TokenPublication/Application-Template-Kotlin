@@ -186,7 +186,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             else{
                 if (transactionResponse.responseCode == ResponseCode.SUCCESS){
                     val printHelper = PrintService()
-                    //TODO maini almadan, saleFragmentta yapmaya çalış.
+                    //TODO mainsiz yapabiliyorsan yap
                     bundle.putString("customerSlipData", printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
                     bundle.putString("merchantSlipData", printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
                     bundle.putString("RefundInfo", getRefundInfo(transactionResponse,batchNo,groupSN,amount,MID,TID,card))

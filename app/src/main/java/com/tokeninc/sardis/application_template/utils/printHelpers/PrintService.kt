@@ -6,15 +6,16 @@ import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.AppTemp
-import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
 import com.tokeninc.sardis.application_template.MainActivity
+import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
 import com.tokeninc.sardis.application_template.data.entities.responses.OnlineTransactionResponse
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 /**
  * This class forms slips with respect to type of Transaction, it can arrange slip for
@@ -27,6 +28,7 @@ class PrintService:BasePrintHelper() {
 
     //TODO installment ve cash refunda göre de düzenleme yap
     //TODO eşlenikli ve taksitli iade iptali slibinde İade miktarı değil, İlk org amount basıldı ona bak
+    //TODO mainsiz yapabiliyorsan yap olmuyor gibi local bir setter olmadığı sürece, belki öyle yapılabilir
     fun getFormattedText(slipType: SlipType, contentValues: ContentValues, extraContentValues: ContentValues?, onlineTransactionResponse: OnlineTransactionResponse,
                          transactionCode: Int, context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
         val styledText = StyledString()
@@ -204,7 +206,8 @@ class PrintService:BasePrintHelper() {
         addTextToNewLine(styledText,"BU İŞLEM YURT İÇİ KARTLA YAPILMIŞTIR", PrinterDefinitions.Alignment.Center, 8)
         addTextToNewLine(styledText,"BU BELGEYİ SAKLAYINIZ", PrinterDefinitions.Alignment.Center, 8)
         styledText.newLine()
-        styledText.printBitmap("ykb", 20)
+        //styledText.printBitmap("ykb", 20)
+        styledText.printLogo(context)
         styledText.addSpace(50)
         return styledText.toString()
     }

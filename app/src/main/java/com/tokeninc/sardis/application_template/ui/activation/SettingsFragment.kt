@@ -21,16 +21,14 @@ import org.apache.commons.lang3.StringUtils
 /**
  * This fragment is for Setting Configuration, it depends on Activation Database
  */
-class SettingsFragment : Fragment() {
+class SettingsFragment(private val mainActivity: MainActivity,
+                       private val activationViewModel: ActivationViewModel,
+                       private val intent: Intent) : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var mainActivity: MainActivity
-    private lateinit var intent: Intent
-
     private var isBankActivateAction = true
-    private lateinit var activationViewModel: ActivationViewModel
 
     private var terminalId: String? = null
     private var merchantId: String? = null
@@ -39,7 +37,7 @@ class SettingsFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentSettingsBinding.inflate(inflater,container,false)
         return binding.root
     }
@@ -54,15 +52,6 @@ class SettingsFragment : Fragment() {
         } else {
             showMenu()
         }
-    }
-
-    /**
-     * This is for setting some variables in this class, it is called from mainActivity
-     */
-    fun setter(mainActivity: MainActivity, activationViewModel: ActivationViewModel, intent: Intent){
-        this.intent = intent
-        this.mainActivity = mainActivity
-        this.activationViewModel = activationViewModel
     }
 
     /**
@@ -119,7 +108,7 @@ class SettingsFragment : Fragment() {
     /**
      * This is for validating the input.
      */
-    private fun validate(customInputFormat: com.token.uicomponents.CustomInput.CustomInputFormat): Boolean {
+    private fun validate(customInputFormat: CustomInputFormat): Boolean {
         val text = customInputFormat.text
         var isValid: Boolean =
             StringUtils.countMatches(text, ".") === 3 && text.split("\\.").toTypedArray().size == 4
@@ -163,9 +152,9 @@ class SettingsFragment : Fragment() {
         val tidMidFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 merchantId = inputList[0].text
-                Log.d("MMMMM",merchantId.toString())
+                Log.d("Merchant ID",merchantId.toString())
                 terminalId = inputList[1].text
-                Log.d("MMMMM",terminalId.toString())
+                Log.d("Terminal ID",terminalId.toString())
                 activationViewModel.hostIP.observe(mainActivity){//to get the current Val
                     activationViewModel.updateActivation(terminalId, merchantId,it)
                 }

@@ -114,7 +114,7 @@ class CardRepository @Inject constructor() :
         enters = false
     }
 
-    //mainActivity onCardDataReceievedi mi çalıştı ?
+    //TODO niye 2 kez geliyor
     var enters = false
     override fun onCardDataReceived(cardData: String?) {
         if (!enters){
@@ -184,7 +184,7 @@ class CardRepository @Inject constructor() :
 
                 }
                 this.card.postValue(card)
-                // cardServiceBinding.unBind()
+                cardServiceBinding.unBind() //unbinding the cardService
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
             }

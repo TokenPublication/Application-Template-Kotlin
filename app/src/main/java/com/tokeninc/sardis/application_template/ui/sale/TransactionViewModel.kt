@@ -129,7 +129,6 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                         }
                         finishTransaction(amount, card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,onlineTransactionResponse,batchViewModel,MID, TID, mainActivity)
                     }
-                    //deferred.join() //TODO olacak mı burası?
                 }
             }
         }.join() //wait that job to finish to return it
@@ -154,11 +153,9 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent,ContentValues(),transactionCode) //it comes from parameters
         } else{
             groupSn = batchViewModel.getGroupSN()
-            Log.i("GroupSn",groupSn.toString())
             batchNo = batchViewModel.batchNo
             batchViewModel.updateGUPSN(groupSn)
             groupSn = batchViewModel.getGroupSN()
-            Log.i("GroupSn",groupSn.toString())
             transactionResponse = transactionRepository.getTransactionResponse(amount,card,
                 transactionCode,extraContent,onlinePin,isPinByPass, uuid,isOffline,onlineTransactionResponse,batchNo,groupSn)
             val responseTransactionCode = transactionResponse.transactionCode
@@ -175,11 +172,11 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             }
         }
         if (transactionCode == TransactionCode.SALE.type){
-            val intent = transactionRepository.prepareSaleIntent(transactionResponse!!,amount, batchNo!!, groupSn!!, card,MID, TID, mainActivity)
+            val intent = transactionRepository.prepareSaleIntent(transactionResponse,amount, batchNo!!, groupSn!!, card,MID, TID, mainActivity)
             liveIntent.postValue(intent)
         }
         else if (transactionCode == TransactionCode.CASH_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.MATCHED_REFUND.type){
-            val intent = transactionRepository.prepareRefundIntent(transactionResponse!!,mainActivity)
+            val intent = transactionRepository.prepareRefundIntent(transactionResponse,mainActivity)
             liveIntent.postValue(intent)
         }
         else if(transactionCode == TransactionCode.VOID.type){

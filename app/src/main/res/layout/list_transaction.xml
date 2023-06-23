@@ -6,7 +6,7 @@
     <data>
         <variable
             name="adapter"
-            type="com.tokeninc.sardis.application_template.ui.adapters.TransactionAdapter" />
+            type="com.tokeninc.sardis.application_template.ui.posttxn.void_operation.VoidAdapter" />
     </data>
 
 
