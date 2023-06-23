@@ -1,12 +1,11 @@
 package com.tokeninc.sardis.application_template.dependency_injection
 
-import android.app.Application
-import com.tokeninc.sardis.application_template.repositories.ActivationRepository
-import com.tokeninc.sardis.application_template.repositories.BatchRepository
-import com.tokeninc.sardis.application_template.repositories.TransactionRepository
-import com.tokeninc.sardis.application_template.viewmodels.ActivationViewModel
-import com.tokeninc.sardis.application_template.viewmodels.BatchViewModel
-import com.tokeninc.sardis.application_template.viewmodels.TransactionViewModel
+import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
+import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
+import com.tokeninc.sardis.application_template.data.repositories.TransactionRepository
+import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
+import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
