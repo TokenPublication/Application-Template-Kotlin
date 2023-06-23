@@ -1,5 +1,6 @@
 package com.tokeninc.sardis.application_template.data.database.batch
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -32,7 +33,7 @@ interface BatchDao {
     fun getBatchNo(): Int
 
     @Query("SELECT ${BatchCols.col_previous_batch_slip} FROM ${DatabaseInfo.BATCHTABLE} LIMIT 1")
-    fun getBatchPreviousSlip(): String?
+    fun getBatchPreviousSlip(): LiveData<String?>
 
     @Query("DELETE FROM ${DatabaseInfo.BATCHTABLE}")
     fun deleteAll()

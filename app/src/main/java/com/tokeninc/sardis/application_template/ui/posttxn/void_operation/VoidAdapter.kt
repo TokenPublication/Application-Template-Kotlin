@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.ui.adapters
+package com.tokeninc.sardis.application_template.ui.posttxn.void_operation
 
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,7 +14,7 @@ import com.tokeninc.sardis.application_template.utils.StringHelper
 /**
  * This adapter arranges Void transactions one by one.
  */
-class TransactionAdapter(private val transactionList: MutableList<Transaction?>): RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
+class VoidAdapter(private val transactionList: MutableList<Transaction?>): RecyclerView.Adapter<VoidAdapter.TransactionViewHolder>() {
 
     inner class TransactionViewHolder(val binding: TransactionItemsBinding): RecyclerView.ViewHolder(binding.root)
 

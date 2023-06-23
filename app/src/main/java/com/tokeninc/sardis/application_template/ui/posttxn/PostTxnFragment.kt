@@ -1,6 +1,5 @@
 package com.tokeninc.sardis.application_template.ui.posttxn
 
-import com.tokeninc.sardis.application_template.ui.MenuItem
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -10,27 +9,30 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModelProvider
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
-import com.tokeninc.sardis.application_template.utils.ContentValHelper
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
-import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
-import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
-import com.tokeninc.sardis.application_template.enums.SlipType
-import com.tokeninc.sardis.application_template.enums.TransactionCode
-import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
 import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
 import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
+import com.tokeninc.sardis.application_template.enums.SlipType
+import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.services.BatchCloseService
 import com.tokeninc.sardis.application_template.services.TransactionService
+import com.tokeninc.sardis.application_template.ui.MenuItem
+import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.posttxn.refund.RefundFragment
 import com.tokeninc.sardis.application_template.ui.posttxn.void_operation.TransactionList
+import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
+import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
+import com.tokeninc.sardis.application_template.utils.ContentValHelper
+import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,6 +53,8 @@ class PostTxnFragment : Fragment() {
     private lateinit var batchCloseService: BatchCloseService
     private lateinit var batchViewModel: BatchViewModel
 
+    private lateinit var cardViewModel: CardViewModel
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View {
         _binding = FragmentPostTxnBinding.inflate(inflater,container,false)
         viewModel = ViewModelProvider(this)[PostTxnViewModel::class.java]
@@ -66,7 +70,8 @@ class PostTxnFragment : Fragment() {
      * This is for initializing some variables on that class, it is called from mainActivity before this class is called
      */
     fun setter(mainActivity: MainActivity, transactionViewModel: TransactionViewModel, transactionService: TransactionService,
-               refundFragment: RefundFragment, batchCloseService: BatchCloseService, batchViewModel: BatchViewModel
+               refundFragment: RefundFragment, batchCloseService: BatchCloseService, batchViewModel: BatchViewModel,
+               cardViewModel: CardViewModel
     ){
         this.mainActivity = mainActivity
         this.transactionViewModel = transactionViewModel
@@ -74,16 +79,32 @@ class PostTxnFragment : Fragment() {
         this.refundFragment = refundFragment
         this.batchCloseService = batchCloseService
         this.batchViewModel = batchViewModel
+        this.cardViewModel = cardViewModel
     }
 
+    private fun startVoidAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
+        cardViewModel.setTransactionCode(TransactionCode.VOID.type)
+        cardViewModel.getCardLiveData().observe(mainActivity) { card -> //firstly observing cardData
+            if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
+                Log.d("CardResult", card.mCardNumber.toString())
+                cardNumberReceived(card) // start this operation with the card data
+                cardViewModel.resetCard() // make it clear for the next operations
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        Log.d("PostTxnDestroying","HEY")
+        super.onDestroyView()
+    }
     /**
      * This function prepares the Post Transactions Menu that contains Void, Refund, Batch Close, Examples and Slip Repetition
      */
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
-            mainActivity.transactionCode = TransactionCode.VOID.type
-            mainActivity.readCard()
+            mainActivity.connectCardService()
+            startVoidAfterConnected()
         }))
         menuItems.add(MenuItem(getStrings(R.string.refund), {
             startRefundFragment()
@@ -114,11 +135,20 @@ class PostTxnFragment : Fragment() {
             mainActivity.startExampleActivity()
         }))
         menuItems.add(MenuItem("Slip Tekrarı",{
-            val slip = batchViewModel.previousBatchSlip
-            mainActivity.print(slip)
+            batchViewModel.getPreviousBatchSlip().observe(mainActivity){
+                mainActivity.print(it)
+            }
         }))
         viewModel.list = menuItems
         viewModel.replaceFragment(mainActivity)
+    }
+
+    fun addFragment(fragment: Fragment)
+    {
+        val ft: FragmentTransaction = parentFragmentManager.beginTransaction()
+        ft.replace(R.id.container, fragment)
+        ft.addToBackStack(null)
+        ft.commit()
     }
 
     /**
@@ -148,7 +178,7 @@ class PostTxnFragment : Fragment() {
      * It starts the refund fragment with initializing variables.
      */
     fun startRefundFragment(){
-        refundFragment.setter(mainActivity,transactionService)
+        refundFragment.setter(mainActivity,transactionService, cardViewModel)
     }
 
     /** After reading a card, this function is called only for Void operations.
@@ -156,7 +186,7 @@ class PostTxnFragment : Fragment() {
      * It shows transactions that has been operated with that card with recyclerview.
      */
     fun cardNumberReceived(mCard: ICCCard?){
-        mainActivity.transactionCode = 0
+        cardViewModel.setTransactionCode(0)
         if (transactionViewModel.getTransactionsByCardNo(mCard!!.mCardNumber.toString()) == null){
             val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
             Handler(Looper.getMainLooper()).postDelayed({
