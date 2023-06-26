@@ -3,7 +3,6 @@ package com.tokeninc.sardis.application_template.ui.posttxn.refund
 import com.tokeninc.sardis.application_template.ui.MenuItem
 import android.annotation.SuppressLint
 import android.content.ContentValues
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -24,10 +23,7 @@ import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentRefundBinding
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
-import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
-import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
-import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
@@ -40,21 +36,16 @@ import java.util.*
 /**
  * This is the fragment for the Refund actions. Refund operation methods are defined here.
  */
-class RefundFragment : Fragment() {
+class RefundFragment(private val mainActivity: MainActivity, private val cardViewModel: CardViewModel,
+                     private val transactionViewModel: TransactionViewModel, private val batchViewModel: BatchViewModel) : Fragment() {
     private var _binding: FragmentRefundBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var mainActivity: MainActivity
 
     private lateinit var card: ICCCard
     private var extraContent = ContentValues()  //at the end of every Refund we finish mainActivity so no need to delete it at everytime
     private var stringExtraContent = ContentValues() //this is for switching customInput format type to string
     var amount = 0 //TODO sonra 0 la ?
-    var refNo : String? = null
-
-    private lateinit var cardViewModel: CardViewModel
-    private lateinit var transactionViewModel: TransactionViewModel
-    private lateinit var batchViewModel: BatchViewModel
 
     companion object{
         lateinit var inputTranDate: CustomInputFormat
@@ -115,24 +106,6 @@ class RefundFragment : Fragment() {
         transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
             mainActivity.setResult(liveIntent)
         }
-    }
-
-    /**
-     * It passes the response code as a result to mainActivity and finishes the refund via printing slip.
-     */
-    private fun finishRefund(transactionResponse: TransactionResponse){
-        Log.d("TransactionResponse/Refund", "responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
-        val printHelper = PrintService()
-        val customerSlip = printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
-        val merchantSlip = printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
-        mainActivity.print(customerSlip)
-        mainActivity.print(merchantSlip)
-        val responseCode = transactionResponse.responseCode
-        val intent = Intent()
-        val bundle = Bundle()
-        bundle.putInt("ResponseCode", responseCode.ordinal)
-        intent.putExtras(bundle)
-        mainActivity.setResult(intent)
     }
 
     /**
@@ -201,7 +174,7 @@ class RefundFragment : Fragment() {
      */
     private fun showInstallments() { // TAKSİTLİ İADE
         val listener = MenuItemClickListener { menuItem: MenuItem? ->
-            val itemName = menuItem!!.name.toString().split(" ")
+            val itemName = menuItem!!.name.split(" ")
             installmentCount = itemName[0].toInt()
             showInstallmentRefundFragment()
         }
@@ -220,71 +193,6 @@ class RefundFragment : Fragment() {
        mainActivity.addFragment(instFragment as Fragment)
     }
 
-    /**
-     * This is for bank application, not used for now.
-     */
-    private fun showLoyaltyRefundFragment(){
-        val inputList: MutableList<CustomInputFormat> = mutableListOf()
-        addInputAmount(inputList,extraContent)
-        addInputRetAmount(inputList,extraContent)
-        addInputTranDate(inputList,extraContent)
-        addInputRefNo(inputList,extraContent)
-        addFragment(inputList,getStrings(R.string.loyalty_refund))
-    }
-
-    /** It adds values to stringExtraContent to use it later. Then calls readCard operation.
-     *
-     */
-    private fun addFragment(inputList: MutableList<CustomInputFormat>, refundType: String){
-        val fragment = InputListFragment.newInstance(
-            inputList, getStrings(R.string.refund)
-        ){ list: List<String?>? ->
-            mainActivity.connectCardService()
-            enterRefund = false
-            startRefundAfterConnected(list)
-        }
-
-        mainActivity.addFragment(fragment)
-    }
-
-    private var enterRefund = false
-    private fun startRefundAfterConnected(input_list: List<String?>?){
-        if (!enterRefund){
-            enterRefund = true
-            cardViewModel.getTransactionCode().observe(mainActivity) { transactionCode ->
-                when (transactionCode) {
-                    // set extra contents with respect to input list
-                    TransactionCode.MATCHED_REFUND.type -> {
-                        stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name,input_list!![0])
-                        stringExtraContent.put(ExtraKeys.REFUND_AMOUNT.name,input_list[1])
-                        stringExtraContent.put(ExtraKeys.REF_NO.name,input_list[2])
-                        stringExtraContent.put(ExtraKeys.AUTH_CODE.name,input_list[3])
-                        stringExtraContent.put(ExtraKeys.TRAN_DATE.name,input_list[4])
-                    }
-                    TransactionCode.INSTALLMENT_REFUND.type -> {
-                        stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name,input_list!![0])
-                        stringExtraContent.put(ExtraKeys.REFUND_AMOUNT.name,input_list[1])
-                        stringExtraContent.put(ExtraKeys.TRAN_DATE.name,input_list[2])
-                    }
-                    else -> {
-                        stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name, input_list!![0])
-                    }
-                }
-                if (transactionCode == TransactionCode.CASH_REFUND.type){
-                    cardViewModel.setAmount(stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt())
-                } else if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type ||transactionCode == TransactionCode.MATCHED_REFUND.type){
-                    cardViewModel.setAmount(stringExtraContent.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
-                }
-                cardViewModel.getCardLiveData().observe(mainActivity){card ->
-                    if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
-                        Log.d("CardResult", card.mCardNumber.toString())
-                        afterReadCard(card,transactionCode,null) // start this operation with the card data
-                        cardViewModel.resetCard() // make it clear for the next operations
-                    }
-                }
-            }
-        }
-    }
     /**
      * This method is for creating input amount with respect to validator.
      */
@@ -377,6 +285,60 @@ class RefundFragment : Fragment() {
         inputList.add(inputTranDate)
     }
 
+    /**
+     * It adds values to stringExtraContent to use it later. Then calls readCard operation.
+     */
+    private fun addFragment(inputList: MutableList<CustomInputFormat>, refundType: String){
+        val fragment = InputListFragment.newInstance(
+            inputList, getStrings(R.string.refund)
+        ){ list: List<String?>? ->
+            mainActivity.connectCardService()
+            enterRefund = false
+            startRefundAfterConnected(list)
+        }
+
+        mainActivity.addFragment(fragment)
+    }
+
+    private var enterRefund = false
+    private fun startRefundAfterConnected(input_list: List<String?>?){
+        if (!enterRefund){
+            enterRefund = true
+            cardViewModel.getTransactionCode().observe(mainActivity) { transactionCode ->
+                when (transactionCode) {
+                    // set extra contents with respect to input list
+                    TransactionCode.MATCHED_REFUND.type -> {
+                        stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name,input_list!![0])
+                        stringExtraContent.put(ExtraKeys.REFUND_AMOUNT.name,input_list[1])
+                        stringExtraContent.put(ExtraKeys.REF_NO.name,input_list[2])
+                        stringExtraContent.put(ExtraKeys.AUTH_CODE.name,input_list[3])
+                        stringExtraContent.put(ExtraKeys.TRAN_DATE.name,input_list[4])
+                    }
+                    TransactionCode.INSTALLMENT_REFUND.type -> {
+                        stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name,input_list!![0])
+                        stringExtraContent.put(ExtraKeys.REFUND_AMOUNT.name,input_list[1])
+                        stringExtraContent.put(ExtraKeys.TRAN_DATE.name,input_list[2])
+                    }
+                    else -> {
+                        stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name, input_list!![0])
+                    }
+                }
+                if (transactionCode == TransactionCode.CASH_REFUND.type){
+                    cardViewModel.setAmount(stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt())
+                } else if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type ||transactionCode == TransactionCode.MATCHED_REFUND.type){
+                    cardViewModel.setAmount(stringExtraContent.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
+                }
+                cardViewModel.getCardLiveData().observe(mainActivity){card ->
+                    if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
+                        Log.d("CardResult", card.mCardNumber.toString())
+                        afterReadCard(card,transactionCode,null) // start this operation with the card data
+                        cardViewModel.resetCard() // make it clear for the next operations
+                    }
+                }
+            }
+        }
+    }
+
     private fun isCurrentDay(dateText: String): Boolean {
         if (dateText.isEmpty())
             return false
@@ -388,16 +350,6 @@ class RefundFragment : Fragment() {
     private fun getFormattedDate(dateText: String): String {
         val lst = dateText.split("/").toMutableList()
         return lst[0] + lst[1] + lst[2].substring(2)
-    }
-
-    /**
-     * This is for initializing some variables on that class, it is called from PostTxn
-     */
-    fun setter(mainActivity: MainActivity, cardViewModel: CardViewModel, transactionViewModel: TransactionViewModel, batchViewModel: BatchViewModel){
-        this.mainActivity = mainActivity
-        this.cardViewModel = cardViewModel
-        this.transactionViewModel = transactionViewModel
-        this.batchViewModel = batchViewModel
     }
 
 }

@@ -33,7 +33,6 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
     private var qrAmount = 100
     private var qrString = "QR Code Test"
     private var menuItems = mutableListOf<IListMenuItem>()
-    lateinit var mainActivity: MainActivity
     private val viewModel = ExampleViewModel()
     lateinit var cardServiceBinding: CardServiceBinding
 
@@ -55,9 +54,6 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
         styledText.print(PrinterService.getService(applicationContext))
     }
 
-    fun setter(mainActivity: MainActivity){
-        this.mainActivity = mainActivity
-    }
 
     fun addFragment(fragment: Fragment)
     {

@@ -22,6 +22,7 @@ import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.BuildConfig
 import com.tokeninc.cardservicebinding.CardServiceBinding
+import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.*
 import com.tokeninc.sardis.application_template.data.database.AppTempDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
@@ -29,7 +30,6 @@ import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.ui.*
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.activation.SettingsFragment
-import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.ui.posttxn.PostTxnFragment
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.posttxn.refund.RefundFragment
@@ -51,33 +51,25 @@ import java.util.*
  * It's @AndroidEntryPoint because, we get ViewModel inside of class,
  */
 @AndroidEntryPoint
-public class MainActivity : TimeOutActivity() {
+class MainActivity : TimeOutActivity() {
 
     //initializing bindings
     private lateinit var cardServiceBinding: CardServiceBinding
 
-    //initializing View Models
+    //initializing View Models and Fragments
     private lateinit var activationViewModel : ActivationViewModel
     private lateinit var batchViewModel : BatchViewModel
     private lateinit var transactionViewModel : TransactionViewModel
-
-    //initializing fragments
-    private val postTxnFragment = PostTxnFragment()
-    private val settingsFragment = SettingsFragment()
-    private val refundFragment = RefundFragment()
-    val textFragment = TextFragment()
+    private lateinit var cardViewModel: CardViewModel
+    private lateinit var settingsFragment: SettingsFragment
     private lateinit var saleFragment : SaleFragment
     private lateinit var triggerFragment: TriggerFragment
-    private val exampleActivity = ExampleActivity()
-
+    private lateinit var postTxnFragment: PostTxnFragment
+    private lateinit var refundFragment: RefundFragment
 
     //initializing other variables
     var transactionCode: Int = 0
     var amount: Int = 0 //this is for holding amount
-
-    //private lateinit var cardRepository: CardRepository
-    //private lateinit var cardViewModelFactory: CardViewModelFactory
-    lateinit var cardViewModel: CardViewModel
     var infoDialog: InfoDialog? = null
 
     /**
@@ -128,11 +120,13 @@ public class MainActivity : TimeOutActivity() {
         val getCardViewModel : CardViewModel by viewModels()
         cardViewModel = getCardViewModel
 
-        saleFragment = SaleFragment(transactionViewModel)
+        saleFragment = SaleFragment(transactionViewModel,this,activationViewModel,batchViewModel,cardViewModel)
+        settingsFragment = SettingsFragment(this, activationViewModel, intent)
         triggerFragment = TriggerFragment(this)
+        refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel)
+        postTxnFragment = PostTxnFragment(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel)
         //cardServiceBinding = CardServiceBinding(this, this)
         observeTIDandMID()
-        textFragment.mainActivity = this
 
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
@@ -147,21 +141,23 @@ public class MainActivity : TimeOutActivity() {
     private fun actionChanged(action: String?){
         when (action){
             getString(R.string.PosTxn_Action) ->  {
-                startPostTxnFragment(postTxnFragment)
                 replaceFragment(postTxnFragment)
             }
             getString(R.string.Sale_Action) ->  {
                 transactionCode = TransactionCode.SALE.type
-                startDummySaleFragment(saleFragment)
+                amount = intent.extras!!.getInt("Amount")
+                cardViewModel.setAmount(amount)
+                saleFragment.setAmount(amount)
 
-                /** TODO bak
-                val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.GIB.name)
+                val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode().equals(
+                    DeviceInfo.PosModeEnum.GIB.name)
                 val bundle = intent.extras
                 val cardData: String? = bundle?.getString("CardData")
                 if (!isGIB && cardData != null && !cardData.equals("CardData") && !cardData.equals(" ")) {
-                    onCardDataReceived(cardData)
+                    replaceFragment(saleFragment)
+                    saleFragment.doSale(cardData)
                 }
-                */
+
                 if (intent.extras != null){
                     val cardReadType = intent.extras!!.getInt("CardReadType")
                     if(cardReadType == CardReadType.ICC.type){
@@ -180,29 +176,26 @@ public class MainActivity : TimeOutActivity() {
                 if (transactionViewModel.allTransactions().isNullOrEmpty()){ //if it is empty just show no transaction dialog
                     callbackMessage(ResponseCode.ERROR)
                 }else{ //else implementing batch closing and finish that activity
-                    startPostTxnFragment(postTxnFragment)
                     postTxnFragment.startBatchClose()
                 }
 
             }
             getString(R.string.Parameter_Action) ->  replaceFragment(triggerFragment)
             getString(R.string.Refund_Action) ->  {
-                startPostTxnFragment(postTxnFragment)
                 refundActionReceived()
             }
-            else ->  startSettingsFragment(settingsFragment) //textFragment.setActionName("Main")
+            else ->  startSettingsFragment(settingsFragment)
         }
     }
 
     fun connectCardService(){
         val isCancelled = booleanArrayOf(false)
         //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
-        infoDialog = showInfoDialog(InfoDialog.InfoType.Processing, "Processing", false)
         val timer: CountDownTimer = object : CountDownTimer(10000, 1000) {
             override fun onTick(millisUntilFinished: Long) {}
             override fun onFinish() { //when it's finished, (after 10 seconds)
                 isCancelled[0] = true //make isCancelled true (because cardService couldn't be connected)
-                infoDialog!!.update(InfoDialog.InfoType.Declined, "Connect Failed")
+                showInfoDialog(InfoDialog.InfoType.Declined, "Connect Failed", false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     if (infoDialog != null) {
                         infoDialog!!.dismiss()
@@ -213,25 +206,26 @@ public class MainActivity : TimeOutActivity() {
         }
         timer.start()
         cardViewModel.initializeCardServiceBinding(this)
-
+        //TODO cancelledsa maini finish
         cardViewModel.getCardServiceConnected().observe(this) { isConnected ->
             // cardService is connected before 10 seconds (which is the limit of the timer)
             if (isConnected && !isCancelled[0]) {
                 timer.cancel() // stop timer
-                infoDialog!!.update(InfoDialog.InfoType.Confirmed, "Connected to Service")
                 Handler(Looper.getMainLooper()).postDelayed({
                     cardViewModel.readCard() //reads the Card
-                    Handler(Looper.getMainLooper())
-                        .postDelayed({ infoDialog!!.dismiss() }, 1000)
-                }, 2000) //to show card Service is connected.
+                }, 500) //to show card Service is connected.
+                cardViewModel.getCallBackMessage().observe(this){responseCode ->
+                    if (responseCode == ResponseCode.CANCELED){ //if it is canceled
+                        finish()
+                        cardViewModel.getTransactionCode().observe(this) { transactionCode ->
+                            if (transactionCode != TransactionCode.VOID.type)  //if it is not void
+                                finish() //finish the activity
+                        }
+                    }
+                }
             }
         }
     }
-
-    //batchclose biterken ui güncelleyince 2 kez geri basınca düz ui geliyor
-    //refundda da 2 kez geri basmak lazım cancelled için ?
-    //voidde kart okuturken tutar çıkmıyor doğru mu ?
-
 
     /** This function only calls whenever Refund Action is received.
      * If there is no RefundInfo on current intent, it will show info dialog with No Refund Intent for 2 seconds.
@@ -257,7 +251,6 @@ public class MainActivity : TimeOutActivity() {
                 cardViewModel.setTransactionCode(transactionCode)
                 connectCardService()
             } else{
-                postTxnFragment.startRefundFragment()
                 val authCode = json.getString("AuthCode")
                 val installmentCount = json.getString("InstCount")
                 val tranDate = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
@@ -283,38 +276,10 @@ public class MainActivity : TimeOutActivity() {
         }
     }
 
-
-    /**
-     * This function is setting a variable in example activity and start that activity with intents
-     * example activity class is for showing some examples on the device it can be deleted by developer
-     */
-    fun startExampleActivity(){ //it can be deleted
-        exampleActivity.setter(this@MainActivity)
-        startActivity(Intent(this@MainActivity, exampleActivity::class.java))
-    }
-
-    /**
-     * This function is setting some variables in fragment
-     */
-    private fun startPostTxnFragment(postTxnFragment: PostTxnFragment){
-        postTxnFragment.setter(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel)
-    }
-
-
-    /** This function is getting amount from intent and pass that amount and other variables to fragment.
-     * Then replace that fragment to current view.
-     */
-    private fun startDummySaleFragment(saleFragment: SaleFragment){
-        amount = intent.extras!!.getInt("Amount")
-        cardViewModel.setAmount(amount)
-        saleFragment.setter(this,activationViewModel,batchViewModel, transactionViewModel,amount,cardViewModel)
-    }
-
     /**
      * This function sets some variables in fragment and then replace that fragment.
      */
     private fun startSettingsFragment(settingsFragment: SettingsFragment){
-        settingsFragment.setter(this,activationViewModel,Intent())
         replaceFragment(settingsFragment)
     }
 
@@ -404,6 +369,11 @@ public class MainActivity : TimeOutActivity() {
 
 
     /**
+    override fun onCardServiceConnected() {
+    setEMVConfiguration() //TODO doğru yere taşınacak
+    }*/
+
+    /**
      * This function only works in installation, it calls setConfig and setCLConfig
      */
     private fun setEMVConfiguration() {
@@ -469,19 +439,10 @@ public class MainActivity : TimeOutActivity() {
         }
     }
 
-
-
-    /**
-    override fun onCardServiceConnected() {
-        setEMVConfiguration() //TODO doğru yere taşınacak
-    }
-    */
-
-
     /**
      * It passes responseCode as a callBack message with respect to given parameter
      */
-    fun callbackMessage(responseCode: ResponseCode){
+    private fun callbackMessage(responseCode: ResponseCode){
         val intent = Intent()
         val bundle = Bundle()
         bundle.putInt("ResponseCode", responseCode.ordinal)
@@ -507,6 +468,7 @@ public class MainActivity : TimeOutActivity() {
         styledText.print(PrinterService.getService(applicationContext))
     }
 
+    //TODO redisgn them
     //This is for holding MID and TID, Because this values are LiveData,
     // instead of writing this functions everywhere it is used
     var currentMID: String? = ""
@@ -533,8 +495,5 @@ public class MainActivity : TimeOutActivity() {
             setTID(it)
         }
     }
-
-
-
 
 }

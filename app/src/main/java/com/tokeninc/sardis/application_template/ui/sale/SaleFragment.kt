@@ -1,7 +1,6 @@
 package com.tokeninc.sardis.application_template.ui.sale
 
 import android.content.ContentValues
-import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -13,6 +12,7 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.google.gson.Gson
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
@@ -37,21 +37,15 @@ import java.lang.String.valueOf
  * This Class is for Sale operations, it depends on Transaction View Model
  * It has dummy sale layout, which is the only view that we created. Other ui elements come from tokeninc.ui library
  */
-class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
+class SaleFragment(private val transactionViewModel: TransactionViewModel, private val mainActivity: MainActivity,
+                   private val activationViewModel: ActivationViewModel, private val batchViewModel: BatchViewModel,
+                   private val cardViewModel: CardViewModel) : Fragment() {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var bundle: Bundle
-    private lateinit var intent: Intent
-    private lateinit var activationViewModel: ActivationViewModel
-    private lateinit var batchViewModel: BatchViewModel
-    private lateinit var mainActivity: MainActivity
     var card: ICCCard? = null
     private var amount = 0
-
-    private lateinit var cardViewModel: CardViewModel
-    private lateinit var transactionViewModel: TransactionViewModel
 
     companion object{
         //listener for spinner
@@ -85,27 +79,16 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
         clickButtons()
     }
 
-    /**
-     * This is for initializing some variables on that class, it is called from mainActivity before this class is called
-     */
-    fun setter(mainActivity: MainActivity, activationViewModel: ActivationViewModel, batchViewModel: BatchViewModel, transactionViewModel: TransactionViewModel, amount:Int, cardViewModel: CardViewModel ){
-        this.mainActivity = mainActivity
-        this.amount = amount
-        this.activationViewModel = activationViewModel
-        this.batchViewModel = batchViewModel
-        this.cardViewModel = cardViewModel
-        this.transactionViewModel = transactionViewModel
-    }
 
     /** Flow: Clicking Sale Button > Read Card > On Card Data Received > (if card is ICC) -> here
      * It is a sale menu, if user click sale it calls doSale() method
      */
-    fun prepareSaleMenu(mCard: ICCCard?) {
+    private fun prepareSaleMenu(mCard: ICCCard?) {
         card = mCard
         cardViewModel.setTransactionCode(0)
-        val menuItemList = viewModel.menuItemList
+        val menuItemList = transactionViewModel.menuItemList
         menuItemList.add(MenuItem( getStrings(R.string.sale), {
-            doSale()
+            doSale(null)
         }))
         menuItemList.add(MenuItem(getStrings(R.string.Installment_sale), { }))
         menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))
@@ -170,12 +153,11 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
             if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
                 Log.d("CardResult", card.mCardNumber.toString())
                 this.card = card
-                cardViewModel.resetCard() // make it clear for the next operations
+                cardViewModel.resetCard() // make it clear for the next operations TODO bir daha kontrolle
                 cardViewModel.getCardReadResult().observe(viewLifecycleOwner){cardReadResult ->
                     if (cardReadResult != null){
-                        Toast.makeText(mainActivity,"Card Read Successfully",Toast.LENGTH_SHORT).show()
                         if (cardReadResult.name == CardReadResult.SALE_NOT_GIB_CL.name || cardReadResult.name == CardReadResult.SALE_GIB.name){
-                            doSale()
+                            doSale(null)
                         }
                         else if (cardReadResult.name == CardReadResult.SALE_NOT_GIB_ICC.name){
                             prepareSaleMenu(card)
@@ -191,19 +173,21 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
      * It creates a transaction response in Default Coroutine Thread with doInBackGround method on Transaction Service
      * after transactionResponse is returning, it calls finishSale method
      */
-    private fun doSale() {
+    fun doSale(cardData: String?) {
+        if (!cardData.isNullOrEmpty()){
+            card = Gson().fromJson(cardData, ICCCard::class.java)
+        }
         CoroutineScope(Dispatchers.Default).launch {
             transactionViewModel.transactionRoutine(amount, card!!,TransactionCode.SALE.type,
             ContentValues(), null,false,null ,false,batchViewModel,
                 mainActivity.currentMID,mainActivity.currentTID,mainActivity)
-        //finishSale(transactionResponse!!)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->
             when (state) {
                 is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
                 is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting % ${state.data}")
-                is TransactionViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Printing Slip",true))
+                is TransactionViewModel.UIState.Success -> Log.i("Transaction Result: "," Success")
             }
         }
         transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
@@ -248,6 +232,11 @@ class SaleFragment(private val viewModel: TransactionViewModel) : Fragment() {
         }
 
         //onSaleResponseRetrieved(amount, code, true, slipType, "1234 **** **** 7890", "OWNER NAME", paymentType)
+    }
+
+    //TODO observe amount in whichplace
+    fun setAmount(amount:Int){
+        this.amount = amount
     }
 
     override fun onDestroy() {

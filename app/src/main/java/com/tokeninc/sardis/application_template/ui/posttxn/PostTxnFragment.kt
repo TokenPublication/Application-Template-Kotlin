@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModelProvider
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.infodialog.InfoDialog
@@ -21,6 +20,7 @@ import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCC
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.ui.MenuItem
+import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.posttxn.refund.RefundFragment
 import com.tokeninc.sardis.application_template.ui.posttxn.void_operation.TransactionList
@@ -34,18 +34,15 @@ import kotlinx.coroutines.launch
 /**
  * This is the class for Post Transaction Methods.
  */
-class PostTxnFragment : Fragment() {
+class PostTxnFragment(private val mainActivity: MainActivity, private val transactionViewModel: TransactionViewModel,
+                      private val refundFragment: RefundFragment, private val batchViewModel: BatchViewModel,
+                      private val cardViewModel: CardViewModel) : Fragment() {
 
     private var _binding: FragmentPostTxnBinding? = null
     private val binding get() = _binding!!
     var card: ICCCard? = null
-    private lateinit var mainActivity: MainActivity
-    private lateinit var refundFragment: RefundFragment
-    private lateinit var viewModel: PostTxnViewModel
-    private lateinit var transactionViewModel: TransactionViewModel
-    private lateinit var batchViewModel: BatchViewModel
 
-    private lateinit var cardViewModel: CardViewModel
+    private lateinit var viewModel: PostTxnViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View {
         _binding = FragmentPostTxnBinding.inflate(inflater,container,false)
@@ -58,26 +55,12 @@ class PostTxnFragment : Fragment() {
         showMenu()
     }
 
-    /**
-     * This is for initializing some variables on that class, it is called from mainActivity before this class is called
-     */
-    fun setter(mainActivity: MainActivity, transactionViewModel: TransactionViewModel,
-               refundFragment: RefundFragment, batchViewModel: BatchViewModel,
-               cardViewModel: CardViewModel
-    ){
-        this.mainActivity = mainActivity
-        this.transactionViewModel = transactionViewModel
-        this.refundFragment = refundFragment
-        this.batchViewModel = batchViewModel
-        this.cardViewModel = cardViewModel
-    }
-
     private fun startVoidAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
         cardViewModel.setTransactionCode(TransactionCode.VOID.type)
         cardViewModel.getCardLiveData().observe(mainActivity) { card -> //firstly observing cardData
             if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
                 Log.d("CardResult", card.mCardNumber.toString())
-                cardNumberReceived(card) // start this operation with the card data
+                voidAfterCardRead(card) // start this operation with the card data
                 cardViewModel.resetCard() // make it clear for the next operations
             }
         }
@@ -93,11 +76,11 @@ class PostTxnFragment : Fragment() {
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
+            cardViewModel.setTransactionCode(TransactionCode.VOID.type)
             mainActivity.connectCardService()
             startVoidAfterConnected()
         }))
         menuItems.add(MenuItem(getStrings(R.string.refund), {
-            startRefundFragment()
             mainActivity.addFragment(refundFragment) //burada stacke ekliyor
         }))
         menuItems.add(MenuItem(getStrings(R.string.batch_close), {
@@ -121,7 +104,8 @@ class PostTxnFragment : Fragment() {
             }
         }))
         menuItems.add(MenuItem(getStrings(R.string.examples), {
-            mainActivity.startExampleActivity()
+            mainActivity.startActivity(Intent(mainActivity, ExampleActivity()::class.java))
+
         }))
         menuItems.add(MenuItem("Slip Tekrarı",{
             batchViewModel.getPreviousBatchSlip().observe(mainActivity){
@@ -130,14 +114,6 @@ class PostTxnFragment : Fragment() {
         }))
         viewModel.list = menuItems
         viewModel.replaceFragment(mainActivity)
-    }
-
-    fun addFragment(fragment: Fragment)
-    {
-        val ft: FragmentTransaction = parentFragmentManager.beginTransaction()
-        ft.replace(R.id.container, fragment)
-        ft.addToBackStack(null)
-        ft.commit()
     }
 
     /**
@@ -160,18 +136,11 @@ class PostTxnFragment : Fragment() {
         }
     }
 
-    /**
-     * It starts the refund fragment with initializing variables.
-     */
-    fun startRefundFragment(){
-        refundFragment.setter(mainActivity,cardViewModel,transactionViewModel,batchViewModel)
-    }
-
     /** After reading a card, this function is called only for Void operations.
      * If there was no operation with that card, it warns the user. Else ->
      * It shows transactions that has been operated with that card with recyclerview.
      */
-    fun cardNumberReceived(mCard: ICCCard?){
+    private fun voidAfterCardRead(mCard: ICCCard?){
         cardViewModel.setTransactionCode(0)
         if (transactionViewModel.getTransactionsByCardNo(mCard!!.mCardNumber.toString()) == null){
             val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
@@ -182,7 +151,6 @@ class PostTxnFragment : Fragment() {
         else{
             card = mCard
             val cardNumber = card!!.mCardNumber
-            //transactionViewModel.cardNumber = cardNumber
             val transactionList = TransactionList(cardNumber)
             transactionList.postTxnFragment = this@PostTxnFragment
             transactionList.viewModel = transactionViewModel
@@ -196,7 +164,6 @@ class PostTxnFragment : Fragment() {
     fun voidOperation(transaction: Transaction){
         val contentValHelper = ContentValHelper()
         CoroutineScope(Dispatchers.Default).launch {
-            //finishVoid(transactionResponse!!)
             transactionViewModel.transactionRoutine(transaction.Col_Amount,
                 card!!,TransactionCode.VOID.type,
                 contentValHelper.getContentVal(transaction),null,false,null,false,batchViewModel,
@@ -214,7 +181,6 @@ class PostTxnFragment : Fragment() {
             mainActivity.setResult(liveIntent)
         }
     }
-
 
     /**
      * Fragment couldn't use getString from res > values > strings, therefore this method call that string from mainActivity.
