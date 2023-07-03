@@ -153,6 +153,7 @@ class MainActivity : TimeOutActivity() {
                     DeviceInfo.PosModeEnum.GIB.name)
                 val bundle = intent.extras
                 val cardData: String? = bundle?.getString("CardData")
+                // when sale operation is called from pgw which has multi bank and app temp is the only issuer of this card
                 if (!isGIB && cardData != null && !cardData.equals("CardData") && !cardData.equals(" ")) {
                     replaceFragment(saleFragment)
                     saleFragment.doSale(cardData)
@@ -206,7 +207,6 @@ class MainActivity : TimeOutActivity() {
         }
         timer.start()
         cardViewModel.initializeCardServiceBinding(this)
-        //TODO cancelledsa maini finish
         cardViewModel.getCardServiceConnected().observe(this) { isConnected ->
             // cardService is connected before 10 seconds (which is the limit of the timer)
             if (isConnected && !isCancelled[0]) {
@@ -214,15 +214,14 @@ class MainActivity : TimeOutActivity() {
                 Handler(Looper.getMainLooper()).postDelayed({
                     cardViewModel.readCard() //reads the Card
                 }, 500) //to show card Service is connected.
-                cardViewModel.getCallBackMessage().observe(this){responseCode ->
-                    if (responseCode == ResponseCode.CANCELED){ //if it is canceled
-                        finish()
-                        cardViewModel.getTransactionCode().observe(this) { transactionCode ->
-                            if (transactionCode != TransactionCode.VOID.type)  //if it is not void
-                                finish() //finish the activity
-                        }
-                    }
-                }
+            }
+        }
+        // when read card is cancelled (on back pressed) finish the main activity
+        cardViewModel.getCallBackMessage().observe(this){responseCode ->
+            if (responseCode == ResponseCode.CANCELED){ //if it is canceled
+                Log.d("Transaction Code :",     "Canceled")
+                cardViewModel.setCallBackMessage(ResponseCode.SUCCESS) //to ensure not store it always canceled.
+                finish()
             }
         }
     }
@@ -232,6 +231,7 @@ class MainActivity : TimeOutActivity() {
      * else -> it transforms refundInfo to JSON object to parse it easily. Then get ReferenceNo and BatchNo
      * Then it compares intent batch number with current Batch Number from database, if they are equal then start Void operation
      * else start refund operation. */
+
     private fun refundActionReceived(){
         if (intent.extras == null || intent.extras!!.getString("RefundInfo") == null){
             callbackMessage(ResponseCode.ERROR)

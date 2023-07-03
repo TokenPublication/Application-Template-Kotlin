@@ -144,7 +144,7 @@ class CardRepository @Inject constructor() :
                         }
                         CardReadType.CLCard.type -> { //if it is contactless
                             if (getTransactionCode().value == TransactionCode.SALE.type && !gibSale){ //if the transaction is sale and its not a gib operation
-                                transactionCode.postValue(0) //not enter this again (it's a bug)
+                                //transactionCode.postValue(0) //not enter this again (it's a bug)
                                 cardReadResult.postValue(CardReadResult.SALE_NOT_GIB_CL)
                             }
                         }
