@@ -149,7 +149,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     fun startSaleAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
         cardViewModel.setTransactionCode(TransactionCode.SALE.type)  //make its transactionCode Sale
         cardViewModel.setAmount(amount) // set its sale amount
-        cardViewModel.getCardLiveData().observe(viewLifecycleOwner) { card -> //firstly observing cardData
+        cardViewModel.getCardLiveData().observe(mainActivity) { card -> //firstly observing cardData
             if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
                 Log.d("CardResult", card.mCardNumber.toString())
                 this.card = card
