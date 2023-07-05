@@ -190,12 +190,12 @@ class MainActivity : TimeOutActivity() {
     }
 
     fun connectCardService(){
-        val isCancelled = booleanArrayOf(false)
+        var isCancelled = false
         //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
         val timer: CountDownTimer = object : CountDownTimer(10000, 1000) {
             override fun onTick(millisUntilFinished: Long) {}
             override fun onFinish() { //when it's finished, (after 10 seconds)
-                isCancelled[0] = true //make isCancelled true (because cardService couldn't be connected)
+                isCancelled = true //make isCancelled true (because cardService couldn't be connected)
                 showInfoDialog(InfoDialog.InfoType.Declined, "Connect Failed", false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     if (infoDialog != null) {
@@ -209,7 +209,7 @@ class MainActivity : TimeOutActivity() {
         cardViewModel.initializeCardServiceBinding(this)
         cardViewModel.getCardServiceConnected().observe(this) { isConnected ->
             // cardService is connected before 10 seconds (which is the limit of the timer)
-            if (isConnected && !isCancelled[0]) {
+            if (isConnected && !isCancelled) {
                 timer.cancel() // stop timer
                 Handler(Looper.getMainLooper()).postDelayed({
                     cardViewModel.readCard() //reads the Card
@@ -238,10 +238,10 @@ class MainActivity : TimeOutActivity() {
         } else{
             cardViewModel.setGibRefund(true) //update GibRefund
             val refundInfo = intent.extras!!.getString("RefundInfo")
-            cardViewModel.setRefundInfo(refundInfo!!)
+            transactionViewModel.refundInfo = refundInfo!!
             val json = JSONObject(refundInfo)
             val refNo = json.getString("RefNo")
-            cardViewModel.setRefNo(refNo)
+            transactionViewModel.refNo = refNo
             val refAmount = json.getString("Amount")
             amount = refAmount.toInt()
             cardViewModel.setAmount(amount)
@@ -270,7 +270,7 @@ class MainActivity : TimeOutActivity() {
                     transactionCode = TransactionCode.MATCHED_REFUND.type
                 }
                 cardViewModel.setTransactionCode(transactionCode)
-                cardViewModel.setExtraContents(extraContents)
+                transactionViewModel.extraContents = extraContents
                 connectCardService()
             }
         }
@@ -442,7 +442,7 @@ class MainActivity : TimeOutActivity() {
     /**
      * It passes responseCode as a callBack message with respect to given parameter
      */
-    private fun callbackMessage(responseCode: ResponseCode){
+    fun callbackMessage(responseCode: ResponseCode){
         val intent = Intent()
         val bundle = Bundle()
         bundle.putInt("ResponseCode", responseCode.ordinal)

@@ -32,9 +32,6 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     //these functions only updating from UI, they don't need to be observed
     fun setGibRefund(isAutoTransaction: Boolean){ cardRepository.gibRefund = isAutoTransaction }
     fun setGibSale(isGibSale: Boolean) { cardRepository.gibSale = isGibSale }
-    fun setRefundInfo(refundInfo: String) { cardRepository.refundInfo = refundInfo }
-    fun setRefNo(refNo: String){ cardRepository.refNo = refNo }
-    fun setExtraContents( extraContents: ContentValues) { cardRepository.extraContents = extraContents }
 
     fun initializeCardServiceBinding(main: MainActivity) {
         Handler(Looper.getMainLooper()).postDelayed({

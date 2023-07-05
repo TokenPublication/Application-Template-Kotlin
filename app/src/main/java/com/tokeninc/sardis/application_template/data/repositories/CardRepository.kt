@@ -72,13 +72,12 @@ class CardRepository @Inject constructor() :
     fun resetCard(){ card = MutableLiveData<ICCCard>()
     }
 
+    private var refNos = MutableLiveData<String>()
+
     //these variables should only for storing the operation's result and intents' responses, because they won't be used
     //for UI updating they don't have to be a LiveData
     var gibRefund = false
     var gibSale = false
-    var refundInfo: String? = null
-    lateinit var refNo: String
-    var extraContents : ContentValues? = null
 
     private lateinit var cardServiceBinding: CardServiceBinding
 

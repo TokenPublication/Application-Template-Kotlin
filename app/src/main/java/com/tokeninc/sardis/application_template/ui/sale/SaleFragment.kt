@@ -154,7 +154,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
                 Log.d("CardResult", card.mCardNumber.toString())
                 this.card = card
                 cardViewModel.resetCard() // make it clear for the next operations TODO bir daha kontrolle
-                cardViewModel.getCardReadResult().observe(viewLifecycleOwner){cardReadResult ->
+                cardViewModel.getCardReadResult().observe(mainActivity){cardReadResult ->
                     if (cardReadResult != null){
                         if (cardReadResult.name == CardReadResult.SALE_NOT_GIB_CL.name || cardReadResult.name == CardReadResult.SALE_GIB.name){
                             doSale(null)
