@@ -108,7 +108,6 @@ class MainActivity : TimeOutActivity() {
     private fun startActivity(){
         buildConfigs()
         val binding = ActivityMainBinding.inflate(layoutInflater)
-        AppTempDB.getInstance(this)
 
         //get ViewModels from Dagger-Hilt easily, but to make this easy you need to implement each dependency clearly
         val getActivationViewModel : ActivationViewModel by viewModels()
@@ -184,7 +183,7 @@ class MainActivity : TimeOutActivity() {
             if(cardReadType == CardReadType.ICC.type){
                 cardViewModel.setGibSale(true)
                 connectCardService()
-                saleFragment.startSaleAfterConnected()
+                saleFragment.gibSale()
             } else{
                 replaceFragment(saleFragment)
             }
@@ -250,11 +249,12 @@ class MainActivity : TimeOutActivity() {
             amount = refAmount.toInt()
             cardViewModel.setAmount(amount)
             val batchNo = json.getInt("BatchNo")
-            if (batchNo == batchViewModel.batchNo){ //void
+            val currentBatchNo = batchViewModel.getBatchNo()
+            if (batchNo == currentBatchNo){ //void
                 transactionCode = TransactionCode.VOID.type
                 cardViewModel.setTransactionCode(transactionCode)
                 connectCardService()
-                postTxnFragment.startVoidAfterConnected()
+                postTxnFragment.gibVoidAfterConnected()
             } else{
                 val authCode = json.getString("AuthCode")
                 val tranDate = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())

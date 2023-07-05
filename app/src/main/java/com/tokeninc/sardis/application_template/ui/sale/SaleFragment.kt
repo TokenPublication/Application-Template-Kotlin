@@ -19,7 +19,7 @@ import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
-import com.tokeninc.sardis.application_template.enums.CardReadResult
+import com.tokeninc.sardis.application_template.enums.CardReadType
 import com.tokeninc.sardis.application_template.enums.PaymentTypes
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.SlipType
@@ -146,7 +146,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         }
     }
 
-    fun startSaleAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
+    fun gibSale(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
         cardViewModel.setTransactionCode(TransactionCode.SALE.type)  //make its transactionCode Sale
         cardViewModel.setAmount(amount) // set its sale amount
         cardViewModel.getCardLiveData().observe(mainActivity) { card -> //firstly observing cardData
@@ -154,16 +154,25 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
                 Log.d("CardResult", card.mCardNumber.toString())
                 this.card = card
                 cardViewModel.resetCard() // make it clear for the next operations TODO bir daha kontrolle
-                cardViewModel.getCardReadResult().observe(mainActivity){cardReadResult ->
-                    if (cardReadResult != null){
-                        if (cardReadResult.name == CardReadResult.SALE_NOT_GIB_CL.name || cardReadResult.name == CardReadResult.SALE_GIB.name){
-                            doSale(null)
-                        }
-                        else if (cardReadResult.name == CardReadResult.SALE_NOT_GIB_ICC.name){
-                            prepareSaleMenu(card)
-                        }
-                    }
-                }
+                doSale(null)
+            }
+        }
+    }
+
+    private fun startSaleAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
+        cardViewModel.setTransactionCode(TransactionCode.SALE.type)  //make its transactionCode Sale
+        cardViewModel.setAmount(amount) // set its sale amount
+        cardViewModel.getCardLiveData().observe(mainActivity) { card -> //firstly observing cardData
+            if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
+                Log.d("CardResult", card.mCardNumber.toString())
+                this.card = card
+                cardViewModel.resetCard() // make it clear for the next operations TODO bir daha kontrolle
+                val cardReadType = card.mCardReadType
+                Log.d("Card Read type",cardReadType.toString())
+                if (cardReadType == CardReadType.CLCard.type)
+                    doSale(null)
+                else if (cardReadType == CardReadType.ICC.type)
+                    prepareSaleMenu(card)
             }
         }
     }

@@ -18,7 +18,6 @@ import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
-import com.tokeninc.sardis.application_template.enums.CardReadResult
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.ui.MenuItem
@@ -107,33 +106,36 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         viewModel.replaceFragment(mainActivity)
     }
 
+    fun gibVoidAfterConnected() {
+        cardViewModel.setTransactionCode(TransactionCode.VOID.type)
+        cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
+            if (cardData != null) { //when the cardData is not null (it is updated after onCardDataReceived)
+                Log.d("Card Read", cardData.mCardNumber.toString())
+                val refNo = transactionViewModel.refNo //TODO kontrolle doğru mu
+                val transactionList = transactionViewModel.getTransactionsByRefNo(refNo)
+                val transaction = if (transactionList != null) transactionList[0] else null
+                Log.d("Refund Info", "Satış İptali: $transaction")
+                if (transaction != null) {
+                    if (cardData.mCardNumber == transaction.Col_PAN) {
+                        this.card = cardData
+                        cardViewModel.resetCard()
+                        voidOperation(transaction)
+                    } else {
+                        mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
+                    }
+                }else{
+                    mainActivity.callbackMessage(ResponseCode.ERROR)
+                }
+            }
+        }
+    }
 
     fun startVoidAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
         cardViewModel.setTransactionCode(TransactionCode.VOID.type)
         cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
             if (cardData != null) { //when the cardData is not null (it is updated after onCardDataReceived)
                 Log.d("Card Read", cardData.mCardNumber.toString())
-                cardViewModel.getCardReadResult().observe(mainActivity){cardReadResult ->
-                    if (cardReadResult != null){
-                        if (cardReadResult.name == CardReadResult.VOID_NOT_GIB.name){
-                            voidAfterCardRead(cardData) // start this operation with the card data
-                        }
-                        else if (cardReadResult.name == CardReadResult.VOID_GIB.name){ //if it is gib_void
-                            val refNo = transactionViewModel.refNo //TODO kontrolle doğru mu
-                            val transactionList = transactionViewModel.getTransactionsByRefNo(refNo)
-                            val transaction = if(transactionList != null) transactionList[0] else null
-                            Log.d("Refund Info", "Satış İptali: $transaction")
-                            if (transaction != null){
-                                if (cardData.mCardNumber == transaction.Col_PAN) {
-                                    this.card = cardData
-                                    voidOperation(transaction)
-                                } else {
-                                    mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
-                                }
-                            }
-                        }
-                    }
-                }
+                voidAfterCardRead(cardData) // start this operation with the card data
                 cardViewModel.resetCard() // make it clear for the next operations TODO gerekli mi
             }
         }

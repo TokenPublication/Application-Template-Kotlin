@@ -160,7 +160,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent,ContentValues(),transactionCode) //it comes from parameters
         } else{
             groupSn = batchViewModel.getGroupSN()
-            batchNo = batchViewModel.batchNo
+            batchNo = batchViewModel.getBatchNo()
             batchViewModel.updateGUPSN(groupSn)
             groupSn = batchViewModel.getGroupSN()
             transactionResponse = transactionRepository.getTransactionResponse(amount,card,

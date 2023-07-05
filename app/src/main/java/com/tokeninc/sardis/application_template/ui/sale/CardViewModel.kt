@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.data.repositories.CardRepository
-import com.tokeninc.sardis.application_template.enums.CardReadResult
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -26,7 +25,6 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
 
     fun getCardLiveData(): LiveData<ICCCard> = cardRepository.getCard()
     fun resetCard() = cardRepository.resetCard()
-    fun getCardReadResult(): LiveData<CardReadResult> = cardRepository.getCardReadResult()
     fun getCardServiceConnected() = cardRepository.getCardServiceConnected()
 
     //these functions only updating from UI, they don't need to be observed

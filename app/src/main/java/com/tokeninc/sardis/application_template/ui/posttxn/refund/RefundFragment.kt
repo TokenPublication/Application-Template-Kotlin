@@ -349,6 +349,7 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
                 if (extraContents.getAsString(ExtraKeys.CARD_NO.name).equals(cardData.mCardNumber)){
                     stringExtraContent = extraContents
                     refundRoutine(cardData,TransactionCode.MATCHED_REFUND.type,extraContents)
+                    cardViewModel.resetCard()
                 }
                 else
                     mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
