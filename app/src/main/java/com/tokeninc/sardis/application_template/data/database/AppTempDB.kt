@@ -31,7 +31,7 @@ abstract class AppTempDB: RoomDatabase() {
                 if (instance == null) {
                     instance = Room.databaseBuilder(
                         context.applicationContext,
-                        AppTempDB::class.java, DatabaseInfo.DATABASENAME2
+                        AppTempDB::class.java, DatabaseInfo.DATABASENAME
                     )
                         .allowMainThreadQueries()
                         .addCallback(object : RoomDatabase.Callback() {

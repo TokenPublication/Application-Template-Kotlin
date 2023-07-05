@@ -126,7 +126,7 @@ class MainActivity : TimeOutActivity() {
         refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel)
         postTxnFragment = PostTxnFragment(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel)
         //cardServiceBinding = CardServiceBinding(this, this)
-        observeTIDandMID()
+        observeTIDMID()
 
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
@@ -144,35 +144,9 @@ class MainActivity : TimeOutActivity() {
                 replaceFragment(postTxnFragment)
             }
             getString(R.string.Sale_Action) ->  {
-                transactionCode = TransactionCode.SALE.type
-                amount = intent.extras!!.getInt("Amount")
-                cardViewModel.setAmount(amount)
-                saleFragment.setAmount(amount)
-
-                val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode().equals(
-                    DeviceInfo.PosModeEnum.GIB.name)
-                val bundle = intent.extras
-                val cardData: String? = bundle?.getString("CardData")
-                // when sale operation is called from pgw which has multi bank and app temp is the only issuer of this card
-                if (!isGIB && cardData != null && !cardData.equals("CardData") && !cardData.equals(" ")) {
-                    replaceFragment(saleFragment)
-                    saleFragment.doSale(cardData)
-                }
-
-                if (intent.extras != null){
-                    val cardReadType = intent.extras!!.getInt("CardReadType")
-                    if(cardReadType == CardReadType.ICC.type){
-                        cardViewModel.setGibSale(true)
-                        connectCardService()
-                        saleFragment.startSaleAfterConnected()
-                    } else{
-                        replaceFragment(saleFragment)
-                    }
-                } else{
-                    replaceFragment(saleFragment)
-                }
+                saleActionReceived()
             }
-            getString(R.string.Settings_Action) ->  startSettingsFragment(settingsFragment)
+            getString(R.string.Settings_Action) ->  replaceFragment(settingsFragment)
             getString(R.string.BatchClose_Action) ->  {
                 if (transactionViewModel.allTransactions().isNullOrEmpty()){ //if it is empty just show no transaction dialog
                     callbackMessage(ResponseCode.ERROR)
@@ -185,7 +159,37 @@ class MainActivity : TimeOutActivity() {
             getString(R.string.Refund_Action) ->  {
                 refundActionReceived()
             }
-            else ->  startSettingsFragment(settingsFragment)
+            else ->  replaceFragment(settingsFragment)
+        }
+    }
+
+    private fun saleActionReceived(){
+        transactionCode = TransactionCode.SALE.type
+        amount = intent.extras!!.getInt("Amount")
+        cardViewModel.setAmount(amount)
+        saleFragment.setAmount(amount)
+
+        val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode().equals(
+            DeviceInfo.PosModeEnum.GIB.name)
+        val bundle = intent.extras
+        val cardData: String? = bundle?.getString("CardData")
+        // when sale operation is called from pgw which has multi bank and app temp is the only issuer of this card
+        if (!isGIB && cardData != null && !cardData.equals("CardData") && !cardData.equals(" ")) {
+            replaceFragment(saleFragment)
+            saleFragment.doSale(cardData)
+        }
+
+        if (intent.extras != null){
+            val cardReadType = intent.extras!!.getInt("CardReadType")
+            if(cardReadType == CardReadType.ICC.type){
+                cardViewModel.setGibSale(true)
+                connectCardService()
+                saleFragment.startSaleAfterConnected()
+            } else{
+                replaceFragment(saleFragment)
+            }
+        } else{
+            replaceFragment(saleFragment)
         }
     }
 
@@ -250,9 +254,9 @@ class MainActivity : TimeOutActivity() {
                 transactionCode = TransactionCode.VOID.type
                 cardViewModel.setTransactionCode(transactionCode)
                 connectCardService()
+                postTxnFragment.startVoidAfterConnected()
             } else{
                 val authCode = json.getString("AuthCode")
-                val installmentCount = json.getString("InstCount")
                 val tranDate = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
                 val cardNo = json.getString("CardNo")
                 val extraContents = ContentValues()
@@ -262,25 +266,10 @@ class MainActivity : TimeOutActivity() {
                 extraContents.put(ExtraKeys.REF_NO.name,refNo)
                 extraContents.put(ExtraKeys.AUTH_CODE.name,authCode)
                 extraContents.put(ExtraKeys.CARD_NO.name,cardNo)
-                if (installmentCount.toInt() > 0){
-                    transactionCode = TransactionCode.INSTALLMENT_REFUND.type
-                    extraContents.put(ExtraKeys.INST_COUNT.name, installmentCount)
-                }
-                else{
-                    transactionCode = TransactionCode.MATCHED_REFUND.type
-                }
-                cardViewModel.setTransactionCode(transactionCode)
-                transactionViewModel.extraContents = extraContents
                 connectCardService()
+                refundFragment.gibRefund(extraContents)
             }
         }
-    }
-
-    /**
-     * This function sets some variables in fragment and then replace that fragment.
-     */
-    private fun startSettingsFragment(settingsFragment: SettingsFragment){
-        replaceFragment(settingsFragment)
     }
 
     /**
@@ -470,7 +459,7 @@ class MainActivity : TimeOutActivity() {
 
     //TODO redisgn them
     //This is for holding MID and TID, Because this values are LiveData,
-    // instead of writing this functions everywhere it is used
+    // instead of writing this functions everywhere it is used call it from mainActivity.
     var currentMID: String? = ""
     var currentTID: String? = ""
 
@@ -487,13 +476,14 @@ class MainActivity : TimeOutActivity() {
     /**
      * After TID and MID is changed, it is called from there and hold data for it. It also called everytime whenever MainActivity is created.
      */
-    fun observeTIDandMID(){
+    fun observeTIDMID(){
         activationViewModel.merchantID.observe(this){
-            setMID(it)
+            if (it != null)
+                setMID(it)
         }
         activationViewModel.terminalID.observe(this){
-            setTID(it)
+            if (it != null)
+                setTID(it)
         }
     }
-
 }

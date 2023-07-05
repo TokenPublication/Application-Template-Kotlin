@@ -143,12 +143,9 @@ class SettingsFragment(private val mainActivity: MainActivity,
             "Invalid Terminal No!"
         ) { input -> input.text.length == 8 })
 
-        activationViewModel.merchantID.observe(mainActivity){
-            inputList[0].text = it
-        }
-        activationViewModel.terminalID.observe(mainActivity){
-            inputList[1].text = it
-        }
+        mainActivity.observeTIDMID()
+        inputList[0].text = mainActivity.currentMID
+        inputList[1].text = mainActivity.currentTID
         val tidMidFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 merchantId = inputList[0].text
@@ -158,7 +155,7 @@ class SettingsFragment(private val mainActivity: MainActivity,
                 activationViewModel.hostIP.observe(mainActivity){//to get the current Val
                     activationViewModel.updateActivation(terminalId, merchantId,it)
                 }
-                mainActivity.observeTIDandMID()
+                mainActivity.observeTIDMID()
                 mainActivity.popFragment()
             })
 

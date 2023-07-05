@@ -57,38 +57,6 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         showMenu()
     }
 
-    private fun startVoidAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
-        cardViewModel.setTransactionCode(TransactionCode.VOID.type)
-        cardViewModel.getCardLiveData().observe(mainActivity) { card -> //firstly observing cardData
-            if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
-                Log.d("Card Read", card.mCardNumber.toString())
-
-                cardViewModel.getCardReadResult().observe(mainActivity){cardReadResult ->
-                    if (cardReadResult != null){
-                        if (cardReadResult.name == CardReadResult.VOID_NOT_GIB.name){
-                            voidAfterCardRead(card) // start this operation with the card data
-                        }
-                        else if (cardReadResult.name == CardReadResult.VOID_GIB.name){ //if it is gib_void
-                            val refNo = transactionViewModel.refNo //TODO kontrolle doğru mu
-                            val transactionList = transactionViewModel.getTransactionsByRefNo(refNo)
-                            val transaction = if(transactionList != null) transactionList[0] else null
-                            Log.d("Refund Info", "Satış İptali: $transaction")
-                            if (transaction != null){
-                                if (card.mCardNumber == transaction!!.Col_PAN) {
-                                    this.card = card
-                                    voidOperation(transaction)
-                                } else {
-                                    mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
-                                }
-                            }
-                        }
-                    }
-                }
-                cardViewModel.resetCard() // make it clear for the next operations TODO gerekli mi
-            }
-        }
-    }
-
     override fun onDestroyView() {
         Log.d("PostTxnDestroying","HEY")
         super.onDestroyView()
@@ -139,23 +107,35 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         viewModel.replaceFragment(mainActivity)
     }
 
-    /**
-     * It starts batch close with batch close service which runs parallel with Coroutine
-     */
-    fun startBatchClose() {
-        CoroutineScope(Dispatchers.Default).launch {
-            batchViewModel.batchRoutine(mainActivity,transactionViewModel)
-        }
-        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
-        batchViewModel.getUiState().observe(mainActivity) { state ->
-            when (state) {
-                is BatchViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
-                is BatchViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Slip Hazırlanıyor % ${state.data}")
-                is BatchViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Confirmed,"Grup Kapama Başarılı",true))
+
+    fun startVoidAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
+        cardViewModel.setTransactionCode(TransactionCode.VOID.type)
+        cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
+            if (cardData != null) { //when the cardData is not null (it is updated after onCardDataReceived)
+                Log.d("Card Read", cardData.mCardNumber.toString())
+                cardViewModel.getCardReadResult().observe(mainActivity){cardReadResult ->
+                    if (cardReadResult != null){
+                        if (cardReadResult.name == CardReadResult.VOID_NOT_GIB.name){
+                            voidAfterCardRead(cardData) // start this operation with the card data
+                        }
+                        else if (cardReadResult.name == CardReadResult.VOID_GIB.name){ //if it is gib_void
+                            val refNo = transactionViewModel.refNo //TODO kontrolle doğru mu
+                            val transactionList = transactionViewModel.getTransactionsByRefNo(refNo)
+                            val transaction = if(transactionList != null) transactionList[0] else null
+                            Log.d("Refund Info", "Satış İptali: $transaction")
+                            if (transaction != null){
+                                if (cardData.mCardNumber == transaction.Col_PAN) {
+                                    this.card = cardData
+                                    voidOperation(transaction)
+                                } else {
+                                    mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
+                                }
+                            }
+                        }
+                    }
+                }
+                cardViewModel.resetCard() // make it clear for the next operations TODO gerekli mi
             }
-        }
-        batchViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
-            mainActivity.setResult(liveIntent)
         }
     }
 
@@ -201,6 +181,26 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             }
         }
         transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
+            mainActivity.setResult(liveIntent)
+        }
+    }
+
+    /**
+     * It starts batch close with batch close service which runs parallel with Coroutine
+     */
+    fun startBatchClose() {
+        CoroutineScope(Dispatchers.Default).launch {
+            batchViewModel.batchRoutine(mainActivity,transactionViewModel)
+        }
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
+        batchViewModel.getUiState().observe(mainActivity) { state ->
+            when (state) {
+                is BatchViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
+                is BatchViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Slip Hazırlanıyor % ${state.data}")
+                is BatchViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Confirmed,"Grup Kapama Başarılı",true))
+            }
+        }
+        batchViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
             mainActivity.setResult(liveIntent)
         }
     }

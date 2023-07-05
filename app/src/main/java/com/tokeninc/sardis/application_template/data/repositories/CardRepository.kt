@@ -160,7 +160,7 @@ class CardRepository @Inject constructor() :
                     if (getTransactionCode().value == TransactionCode.VOID.type){ //if the transaction Code is VOID
                         if (gibRefund) { // If it is GIB operation
                             gibRefund = false
-                            setTransactionCode(0)
+                            //setTransactionCode(0)
                             cardReadResult.postValue(CardReadResult.VOID_GIB)
                         }
                         else { //// If it is not GIB operation
@@ -183,7 +183,8 @@ class CardRepository @Inject constructor() :
 
                 }
                 this.card.postValue(card)
-                cardServiceBinding.unBind() //unbinding the cardService
+                if (getCardReadResult().value != CardReadResult.VOID_GIB) //TODO void_gibde patlıyor neden bak
+                    cardServiceBinding.unBind() //unbinding the cardService
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
             }
