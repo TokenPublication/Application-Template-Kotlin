@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * We annotate with HiltViewModel to tell Hilt (Dependency Injection) to it's our viewModel
+ * We annotate with HiltViewModel to notify Hilt (Dependency Injection) to it's our viewModel
  * lately we call this viewModel without passing its parameter thanks to  hilt like in the repository here
  * We won't call repository while we call ViewModel class because we define our repository in AppModule with Hilt.
  */

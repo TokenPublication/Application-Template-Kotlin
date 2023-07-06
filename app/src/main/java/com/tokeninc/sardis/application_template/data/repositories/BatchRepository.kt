@@ -31,9 +31,6 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
         batchDao.updateGUPSN(groupSn)
     }
 
-    fun deleteAll(){
-        batchDao.deleteAll()
-    }
 
     /**
      * It finishes the batch operation via printing slip with respect to achieved data and

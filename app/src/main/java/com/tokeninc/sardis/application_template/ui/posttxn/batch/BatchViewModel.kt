@@ -29,31 +29,40 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
     fun getGroupSN()  = batchRepository.getGroupSN()
     fun getBatchNo() = batchRepository.getBatchNo()
     fun getPreviousBatchSlip(): LiveData<String?> = batchRepository.getPreviousBatchSlip()
-    fun updateBatchNo(batchNo: Int){
+
+    /**
+     * This function works in IO thread, so it doesn't lock the main thread.
+     * It increases batch number 1 and make groupSn 1
+     */
+    private fun updateBatchNo(batchNo: Int){
         viewModelScope.launch(Dispatchers.IO) {
             batchRepository.updateBatchNo(batchNo)
         }
     }
 
-    fun updateBatchSlip(batchSlip: String?,batchNo: Int?){
+    /**
+     * This function works in IO thread, so it doesn't lock the main thread.
+     * It updates the previous batch slip
+     */
+    private fun updateBatchSlip(batchSlip: String?, batchNo: Int?){
         viewModelScope.launch(Dispatchers.IO){
             batchRepository.updateBatchSlip(batchSlip, batchNo)
         }
     }
 
+    /**
+     * This function works in IO thread, so it doesn't lock the main thread.
+     * It increases the group Serial No as one.
+     */
     fun updateGUPSN(groupSn: Int){
         viewModelScope.launch(Dispatchers.IO) {
             batchRepository.updateGUPSN(groupSn)
         }
     }
 
-    fun deleteAll(){
-        batchRepository.deleteAll()
-    }
-
-
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
+    //this is for storing UI state, it is observed from the fragment to update UI
     private val uiState = MutableLiveData<UIState>()
 
     fun getUiState(): LiveData<UIState> = uiState
@@ -69,7 +78,7 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
         // Add more states as needed
     }
 
-    /** It runs functions in parallel while ui updating dynamically in main thread
+    /** It runs functions in parallel while ui updating dynamically in main thread with UI States
      * It also calls finishBatchClose functions in parallel in IO coroutine thread.
      */
     suspend fun batchRoutine(mainActivity: MainActivity, transactionViewModel: TransactionViewModel){
@@ -99,7 +108,7 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
 
     /** It gets all transactions from transaction View Model, then makes up slip from printService.
      * Lastly insert this slip to database, to print it again in next day. If it inserts it successfully, ui is updating
-     * with Success Message. Lastly, update Batch number and resets group number and delete all transactions from Transaction Table.
+     * with Success Message. Finally, update Batch number and resets group number and delete all transactions from Transaction Table.
      */
     private fun finishBatchClose(mainActivity: MainActivity, transactionViewModel: TransactionViewModel) {
         val transactions = transactionViewModel.allTransactions() //get all transactions from viewModel

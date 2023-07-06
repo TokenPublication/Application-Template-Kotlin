@@ -11,7 +11,7 @@ class PrintHelper: BasePrintHelper() {
 
     val dateUtil = DateUtil()
 
-    fun PrintSuccess(): String? {   // Print the success message
+    fun printSuccess(): String {   // Print the success message
         val styledText = StyledString()
 
         // Strings must be max 29 digits
@@ -38,7 +38,7 @@ class PrintHelper: BasePrintHelper() {
         return styledText.toString()
     }
 
-    fun PrintError(): String? {   // Print the error message if necessary
+    fun printError(): String {   // Print the error message if necessary
         val styledText = StyledString()
         addTextToNewLine(
             styledText,
@@ -64,7 +64,7 @@ class PrintHelper: BasePrintHelper() {
         return styledText.toString()
     }
 
-    fun PrintBatchClose(styledText: StyledString,batch_no: String, tx_no: String, totalAmount: Int, MID: String?, TID: String?): String? {
+    fun printBatchClose(styledText: StyledString, batch_no: String, tx_no: String, totalAmount: Int, MID: String?, TID: String?): String {
         addTextToNewLine(styledText, "TOKEN", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "FINTECH", PrinterDefinitions.Alignment.Center)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)

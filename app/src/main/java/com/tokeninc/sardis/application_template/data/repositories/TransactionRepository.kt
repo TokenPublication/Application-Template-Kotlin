@@ -25,6 +25,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
 
+
 class TransactionRepository @Inject constructor(private val transactionDao: TransactionDao) {
 
     suspend fun allTransactions(): List<Transaction?>? = transactionDao.getAllTransactions()
@@ -67,6 +68,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         return onlineTransactionResponse
     }
 
+    //TODO bu repo tekrar gözden geçirilecek
 
     /** Add values to content with respect to parameters, then if it is Void update transaction as changing isVoid else ->
      * insert that contents to Transaction table and update Group Serial Number of batch table.

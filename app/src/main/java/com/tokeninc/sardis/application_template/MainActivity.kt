@@ -24,7 +24,6 @@ import com.tokeninc.cardservicebinding.BuildConfig
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.*
-import com.tokeninc.sardis.application_template.data.database.AppTempDB
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.ui.*
@@ -47,7 +46,7 @@ import java.util.*
 
 
 /** This is the Main Activity class,
- *  all operations are run here because this application is designed as a single-activity architecture
+ * all operations are run here because this application is designed as a single-activity architecture
  * It's @AndroidEntryPoint because, we get ViewModel inside of class,
  */
 @AndroidEntryPoint
@@ -68,8 +67,6 @@ class MainActivity : TimeOutActivity() {
     private lateinit var refundFragment: RefundFragment
 
     //initializing other variables
-    var transactionCode: Int = 0
-    var amount: Int = 0 //this is for holding amount
     var infoDialog: InfoDialog? = null
 
     /**
@@ -162,14 +159,21 @@ class MainActivity : TimeOutActivity() {
         }
     }
 
+    /**
+     * This function is called when action == "SALE". Action could be "SALE" in 3 different scenarios
+     * 1- When the customer clicks on credit card in pgw and then selects Application Template as a Banking Application
+     * ( If the device has only Application Template as a Banking Application, pgw automatically directs user to Application Template when clicking credit card)
+     * 2- When GiB sends a sale request
+     * 3- When the card is read by payment gateway and the Application Template is the only issuer of this card, in this situation
+     * payment gateway automatically directs the sale to Application Template and sale action received.
+     */
     private fun saleActionReceived(){
-        transactionCode = TransactionCode.SALE.type
-        amount = intent.extras!!.getInt("Amount")
+        // get the amount from sale intent, and assign amount to corresponding classes
+        val amount = intent.extras!!.getInt("Amount")
         cardViewModel.setAmount(amount)
         saleFragment.setAmount(amount)
-
-        val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode().equals(
-            DeviceInfo.PosModeEnum.GIB.name)
+        //controlling whether the request coming from gib
+        val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.GIB.name)
         val bundle = intent.extras
         val cardData: String? = bundle?.getString("CardData")
         // when sale operation is called from pgw which has multi bank and app temp is the only issuer of this card
@@ -177,8 +181,8 @@ class MainActivity : TimeOutActivity() {
             replaceFragment(saleFragment)
             saleFragment.doSale(cardData)
         }
-
-        if (intent.extras != null){
+        // when sale request comes from GIB
+        else if (intent.extras != null && isGIB){
             val cardReadType = intent.extras!!.getInt("CardReadType")
             if(cardReadType == CardReadType.ICC.type){
                 cardViewModel.setGibSale(true)
@@ -187,11 +191,15 @@ class MainActivity : TimeOutActivity() {
             } else{
                 replaceFragment(saleFragment)
             }
-        } else{
+        } else{ // when user select application template as a banking application
             replaceFragment(saleFragment)
         }
     }
 
+    /**
+     * This function is called whenever cardService is required. After Connecting to the Card Service, it opens the card reading screen
+     * If it couldn't connect to the card service after 10 seconds, it shows a dialog and finishes to the mainActivity.
+     */
     fun connectCardService(){
         var isCancelled = false
         //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
@@ -222,15 +230,19 @@ class MainActivity : TimeOutActivity() {
         // when read card is cancelled (on back pressed) finish the main activity
         cardViewModel.getCallBackMessage().observe(this){responseCode ->
             Log.d("Card Result Code with call back message",responseCode.name)
-            if (responseCode == ResponseCode.CANCELED){ //if it is canceled
-                //cardViewModel.setCallBackMessage(ResponseCode.SUCCESS) //to ensure not store it always canceled. (when mainActivity finishes, it couldn't kill the cardRepository.
+            if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.ERROR){ //if it is canceled
                 callbackMessage(responseCode)
             }
         }
     }
 
+    /**
+     * Whenever mainActivity is destoryed, it calls the onDestroy method of cardViewModel and CardRepository from there.
+     * It is needed because the lifecycle of CardRepository is different than the mainActivity, it couldn't finish with the mainActivity,
+     * thus some variable's values are preserved and that gives an error in the following operations.
+     */
     override fun onDestroy() {
-        Log.d("On Destroy", "It's is destroyed")
+        Log.d("Main Activity On Destroy", "MainActivity is destroyed")
         cardViewModel.onDestroyed()
         super.onDestroy()
     }
@@ -247,21 +259,19 @@ class MainActivity : TimeOutActivity() {
         } else{
             cardViewModel.setGibRefund(true) //update GibRefund
             val refundInfo = intent.extras!!.getString("RefundInfo")
-            transactionViewModel.refundInfo = refundInfo!!
-            val json = JSONObject(refundInfo)
+            val json = JSONObject(refundInfo!!)
             val refNo = json.getString("RefNo")
             transactionViewModel.refNo = refNo
             val refAmount = json.getString("Amount")
-            amount = refAmount.toInt()
+            val amount = refAmount.toInt()
             cardViewModel.setAmount(amount)
-            val batchNo = json.getInt("BatchNo")
+            val transactionBatchNo = json.getInt("BatchNo")
             val currentBatchNo = batchViewModel.getBatchNo()
-            if (batchNo == currentBatchNo){ //void
-                transactionCode = TransactionCode.VOID.type
-                cardViewModel.setTransactionCode(transactionCode)
+            if (transactionBatchNo == currentBatchNo){ // GIB Void Operation
+                cardViewModel.setTransactionCode(TransactionCode.VOID.type)
                 connectCardService()
                 postTxnFragment.gibVoidAfterConnected()
-            } else{
+            } else{ // GIB Refund Operation (because refund request is received after closing batch
                 val authCode = json.getString("AuthCode")
                 val tranDate = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
                 val cardNo = json.getString("CardNo")
@@ -280,10 +290,9 @@ class MainActivity : TimeOutActivity() {
 
     /**
      * This method is for showing callBack message, it finishes the activity with given intent.
-     * The activity needs to be finished else Postman surmises transaction is continuing and Transaction couldn't end.
      */
     fun setResult(resultIntent: Intent){
-        setResult(RESULT_OK, resultIntent) //responseCode yeterli
+        setResult(RESULT_OK, resultIntent)
         finish()
     }
 
@@ -336,6 +345,10 @@ class MainActivity : TimeOutActivity() {
         ft.addToBackStack(null)
         ft.commit()
     }
+
+    /**
+     * This pops the fragment from fragment stack
+     */
 
     fun popFragment(){
         supportFragmentManager.popBackStack()

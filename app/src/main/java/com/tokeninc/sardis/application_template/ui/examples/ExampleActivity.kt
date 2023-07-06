@@ -17,7 +17,6 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.deviceinfo.DeviceInfo
-import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.ui.examples.viewmodels.ExampleViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
@@ -172,10 +171,10 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
         }))
         val subListPrint = mutableListOf<IListMenuItem>()
         subListPrint.add(MenuItem("Print Load Success", {
-            print(PrintHelper().PrintSuccess()) // Message print: Load Success
+            print(PrintHelper().printSuccess()) // Message print: Load Success
         }))
         subListPrint.add(MenuItem("Print Load Error", {
-            print(PrintHelper().PrintError()) // Message print: Load Error
+            print(PrintHelper().printError()) // Message print: Load Error
         }))
         //subListPrint.add(com.tokeninc.sardis.application_template.ui.MenuItem("Print Bitmap", { }))
         menuItems.add(MenuItem("Print Functions", subListPrint, null))

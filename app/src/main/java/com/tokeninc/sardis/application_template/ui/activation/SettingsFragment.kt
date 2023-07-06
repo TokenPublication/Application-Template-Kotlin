@@ -48,7 +48,6 @@ class SettingsFragment(private val mainActivity: MainActivity,
         if (isBankActivateAction) {
             terminalId = intent.getStringExtra("terminalID")
             merchantId = intent.getStringExtra("merchantID")
-            //startActivation()
         } else {
             showMenu()
         }
@@ -56,7 +55,7 @@ class SettingsFragment(private val mainActivity: MainActivity,
 
     /**
      * This prepares menu, when user clicks Setup, Terminal ID & Merchant ID fragment will be opened
-     * If user clicks Host Settings s/he can change IP Port configuration with opening page.
+     * If user clicks Host Settings user can change IP Port configuration with opening page.
      */
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
@@ -86,7 +85,7 @@ class SettingsFragment(private val mainActivity: MainActivity,
             "Port", EditTextInputType.Number, 4, "Invalid Port!"
         ) { customInputFormat -> customInputFormat.text.length >= 2 && customInputFormat.text.toInt() > 0 })
 
-         activationViewModel.hostIP.observe(mainActivity) {//to see the changes in UI
+         activationViewModel.hostIP.observe(mainActivity) {
              inputList[0].text = it
          }
         activationViewModel.hostPort.observe(mainActivity){

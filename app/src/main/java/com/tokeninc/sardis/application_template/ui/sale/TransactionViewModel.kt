@@ -62,13 +62,13 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         return transactionRepository.getTransactionsByCardNo(cardNo)
     }
 
-    fun insertTransaction(transaction: Transaction){
+    private fun insertTransaction(transaction: Transaction){
         viewModelScope.launch(Dispatchers.IO){
             transactionRepository.insertTransaction(transaction)
         }
     }
 
-    fun setVoid(gupSN: Int, date: String?, card_SID: String?){
+    private fun setVoid(gupSN: Int, date: String?, card_SID: String?){
         viewModelScope.launch(Dispatchers.IO) {
             transactionRepository.setVoid(gupSN, date, card_SID)
         }
@@ -83,7 +83,6 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     //these variables should only for storing the operation's result and intents' responses.
     // they don't have to be a LiveData because they won't be used for UI updating
 
-    var refundInfo: String? = null
     lateinit var refNo: String
     var extraContents : ContentValues? = null
 
@@ -131,7 +130,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 if (downloadNumber == 10){
                     coroutineScope.launch(Dispatchers.IO) {
                         val onlineTransactionResponse = transactionRepository.parseResponse(card,extraContent,transactionCode)
-                        coroutineScope.launch(Dispatchers.Main) { //update UI with returnin auth Code
+                        coroutineScope.launch(Dispatchers.Main) {
                             uiState.postValue(UIState.Success("Preparing The Data"))
                         }
                         finishTransaction(amount, card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,onlineTransactionResponse,batchViewModel,MID, TID, mainActivity)
@@ -153,8 +152,8 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         var transactionResponse: TransactionResponse? = null
         var batchNo: Int? = null
         var groupSn: Int? = null
-        var responseCode = ResponseCode.ERROR //TODO CONTROLLER EKLE
-        if (transactionCode == TransactionCode.VOID.type){ //if it is Void set it is as a void
+        var responseCode = ResponseCode.ERROR //TODO ADD CONTROLLER
+        if (transactionCode == TransactionCode.VOID.type){
             setVoid(extraContent!!.getAsString(TransactionCols.Col_GUP_SN).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card.SID)
             responseCode = ResponseCode.SUCCESS
             transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent,ContentValues(),transactionCode) //it comes from parameters

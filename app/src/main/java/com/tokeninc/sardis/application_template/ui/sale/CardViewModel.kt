@@ -1,6 +1,5 @@
 package com.tokeninc.sardis.application_template.ui.sale
 
-import android.content.ContentValues
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.LiveData

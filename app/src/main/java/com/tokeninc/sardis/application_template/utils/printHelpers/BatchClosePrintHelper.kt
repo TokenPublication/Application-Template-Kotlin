@@ -14,14 +14,12 @@ class BatchClosePrintHelper(): BasePrintHelper() {
 
 
     fun batchText(batch_no: String, transactions: List<Transaction?>, mainActivity: MainActivity, isCopy: Boolean): String {
-        var styledText = StyledString()
+        val styledText = StyledString()
         val stringHelper = StringHelper()
         val printHelper = PrintHelper()
         var totalAmount = 0
         val MID = mainActivity.currentMID
         val TID = mainActivity.currentTID
-        //val MID = mainActivity.activationViewModel.merchantID.value
-        //val TID = mainActivity.activationViewModel.terminalID.value
         addTextToNewLine(styledText, "TOKEN", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "FINTECH", PrinterDefinitions.Alignment.Center)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)
@@ -52,7 +50,7 @@ class BatchClosePrintHelper(): BasePrintHelper() {
                 transactionType = "İPTAL "  //TODO punto küçültüp += yap
             }
             addText(styledText,transactionType+it.Col_GUP_SN, PrinterDefinitions.Alignment.Right)
-            addTextToNewLine(styledText,stringHelper.MaskTheCardNo(it.Col_PAN),PrinterDefinitions.Alignment.Left)
+            addTextToNewLine(styledText,stringHelper.maskTheCardNo(it.Col_PAN),PrinterDefinitions.Alignment.Left)
             addText(styledText,it.Col_ExpDate,PrinterDefinitions.Alignment.Right)
             addTextToNewLine(styledText,it.Col_HostLogKey,PrinterDefinitions.Alignment.Left)
             val amount = it.Col_Amount
@@ -69,7 +67,7 @@ class BatchClosePrintHelper(): BasePrintHelper() {
         styledText.newLine()
         styledText.printBitmap("ykb", 20)
         styledText.addSpace(50)
-        printHelper.PrintBatchClose(styledText,batch_no, transactions.size.toString(),totalAmount, MID, TID)!!
+        printHelper.printBatchClose(styledText,batch_no, transactions.size.toString(),totalAmount, MID, TID)!!
         addTextToNewLine(styledText,"BU BELGEYİ SAKLAYINIZ",PrinterDefinitions.Alignment.Center,8)
         styledText.newLine()
         styledText.printBitmap("ykb", 20)
