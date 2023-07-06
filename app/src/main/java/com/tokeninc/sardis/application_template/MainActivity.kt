@@ -221,12 +221,18 @@ class MainActivity : TimeOutActivity() {
         }
         // when read card is cancelled (on back pressed) finish the main activity
         cardViewModel.getCallBackMessage().observe(this){responseCode ->
+            Log.d("Card Result Code with call back message",responseCode.name)
             if (responseCode == ResponseCode.CANCELED){ //if it is canceled
-                Log.d("Transaction Code :",     "Canceled")
-                cardViewModel.setCallBackMessage(ResponseCode.SUCCESS) //to ensure not store it always canceled.
-                finish()
+                //cardViewModel.setCallBackMessage(ResponseCode.SUCCESS) //to ensure not store it always canceled. (when mainActivity finishes, it couldn't kill the cardRepository.
+                callbackMessage(responseCode)
             }
         }
+    }
+
+    override fun onDestroy() {
+        Log.d("On Destroy", "It's is destroyed")
+        cardViewModel.onDestroyed()
+        super.onDestroy()
     }
 
     /** This function only calls whenever Refund Action is received.

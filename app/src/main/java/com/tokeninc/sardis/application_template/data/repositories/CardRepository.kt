@@ -21,8 +21,6 @@ class CardRepository @Inject constructor() :
 
 
 
-    //setValue or .code = for mainThreads, postValue for any threads in MutableLiveData
-    // lifecycle'ı farklı olduğundan mainActivity finish olunca buradaki variablelar ilk hallerine dönmezler, bunu handle et!
     // these variables are both updating from here and mainActivity and also observe to make some operations therefore they are LiveData
     private var transactionCode = MutableLiveData<Int>(0)
     fun getTransactionCode(): LiveData<Int> {
@@ -69,6 +67,20 @@ class CardRepository @Inject constructor() :
 
     fun cardServiceBinder(mainActivity: MainActivity) {
         cardServiceBinding = CardServiceBinding(mainActivity, this)
+    }
+
+    /** It is called when the main activity is finished (destroyed), because this repository doesn't end with the main Activity.
+     * It only initializes the variables again, with this method, most of the controlling functions to ensure that
+     * keep variables again at an initial point won't be needed.
+     */
+    fun onDestroyed(){
+        transactionCode = MutableLiveData<Int>(0)
+        amount = MutableLiveData<Int>(0)
+        callBackMessage = MutableLiveData<ResponseCode>()
+        isCardServiceConnected = MutableLiveData(false)
+        card =  MutableLiveData<ICCCard>()
+        gibRefund = false
+        gibSale = false
     }
 
     /**
@@ -118,14 +130,8 @@ class CardRepository @Inject constructor() :
                     setCallBackMessage(ResponseCode.ERROR)
                     Log.d("CardDataReceived","Card Result Code: ERROR")
                 }
-                if (card.resultCode == CardServiceResult.SUCCESS.resultCode()) { //if card reads is successful
-                    if (gibSale)
-                        gibSale = false
-                }
                 this.card.postValue(card)
-                if (gibRefund) //TODO void_gibde patlıyor neden bak
-                    gibRefund = false
-                else
+                if (!gibRefund) //TODO void_gibde patlıyor neden bak
                     cardServiceBinding.unBind() //unbinding the cardService
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()

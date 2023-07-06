@@ -330,7 +330,6 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
                     if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
                         Log.d("CardResult", card.mCardNumber.toString())
                         refundRoutine(card,transactionCode,null) // start this operation with the card data
-                        cardViewModel.resetCard() // make it clear for the next operations
                     }
                 }
             }
@@ -349,7 +348,6 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
                 if (extraContents.getAsString(ExtraKeys.CARD_NO.name).equals(cardData.mCardNumber)){
                     stringExtraContent = extraContents
                     refundRoutine(cardData,TransactionCode.MATCHED_REFUND.type,extraContents)
-                    cardViewModel.resetCard()
                 }
                 else
                     mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)

@@ -118,7 +118,6 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
                 if (transaction != null) {
                     if (cardData.mCardNumber == transaction.Col_PAN) {
                         this.card = cardData
-                        cardViewModel.resetCard()
                         voidOperation(transaction)
                     } else {
                         mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
@@ -136,7 +135,6 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             if (cardData != null) { //when the cardData is not null (it is updated after onCardDataReceived)
                 Log.d("Card Read", cardData.mCardNumber.toString())
                 voidAfterCardRead(cardData) // start this operation with the card data
-                cardViewModel.resetCard() // make it clear for the next operations TODO gerekli mi
             }
         }
     }
@@ -146,7 +144,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
      * It shows transactions that has been operated with that card with recyclerview.
      */
     private fun voidAfterCardRead(mCard: ICCCard?){
-        cardViewModel.setTransactionCode(0)
+        //cardViewModel.setTransactionCode(0)
         if (transactionViewModel.getTransactionsByCardNo(mCard!!.mCardNumber.toString()) == null){
             val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
             Handler(Looper.getMainLooper()).postDelayed({

@@ -18,18 +18,16 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     // these functions can be observed from UI and also updated from UI.
     fun getTransactionCode(): LiveData<Int>  = cardRepository.getTransactionCode()
     fun setTransactionCode(code: Int){ cardRepository.setTransactionCode(code) }
-    fun getAmount(): LiveData<Int>  = cardRepository.getAmount()
     fun setAmount(amount: Int){ cardRepository.setAmount(amount) }
     fun getCallBackMessage(): LiveData<ResponseCode>  = cardRepository.getCallBackMessage()
-    fun setCallBackMessage(callbackMessage: ResponseCode){ cardRepository.setCallBackMessage(callbackMessage) }
-
     fun getCardLiveData(): LiveData<ICCCard> = cardRepository.getCard()
-    fun resetCard() = cardRepository.resetCard()
     fun getCardServiceConnected() = cardRepository.getCardServiceConnected()
 
     //these functions only updating from UI, they don't need to be observed
     fun setGibRefund(isAutoTransaction: Boolean){ cardRepository.gibRefund = isAutoTransaction }
     fun setGibSale(isGibSale: Boolean) { cardRepository.gibSale = isGibSale }
+
+    fun onDestroyed(){ cardRepository.onDestroyed()}
 
     fun initializeCardServiceBinding(main: MainActivity) {
         Handler(Looper.getMainLooper()).postDelayed({
