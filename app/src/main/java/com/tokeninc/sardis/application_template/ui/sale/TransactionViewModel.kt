@@ -129,7 +129,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 downloadNumber++
                 if (downloadNumber == 10){
                     coroutineScope.launch(Dispatchers.IO) {
-                        val onlineTransactionResponse = transactionRepository.parseResponse(card,extraContent,transactionCode)
+                        val onlineTransactionResponse = transactionRepository.parseResponse(extraContent,transactionCode)
                         coroutineScope.launch(Dispatchers.Main) {
                             uiState.postValue(UIState.Success("Preparing The Data"))
                         }

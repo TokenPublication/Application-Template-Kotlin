@@ -1,5 +1,4 @@
 package com.tokeninc.sardis.application_template.data.repositories
-import android.content.ContentValues
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -15,14 +14,17 @@ import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
 
-
+/**
+ * This class is for managing data related card operations
+ * It implements CardServiceListener interface's methods which are card service binding lib's methods.
+ */
 class CardRepository @Inject constructor() :
     CardServiceListener {
 
 
 
-    // these variables are both updating from here and mainActivity and also observe to make some operations therefore they are LiveData
-    private var transactionCode = MutableLiveData<Int>(0)
+    // these variables are both updating from here and mainActivity, they also observed from different classes therefore they are LiveData
+    private var transactionCode = MutableLiveData(0)
     fun getTransactionCode(): LiveData<Int> {
         return transactionCode
     }
@@ -30,19 +32,16 @@ class CardRepository @Inject constructor() :
         transactionCode.postValue(code)
     }
 
-    private var amount = MutableLiveData<Int>(0) //this is for holding amount
-    fun getAmount(): LiveData<Int> {
-        return amount
-    }
+    private var amount = MutableLiveData(0)
     fun setAmount(transactionAmount: Int){
         amount.postValue(transactionAmount)
     }
 
-    private var callBackMessage = MutableLiveData<ResponseCode>() //this is for holding amount
+    private var callBackMessage = MutableLiveData<ResponseCode>()
     fun getCallBackMessage(): LiveData<ResponseCode> {
         return callBackMessage
     }
-    fun setCallBackMessage(callBackMessage_: ResponseCode){
+    private fun setCallBackMessage(callBackMessage_: ResponseCode){
         callBackMessage.value = callBackMessage_
     }
 
@@ -54,8 +53,6 @@ class CardRepository @Inject constructor() :
     private var card =  MutableLiveData<ICCCard>()
     fun getCard(): LiveData<ICCCard> {
         return card
-    }
-    fun resetCard(){ card = MutableLiveData<ICCCard>()
     }
 
     //these variables should only for storing the operation's result and intents' responses, because they won't be used
@@ -74,8 +71,8 @@ class CardRepository @Inject constructor() :
      * keep variables again at an initial point won't be needed.
      */
     fun onDestroyed(){
-        transactionCode = MutableLiveData<Int>(0)
-        amount = MutableLiveData<Int>(0)
+        transactionCode = MutableLiveData(0)
+        amount = MutableLiveData(0)
         callBackMessage = MutableLiveData<ResponseCode>()
         isCardServiceConnected = MutableLiveData(false)
         card =  MutableLiveData<ICCCard>()
@@ -91,7 +88,7 @@ class CardRepository @Inject constructor() :
         try {
             obj.put("forceOnline", 0)
             obj.put("zeroAmount", 1)
-            obj.put("showAmount", if (getTransactionCode().value == TransactionCode.VOID.type) 0 else 1) //amountu göstermiyor voidse
+            obj.put("showAmount", if (getTransactionCode().value == TransactionCode.VOID.type) 0 else 1)
             obj.put("partialEMV", 1)
             if (gibSale)
                 obj.put("showCardScreen", 0)
@@ -108,37 +105,39 @@ class CardRepository @Inject constructor() :
             e.printStackTrace()
         }
         cardServiceBinding.getCard(amount.value!!, 30, obj.toString())
-        enters = false
     }
 
-    //TODO niye 2 kez geliyor
-    var enters = false
+    /**
+     * This class is triggered after reading card, if card couldn't be read successfully a callback message is arranged
+     * It will be observed where this function is called, then it will finish the mainActivity with respect to resultCode
+     * After reading card operations are done, unbind the cardService.
+     */
+
     override fun onCardDataReceived(cardData: String?) {
-        if (!enters){
-            enters = true
-            try {
-                val card: ICCCard = Gson().fromJson(cardData, ICCCard::class.java) //get the ICC cardModel from cardData
-                if (card.resultCode == CardServiceResult.USER_CANCELLED.resultCode()) { //if user pressed back button in GiB operation
-                    Log.d("CardDataReceived","Card Result Code: User Cancelled")
-                    setCallBackMessage(ResponseCode.CANCELED)
-                }
-                if (card.resultCode == CardServiceResult.ERROR_TIMEOUT.resultCode()) { //if there is a timeout
-                    Log.d("CardDataReceived","Card Result Code: TIMEOUT")
-                    setCallBackMessage(ResponseCode.CANCELED)
-                }
-                if (card.resultCode == CardServiceResult.ERROR.resultCode()) {
-                    setCallBackMessage(ResponseCode.ERROR)
-                    Log.d("CardDataReceived","Card Result Code: ERROR")
-                }
-                this.card.postValue(card)
-                if (!gibRefund) //TODO void_gibde patlıyor neden bak
-                    cardServiceBinding.unBind() //unbinding the cardService
-            } catch (e: java.lang.Exception) {
-                e.printStackTrace()
+        try {
+            val card: ICCCard = Gson().fromJson(cardData, ICCCard::class.java) //get the ICC cardModel from cardData
+            if (card.resultCode == CardServiceResult.USER_CANCELLED.resultCode()) { //if user pressed back button
+                Log.d("CardDataReceived","Card Result Code: User Cancelled")
+                setCallBackMessage(ResponseCode.CANCELED)
             }
+            if (card.resultCode == CardServiceResult.ERROR_TIMEOUT.resultCode()) { //if there timeout is occurred
+                Log.d("CardDataReceived","Card Result Code: TIMEOUT")
+                setCallBackMessage(ResponseCode.CANCELED)
+            }
+            if (card.resultCode == CardServiceResult.ERROR.resultCode()) {
+                setCallBackMessage(ResponseCode.ERROR)
+                Log.d("CardDataReceived","Card Result Code: ERROR")
+            }
+            this.card.postValue(card)
+            cardServiceBinding.unBind() //unbinding the cardService
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
         }
     }
 
+    /**
+     * When connecting to the card service, make this flag's value true to observe it from different classes.
+     */
     override fun onCardServiceConnected() {
         isCardServiceConnected.value = true
     }

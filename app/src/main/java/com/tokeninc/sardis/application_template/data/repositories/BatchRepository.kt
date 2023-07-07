@@ -8,13 +8,12 @@ import com.token.printerlib.PrinterService
 import com.token.printerlib.StyledString
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.batch.BatchDao
-import com.tokeninc.sardis.application_template.data.database.batch.Batch
 import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
-import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
-import com.tokeninc.sardis.application_template.enums.SlipType
-import com.tokeninc.sardis.application_template.utils.printHelpers.PrintService
 import javax.inject.Inject
 
+/**
+ * This class contains both Batch Dao operations and some operations about the preparing batch intent data.
+ */
 class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
     fun getGroupSN() = batchDao.getGUPSN()
     fun getBatchNo() = batchDao.getBatchNo()
@@ -33,8 +32,9 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
 
 
     /**
-     * It finishes the batch operation via printing slip with respect to achieved data and
-     * passes the response code to liveData intent which is observed in its fragment and finishes the mainActivity
+     * It finishes the batch operation via printing slip with respect to
+     * @param batchCloseResponse
+     * and passes the response code as a liveData intent which is observed from its fragment and finishes the mainActivity
      */
     fun prepareBatchIntent(batchCloseResponse: BatchCloseResponse, mainActivity: MainActivity, slip: String): Intent {
         Log.d("finishBatch","${batchCloseResponse.batchResult}")
@@ -47,7 +47,7 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
         return intent
     }
 
-    fun print(printText: String?, mainActivity: MainActivity) {
+    private fun print(printText: String?, mainActivity: MainActivity) {
         val styledText = StyledString()
         styledText.addStyledText(printText)
         styledText.finishPrintingProcedure()

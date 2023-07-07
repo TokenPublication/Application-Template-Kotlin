@@ -182,7 +182,7 @@ class MainActivity : TimeOutActivity() {
             saleFragment.doSale(cardData)
         }
         // when sale request comes from GIB
-        else if (intent.extras != null && isGIB){
+        else if (intent.extras != null){
             val cardReadType = intent.extras!!.getInt("CardReadType")
             if(cardReadType == CardReadType.ICC.type){
                 cardViewModel.setGibSale(true)
