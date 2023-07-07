@@ -21,9 +21,4 @@ class ActivationRepository @Inject constructor(private val activationDao: Activa
         activationDao.updateConnection(ip,port,old_ip)
     }
 
-    fun deleteAll(){
-        activationDao.deleteAll()
-    }
-
-
 }

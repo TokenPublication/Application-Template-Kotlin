@@ -22,6 +22,7 @@ import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentRefundBinding
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
@@ -209,10 +210,10 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
                 } else if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type ||transactionCode == TransactionCode.MATCHED_REFUND.type){
                     cardViewModel.setAmount(stringExtraContent.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
                 }
-                cardViewModel.getCardLiveData().observe(mainActivity){card ->
-                    if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
-                        Log.d("CardResult", card.mCardNumber.toString())
-                        refundRoutine(card,transactionCode) // start this operation with the card data
+                cardViewModel.getCardLiveData().observe(mainActivity){cardData ->
+                    if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
+                        Log.d("CardResult", cardData.mCardNumber.toString())
+                        refundRoutine(cardData,transactionCode) // start this operation with the card data
                     }
                 }
             }
@@ -226,7 +227,7 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
         cardViewModel.setTransactionCode(TransactionCode.MATCHED_REFUND.type)
         transactionViewModel.extraContents = extraContents
         cardViewModel.getCardLiveData().observe(mainActivity){ cardData ->
-            if (cardData != null) {
+            if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) {
                 Log.d("Card Read", cardData.mCardNumber.toString())
                 if (extraContents.getAsString(ExtraKeys.CARD_NO.name).equals(cardData.mCardNumber)){
                     stringExtraContent = extraContents //initializing stringExtraContents to use it later.

@@ -65,12 +65,12 @@ class BatchClosePrintHelper(): BasePrintHelper() {
         styledText.newLine()
         addTextToNewLine(styledText,"===========================",PrinterDefinitions.Alignment.Center)
         styledText.newLine()
-        styledText.printBitmap("ykb", 20)
+        styledText.printLogo(mainActivity)
         styledText.addSpace(50)
         printHelper.printBatchClose(styledText,batch_no, transactions.size.toString(),totalAmount, MID, TID)!!
         addTextToNewLine(styledText,"BU BELGEYİ SAKLAYINIZ",PrinterDefinitions.Alignment.Center,8)
         styledText.newLine()
-        styledText.printBitmap("ykb", 20)
+        styledText.printLogo(mainActivity)
         styledText.addSpace(50)
         return styledText.toString()
     }

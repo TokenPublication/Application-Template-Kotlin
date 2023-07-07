@@ -1,6 +1,5 @@
 package com.tokeninc.sardis.application_template.ui.activation
 
-import com.tokeninc.sardis.application_template.ui.MenuItem
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -13,8 +12,14 @@ import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
+import com.tokeninc.sardis.application_template.ui.MenuItem
+import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
 
 
@@ -104,6 +109,28 @@ class SettingsFragment(private val mainActivity: MainActivity,
         mainActivity.addFragment(hostFragment as Fragment)
     }
 
+    private fun startActivation(){
+        CoroutineScope(Dispatchers.Default).launch {
+            activationViewModel.setupRoutine(mainActivity)
+        }
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Processing, "Aktivasyon Başlatılıyor…", false)
+        activationViewModel.getUiState().observe(mainActivity) { state ->
+            when (state) {
+                is ActivationViewModel.UIState.Starting -> mainActivity.showDialog(dialog)
+                is ActivationViewModel.UIState.ParameterUploading -> dialog.update(InfoDialog.InfoType.Progress,"Parametre Yükleniyor")
+                is ActivationViewModel.UIState.MemberActCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,"Üye İşyeri Aktivasyonu: Başarılı")
+                is ActivationViewModel.UIState.RKLLoading -> dialog.update(InfoDialog.InfoType.Progress,"RKL Yükleniyor")
+                is ActivationViewModel.UIState.RKLLoaded -> dialog.update(InfoDialog.InfoType.Confirmed,"RKL Yüklendi")
+                is ActivationViewModel.UIState.KeyBlockLoading -> dialog.update(InfoDialog.InfoType.Progress,"Key Blok Yükleniyor")
+                is ActivationViewModel.UIState.ActivationCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,"Aktivasyon Tamamlandı")
+                is ActivationViewModel.UIState.Finished -> {
+                    dialog.dismiss()
+                    mainActivity.print(PrintHelper().printSuccess())
+                }
+            }
+        }
+    }
+
     /**
      * This is for validating the input.
      */
@@ -155,6 +182,7 @@ class SettingsFragment(private val mainActivity: MainActivity,
                     activationViewModel.updateActivation(terminalId, merchantId,it)
                 }
                 mainActivity.observeTIDMID()
+                startActivation()
                 mainActivity.popFragment()
             })
 
