@@ -61,7 +61,6 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     fun getTransactionsByCardNo(cardNo: String): List<Transaction?>?{
         return transactionRepository.getTransactionsByCardNo(cardNo)
     }
-
     private fun insertTransaction(transaction: Transaction){
         viewModelScope.launch(Dispatchers.IO){
             transactionRepository.insertTransaction(transaction)
@@ -152,7 +151,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         var transactionResponse: TransactionResponse? = null
         var batchNo: Int? = null
         var groupSn: Int? = null
-        var responseCode = ResponseCode.ERROR //TODO ADD CONTROLLER
+        var responseCode = ResponseCode.ERROR
         if (transactionCode == TransactionCode.VOID.type){
             setVoid(extraContent!!.getAsString(TransactionCols.Col_GUP_SN).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card.SID)
             responseCode = ResponseCode.SUCCESS

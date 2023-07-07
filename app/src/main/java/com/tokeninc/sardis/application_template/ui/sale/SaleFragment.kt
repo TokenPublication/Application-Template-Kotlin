@@ -147,7 +147,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         }
     }
 
-    fun gibSale(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
+    fun gibSale(){
         cardViewModel.setTransactionCode(TransactionCode.SALE.type)  //make its transactionCode Sale
         cardViewModel.setAmount(amount) // set its sale amount
         cardViewModel.getCardLiveData().observe(mainActivity) { card -> //firstly observing cardData
@@ -160,7 +160,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     }
 
 
-    private fun startSaleAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
+    private fun startSaleAfterConnected(){
         cardViewModel.setTransactionCode(TransactionCode.SALE.type)  //make its transactionCode Sale
         cardViewModel.setAmount(amount) // set its sale amount
         cardViewModel.getCardLiveData().observe(mainActivity) { card -> //firstly observing cardData
@@ -213,8 +213,6 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         var paymentType = PaymentTypes.CREDITCARD.type
         val cbMerchant = binding.cbMerchant
         val cbCustomer = binding.cbCustomer
-
-        //this is for slip type //TODO buraya bakmıyor olabilir
         var slipType = SlipType.NO_SLIP
         if (cbMerchant.isChecked && cbCustomer.isChecked)
             slipType = SlipType.BOTH_SLIPS
@@ -243,7 +241,6 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         //onSaleResponseRetrieved(amount, code, true, slipType, "1234 **** **** 7890", "OWNER NAME", paymentType)
     }
 
-    //TODO observe amount in whichplace
     fun setAmount(amount:Int){
         this.amount = amount
     }

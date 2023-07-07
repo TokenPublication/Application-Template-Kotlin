@@ -8,7 +8,7 @@ interface TransactionDao {
 
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTransaction(transaction: Transaction) //TODO return Long with PK of row
+    suspend fun insertTransaction(transaction: Transaction)
 
     @Query("SELECT * FROM ${DatabaseInfo.TRANSACTIONTABLE} WHERE ${TransactionCols.Col_PAN} = :cardNo AND ${TransactionCols.Col_IsVoid} <> 1 ORDER BY  ${TransactionCols.Col_GUP_SN} DESC")
     fun getTransactionsByCardNo(cardNo: String): List<Transaction?>?

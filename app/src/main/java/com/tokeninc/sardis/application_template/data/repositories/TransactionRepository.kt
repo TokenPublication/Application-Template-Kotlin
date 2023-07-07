@@ -179,7 +179,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             bundle.putString("MID", MID.toString())
             bundle.putString("TID", TID.toString())
             bundle.putInt("TxnNo",groupSN)
-            bundle.putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
+            bundle.putInt("PaymentType", PaymentTypes.CREDITCARD.type)
 
             var slipType: SlipType = SlipType.NO_SLIP
             if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
@@ -199,7 +199,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
                     }
                 }
             }
-            bundle.putInt("SlipType", slipType.value) //TODO fail receipt yap
+            bundle.putInt("SlipType", slipType.value)
             intent.putExtras(bundle)
         }
         return intent

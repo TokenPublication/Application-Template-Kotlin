@@ -47,7 +47,7 @@ class BatchClosePrintHelper(): BasePrintHelper() {
                 6 -> transactionType = "T. İADE "
             }
             if (it.Col_IsVoid == 1){
-                transactionType = "İPTAL "  //TODO punto küçültüp += yap
+                transactionType = "İPTAL "
             }
             addText(styledText,transactionType+it.Col_GUP_SN, PrinterDefinitions.Alignment.Right)
             addTextToNewLine(styledText,stringHelper.maskTheCardNo(it.Col_PAN),PrinterDefinitions.Alignment.Left)
