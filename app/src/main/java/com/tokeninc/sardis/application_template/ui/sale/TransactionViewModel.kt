@@ -112,7 +112,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     suspend fun transactionRoutine( amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues,
                                 onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean, batchViewModel: BatchViewModel,
     MID: String?, TID: String?, mainActivity:MainActivity) {
-        var downloadNumber: Int = 0
+        var downloadNumber = 0
         coroutineScope.launch(Dispatchers.Main){//firstly updating the UI as loading
             uiState.postValue(UIState.Loading)
         }
