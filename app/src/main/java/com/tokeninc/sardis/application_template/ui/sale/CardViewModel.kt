@@ -23,8 +23,8 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     fun getCardServiceConnected() = cardRepository.getCardServiceConnected()
 
     //these functions only updating from UI, they don't need to be observed
-    fun setGibRefund(isAutoTransaction: Boolean){ cardRepository.gibRefund = isAutoTransaction }
     fun setGibSale(isGibSale: Boolean) { cardRepository.gibSale = isGibSale }
+    fun setMainActivity(main: MainActivity){ cardRepository.mainActivity =main}
 
     fun onDestroyed(){ cardRepository.onDestroyed()}
 

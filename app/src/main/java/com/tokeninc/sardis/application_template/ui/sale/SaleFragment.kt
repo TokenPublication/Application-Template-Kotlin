@@ -21,6 +21,7 @@ import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
 import com.tokeninc.sardis.application_template.enums.CardReadType
+import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.enums.PaymentTypes
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.SlipType
@@ -150,10 +151,10 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     fun gibSale(){
         cardViewModel.setTransactionCode(TransactionCode.SALE.type)  //make its transactionCode Sale
         cardViewModel.setAmount(amount) // set its sale amount
-        cardViewModel.getCardLiveData().observe(mainActivity) { card -> //firstly observing cardData
-            if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
-                Log.d("CardResult", card.mCardNumber.toString())
-                this.card = card
+        cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
+            if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
+                Log.d("CardResult", cardData.mCardNumber.toString())
+                this.card = cardData
                 doSale(null)
             }
         }
@@ -163,11 +164,11 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     private fun startSaleAfterConnected(){
         cardViewModel.setTransactionCode(TransactionCode.SALE.type)  //make its transactionCode Sale
         cardViewModel.setAmount(amount) // set its sale amount
-        cardViewModel.getCardLiveData().observe(mainActivity) { card -> //firstly observing cardData
-            if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
-            Log.d("CardResult", card.mCardNumber.toString())
-            this.card = card
-            val cardReadType = card.mCardReadType
+        cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
+            if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
+            Log.d("CardResult", cardData.mCardNumber.toString())
+            this.card = cardData
+            val cardReadType = cardData.mCardReadType
             Log.d("Card Read type",cardReadType.toString())
             if (cardReadType == CardReadType.CLCard.type)
                 doSale(null)

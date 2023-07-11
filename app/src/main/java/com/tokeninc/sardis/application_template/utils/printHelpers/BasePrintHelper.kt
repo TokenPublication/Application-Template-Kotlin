@@ -48,7 +48,6 @@ open class BasePrintHelper {
         styledText.addTextToLine("İŞYERİ NO:", PrinterDefinitions.Alignment.Left)
         styledText.setFontFace(PrinterDefinitions.Font_E.SourceSansPro)
         styledText.addTextToLine(mainActivity.currentMID, PrinterDefinitions.Alignment.Right)
-        //styledText.addTextToLine(mainActivity.activationViewModel.merchantID.value, PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.addTextToLine("TERMİNAL NO:", PrinterDefinitions.Alignment.Left)

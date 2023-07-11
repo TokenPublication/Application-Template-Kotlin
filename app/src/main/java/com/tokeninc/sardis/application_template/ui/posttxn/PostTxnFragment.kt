@@ -18,6 +18,7 @@ import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
+import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.ui.MenuItem
@@ -113,7 +114,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
     fun gibVoidAfterConnected() {
         cardViewModel.setTransactionCode(TransactionCode.VOID.type)
         cardViewModel.getCardLiveData().observe(mainActivity) { cardData ->
-            if (cardData != null) {
+            if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) {
                 Log.d("Card Read", cardData.mCardNumber.toString())
                 val refNo = transactionViewModel.refNo
                 val transactionList = transactionViewModel.getTransactionsByRefNo(refNo)
@@ -139,7 +140,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
     private fun startVoidAfterConnected(){ //TODO background screen should be changed
         cardViewModel.setTransactionCode(TransactionCode.VOID.type)
         cardViewModel.getCardLiveData().observe(mainActivity) { cardData ->
-            if (cardData != null) {
+            if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) {
                 Log.d("Card Read", cardData.mCardNumber.toString())
                 voidAfterCardRead(cardData) // start this operation with the card data
             }

@@ -203,7 +203,6 @@ class PrintService:BasePrintHelper() {
         addTextToNewLine(styledText,"BU İŞLEM YURT İÇİ KARTLA YAPILMIŞTIR", PrinterDefinitions.Alignment.Center, 8)
         addTextToNewLine(styledText,"BU BELGEYİ SAKLAYINIZ", PrinterDefinitions.Alignment.Center, 8)
         styledText.newLine()
-        //styledText.printBitmap("ykb", 20)
         styledText.printLogo(context)
         styledText.addSpace(50)
         return styledText.toString()

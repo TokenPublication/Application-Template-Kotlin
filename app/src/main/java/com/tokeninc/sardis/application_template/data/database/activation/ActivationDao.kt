@@ -30,7 +30,4 @@ interface ActivationDao {
     @Query("SELECT ${ActivationCols.ColPortNo} FROM ${DatabaseInfo.ACTTABLE} LIMIT 1")
     fun getHostPort(): LiveData<String?>
 
-    @Query("DELETE FROM ${DatabaseInfo.ACTTABLE}")
-    fun deleteAll()
-
 }

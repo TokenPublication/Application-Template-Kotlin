@@ -57,8 +57,9 @@ class CardRepository @Inject constructor() :
 
     //these variables should only for storing the operation's result and intents' responses, because they won't be used
     //for UI updating they don't have to be a LiveData
-    var gibRefund = false
     var gibSale = false
+    var mainActivity: MainActivity? = null
+
 
     private lateinit var cardServiceBinding: CardServiceBinding
 
@@ -76,8 +77,8 @@ class CardRepository @Inject constructor() :
         callBackMessage = MutableLiveData<ResponseCode>()
         isCardServiceConnected = MutableLiveData(false)
         card =  MutableLiveData<ICCCard>()
-        gibRefund = false
         gibSale = false
+        mainActivity = null
     }
 
     /**
@@ -137,9 +138,11 @@ class CardRepository @Inject constructor() :
 
     /**
      * When connecting to the card service, make this flag's value true to observe it from different classes.
+     * After that call setEMVConfiguration method, it checks whether the Setup is Done before, if it is do nothing, else set EMV
      */
     override fun onCardServiceConnected() {
         isCardServiceConnected.value = true
+        mainActivity!!.setEMVConfiguration(true)
     }
 
     override fun onPinReceived(s: String) {}

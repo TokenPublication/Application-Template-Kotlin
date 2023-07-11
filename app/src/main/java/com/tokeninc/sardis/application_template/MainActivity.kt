@@ -115,6 +115,7 @@ class MainActivity : TimeOutActivity() {
         transactionViewModel = getTransactionViewModel
         val getCardViewModel : CardViewModel by viewModels()
         cardViewModel = getCardViewModel
+        cardViewModel.setMainActivity(this) //this is for making setEMVConfiguration method
 
         saleFragment = SaleFragment(transactionViewModel,this,activationViewModel,batchViewModel,cardViewModel)
         settingsFragment = SettingsFragment(this, activationViewModel, intent)
@@ -257,7 +258,6 @@ class MainActivity : TimeOutActivity() {
         if (intent.extras == null || intent.extras!!.getString("RefundInfo") == null){
             callbackMessage(ResponseCode.ERROR)
         } else{
-            cardViewModel.setGibRefund(true) //update GibRefund
             val refundInfo = intent.extras!!.getString("RefundInfo")
             val json = JSONObject(refundInfo!!)
             val refNo = json.getString("RefNo")
@@ -377,27 +377,28 @@ class MainActivity : TimeOutActivity() {
 
 
     /**
-    override fun onCardServiceConnected() {
-    setEMVConfiguration() //TODO doğru yere taşınacak
-    }*/
-
-    /**
      * This function only works in installation, it calls setConfig and setCLConfig
+     * It also called from onCardServiceConnected method of Card Service Library, if Configs couldn't set in first_run
+     * (it is checked from sharedPreferences), again it setConfigurations, else do nothing.
      */
-    private fun setEMVConfiguration() {
+    fun setEMVConfiguration(fromCardService: Boolean) {
         val sharedPreference = getSharedPreferences("myprefs",Context.MODE_PRIVATE)
         val editor = sharedPreference.edit()
         val firstTimeBoolean = sharedPreference.getBoolean("FIRST_RUN",false)
         if (!firstTimeBoolean){
+            if (fromCardService){
+                Toast.makeText(applicationContext, "Config Dosyaları Güncellendi, Lütfen Banka Kurulumu Yapınız", Toast.LENGTH_LONG).show()
+            }
             setConfig()
             setCLConfig()
             editor.putBoolean("FIRST_RUN",true)
+            Log.d("setEMVConfiguration","ok")
             editor.apply()
         }
     }
 
     /**
-     * It set Config.xml
+     * It sets Config.xml
      */
     private fun setConfig() {
         try {
@@ -423,7 +424,7 @@ class MainActivity : TimeOutActivity() {
     }
 
     /**
-     * It set cl_config.xml
+     * It sets cl_config.xml
      */
     private fun setCLConfig() {
         try {
