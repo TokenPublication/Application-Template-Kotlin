@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.data.repositories.CardRepository
@@ -21,6 +22,7 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     fun getCallBackMessage(): LiveData<ResponseCode>  = cardRepository.getCallBackMessage()
     fun getCardLiveData(): LiveData<ICCCard> = cardRepository.getCard()
     fun getCardServiceConnected() = cardRepository.getCardServiceConnected()
+    fun getCardServiceBinding(): CardServiceBinding { return cardRepository.getCardServiceBinding() }
 
     //these functions only updating from UI, they don't need to be observed
     fun setGibSale(isGibSale: Boolean) { cardRepository.gibSale = isGibSale }

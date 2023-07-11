@@ -13,6 +13,7 @@ import com.tokeninc.sardis.application_template.data.database.transaction.Transa
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.data.entities.responses.OnlineTransactionResponse
 import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.enums.CardReadType
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.PaymentTypes
 import com.tokeninc.sardis.application_template.enums.ResponseCode
@@ -85,7 +86,10 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         content.put(TransactionCols.Col_GUP_SN,groupSn)
         content.put(TransactionCols.Col_ReceiptNo, 2) // TODO Check Receipt NO 1000TR
         content.put(TransactionCols.Col_CardReadType, card.mCardReadType)
-        content.put(TransactionCols.Col_PAN, card.mCardNumber)
+        if (card.mCardReadType == CardReadType.QrPay.type)
+            content.put(TransactionCols.Col_PAN, "5209305830592013")
+        else
+            content.put(TransactionCols.Col_PAN, card.mCardNumber)
         content.put(TransactionCols.Col_CardSequenceNumber, card.CardSeqNum)
         content.put(TransactionCols.Col_TransCode, transactionCode)
         content.put(TransactionCols.Col_Amount, amount)
@@ -175,7 +179,11 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             bundle.putInt("Amount2", 0)
             bundle.putBoolean("IsSlip", true)
             bundle.putInt("BatchNo", batchNo)
-            bundle.putString("CardNo", StringHelper().maskCardForBundle(card.mCardNumber!!))
+            if (card.mCardReadType != CardReadType.QrPay.type) {
+                bundle.putString("CardNo", StringHelper().maskCardForBundle(card.mCardNumber!!))
+            } else {
+                card.mCardNumber = "5209305830592013";  //Dummy for QR sale
+            }
             bundle.putString("MID", MID.toString())
             bundle.putString("TID", TID.toString())
             bundle.putInt("TxnNo",groupSN)
