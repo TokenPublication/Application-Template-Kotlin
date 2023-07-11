@@ -1,7 +1,6 @@
 package com.tokeninc.sardis.application_template.dependency_injection
 
 import android.app.Application
-import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.AppTempDB
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
@@ -36,7 +35,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDatabase(app: Application): AppTempDB = AppTempDB.getInstance(app)
-    //app TestApplicationda @HiltAndroidApp dediğimiz için oradan geldi Application
+    // Application comes from AppTemp thanks to annotation @HiltAndroidApp
 
     /**
      * It returns Repository instance

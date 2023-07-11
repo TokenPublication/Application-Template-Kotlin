@@ -7,14 +7,9 @@ import java.util.*
  */
 class StringHelper {
 
-    fun getAmount(amount: Int): String? {
-        val Lang = Locale.getDefault().displayLanguage
-        val currency: String
-        currency = if (Lang == "Türkçe") {
-            "₺"
-        } else {
-            "€"
-        }
+    fun getAmount(amount: Int): String {
+        val lang = Locale.getDefault().displayLanguage
+        val currency: String = if (lang == "Türkçe") { "₺" } else { "€" }
         var str = amount.toString()
         if (str.length == 1) str = "00$str" else if (str.length == 2) str = "0$str"
         val s1 = str.substring(0, str.length - 2)
@@ -22,16 +17,14 @@ class StringHelper {
         return "$s1,$s2$currency"
     }
 
-    fun GenerateApprovalCode(BatchNo: String, TransactionNo: String, SaleID: String): String? {
-        var approvalCode = "0"
-        approvalCode = BatchNo + TransactionNo + SaleID
-        return approvalCode
+    fun generateApprovalCode(BatchNo: String, TransactionNo: String, SaleID: String): String {
+        return BatchNo + TransactionNo + SaleID
     }
 
     /**
      * It forms card number as **** **** **** 4321
      */
-    fun maskCardNumber(cardNo: String): String? {
+    fun maskCardNumber(cardNo: String): String {
         // 1234 **** **** 7890
         //val prefix = cardNo.substring(0, 4)
         val suffix = cardNo.substring(cardNo.length - 4)
@@ -52,17 +45,17 @@ class StringHelper {
     /**
      * It forms card Number as 1234 **** **** 4321
      */
-    fun MaskTheCardNo(cardNo: String): String? {
-        val CardNoFirstFour = cardNo.substring(0, 4)
-        val CardNoLastFour = cardNo.substring(cardNo.length - 4)
-        val masked = StringBuilder(CardNoFirstFour)
+    fun maskTheCardNo(cardNo: String): String {
+        val cardNoFirstFour = cardNo.substring(0, 4)
+        val cardNoLastFour = cardNo.substring(cardNo.length - 4)
+        val masked = StringBuilder(cardNoFirstFour)
         for (i in 4 .. cardNo.length - 5) {
             if (i % 4 == 0)
                 masked.append(" ")
             masked.append("*")
         }
         masked.append(" ")
-        masked.append(CardNoLastFour)
+        masked.append(cardNoLastFour)
         val formatted = StringBuilder(masked)
         return formatted.toString()
     }

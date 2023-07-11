@@ -71,7 +71,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             startVoidAfterConnected()
         }))
         menuItems.add(MenuItem(getStrings(R.string.refund), {
-            mainActivity.addFragment(refundFragment) //burada stacke ekliyor
+            mainActivity.addFragment(refundFragment)
         }))
         menuItems.add(MenuItem(getStrings(R.string.batch_close), {
             if (transactionViewModel.allTransactions().isNullOrEmpty()){
@@ -106,12 +106,16 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         viewModel.replaceFragment(mainActivity)
     }
 
+    /**
+     * This function is called after card reading, it finds the corresponding transaction by reference number and void it
+     * if the reading card and transaction's card numbers are matching.
+     */
     fun gibVoidAfterConnected() {
         cardViewModel.setTransactionCode(TransactionCode.VOID.type)
-        cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
-            if (cardData != null) { //when the cardData is not null (it is updated after onCardDataReceived)
+        cardViewModel.getCardLiveData().observe(mainActivity) { cardData ->
+            if (cardData != null) {
                 Log.d("Card Read", cardData.mCardNumber.toString())
-                val refNo = transactionViewModel.refNo //TODO kontrolle doğru mu
+                val refNo = transactionViewModel.refNo
                 val transactionList = transactionViewModel.getTransactionsByRefNo(refNo)
                 val transaction = if (transactionList != null) transactionList[0] else null
                 Log.d("Refund Info", "Satış İptali: $transaction")
@@ -129,10 +133,13 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         }
     }
 
-    fun startVoidAfterConnected(){ //TODO 0.5 sn eski arkaplan oluyor kartla yapılan işlemler gelene kadar ona bak.
+    /**
+     * After connected to cardService, this method isc called. When card data is received it calls voidAfterCardRead to prepare a recycler view list.
+     */
+    private fun startVoidAfterConnected(){ //TODO background screen should be changed
         cardViewModel.setTransactionCode(TransactionCode.VOID.type)
-        cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
-            if (cardData != null) { //when the cardData is not null (it is updated after onCardDataReceived)
+        cardViewModel.getCardLiveData().observe(mainActivity) { cardData ->
+            if (cardData != null) {
                 Log.d("Card Read", cardData.mCardNumber.toString())
                 voidAfterCardRead(cardData) // start this operation with the card data
             }
@@ -144,7 +151,6 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
      * It shows transactions that has been operated with that card with recyclerview.
      */
     private fun voidAfterCardRead(mCard: ICCCard?){
-        //cardViewModel.setTransactionCode(0)
         if (transactionViewModel.getTransactionsByCardNo(mCard!!.mCardNumber.toString()) == null){
             val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
             Handler(Looper.getMainLooper()).postDelayed({
@@ -154,15 +160,13 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         else{
             card = mCard
             val cardNumber = card!!.mCardNumber
-            val transactionList = TransactionList(cardNumber)
-            transactionList.postTxnFragment = this@PostTxnFragment
-            transactionList.viewModel = transactionViewModel
+            val transactionList = TransactionList(cardNumber,transactionViewModel,this)
             mainActivity.addFragment(transactionList)
         }
     }
 
     /**
-     * It starts void operation in parallel
+     * It starts void operation in parallel with TransactionRoutine method.
      */
     fun voidOperation(transaction: Transaction){
         val contentValHelper = ContentValHelper()

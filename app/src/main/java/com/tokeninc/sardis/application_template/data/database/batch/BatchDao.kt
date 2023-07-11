@@ -15,8 +15,7 @@ interface BatchDao {
     suspend fun initBatch(batch: Batch)
 
     @Query("UPDATE ${DatabaseInfo.BATCHTABLE} SET ${BatchCols.col_ulGUP_SN} = :groupSn + 1 WHERE ${BatchCols.col_ulGUP_SN} = :groupSn")
-    suspend fun updateGUPSN(groupSn: Int) //PK değil diye hata olur mu ?
-    //gupSN 0 olmuş ilk işlemde ? eğer hep bir geriden geliyorsa 1 den başlat
+    suspend fun updateGUPSN(groupSn: Int)
 
     @Query("UPDATE ${DatabaseInfo.BATCHTABLE} SET ${BatchCols.col_ulGUP_SN} = 1, ${BatchCols.col_batchNo} = :batchNo + 1 WHERE ${BatchCols.col_batchNo} = :batchNo")
     suspend fun updateBatchNo(batchNo: Int)
@@ -31,8 +30,5 @@ interface BatchDao {
 
     @Query("SELECT ${BatchCols.col_previous_batch_slip} FROM ${DatabaseInfo.BATCHTABLE} LIMIT 1")
     fun getBatchPreviousSlip(): LiveData<String?>
-
-    @Query("DELETE FROM ${DatabaseInfo.BATCHTABLE}")
-    fun deleteAll()
 
 }

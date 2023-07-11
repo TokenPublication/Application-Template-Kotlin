@@ -35,18 +35,16 @@ abstract class AppTempDB: RoomDatabase() {
                     )
                         .allowMainThreadQueries()
                         .addCallback(object : RoomDatabase.Callback() {
+                            // it only enters this at first when database is created
                             override fun onCreate(db: SupportSQLiteDatabase) {
                                 Log.d("FIRST INSTANCE", "HEY")
                                 super.onCreate(db)
-                                    coroutineScope.launch{ //ilk kurulumda host settingse girerken buraya giriyor
-                                        //öyle olunca da o an gösteremiyor ipyi geri gelip girince görünüyor
+                                    coroutineScope.launch{
                                         val firstActivation = Activation(null, null)
                                         val instance = getInstance(context)
-                                        val actDao = instance.activationDao
-                                        actDao.initActivation(firstActivation) //burdan sonrasına gitmedi aq
+                                        instance.activationDao.initActivation(firstActivation)
                                         val firstBatch = Batch(null)
-                                        val daobatch = instance.batchDao
-                                        daobatch.initBatch(firstBatch)
+                                        instance.batchDao.initBatch(firstBatch)
                                         Log.d("FIRST INSTANCE","created")
                                     }
                             }
@@ -59,26 +57,3 @@ abstract class AppTempDB: RoomDatabase() {
         }
     }
 }
-/**
- * return firstInstance ?: synchronized(this) {
-firstInstance ?: Room.databaseBuilder(
-context.applicationContext,
-AppTempDB::class.java,DatabaseInfo.DATABASENAME2
-)
-.allowMainThreadQueries()
-.addCallback(object : RoomDatabase.Callback() {
-override fun onCreate(db: SupportSQLiteDatabase) {
-super.onCreate(db)
-// Perform DAO insert operations here
-CoroutineScope(Dispatchers.IO).launch {
-val firstActivation = Activation(null,null)
-val firstBatch = Batch(null,1,0)
-firstInstance?.batchDao?.initBatch(firstBatch)
-firstInstance?.activationDao?.initActivation(firstActivation)
-}
-}
-})
-.build()
-.also { firstInstance = it }
-}
- */

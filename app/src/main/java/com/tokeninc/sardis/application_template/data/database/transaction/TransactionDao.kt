@@ -6,8 +6,9 @@ import com.tokeninc.sardis.application_template.data.database.DatabaseInfo
 @Dao
 interface TransactionDao {
 
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTransaction(transaction: Transaction) //TODO insert Boolean dönebilir mi
+    suspend fun insertTransaction(transaction: Transaction)
 
     @Query("SELECT * FROM ${DatabaseInfo.TRANSACTIONTABLE} WHERE ${TransactionCols.Col_PAN} = :cardNo AND ${TransactionCols.Col_IsVoid} <> 1 ORDER BY  ${TransactionCols.Col_GUP_SN} DESC")
     fun getTransactionsByCardNo(cardNo: String): List<Transaction?>?

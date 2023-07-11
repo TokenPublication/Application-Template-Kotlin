@@ -25,6 +25,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
 
+
 class TransactionRepository @Inject constructor(private val transactionDao: TransactionDao) {
 
     suspend fun allTransactions(): List<Transaction?>? = transactionDao.getAllTransactions()
@@ -49,7 +50,10 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         transactionDao.deleteAll()
     }
 
-    fun parseResponse(card: ICCCard, contentVal: ContentValues?, transactionCode: Int): OnlineTransactionResponse {
+    /**
+     * It parses the response in a dummy way.
+     */
+    fun parseResponse (contentVal: ContentValues?, transactionCode: Int): OnlineTransactionResponse {
         val onlineTransactionResponse = OnlineTransactionResponse()
         onlineTransactionResponse.mResponseCode = ResponseCode.SUCCESS
         onlineTransactionResponse.mTextPrintCode1 = "Test Print 1"
@@ -68,15 +72,14 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
     }
 
 
-    /** Add values to content with respect to parameters, then if it is Void update transaction as changing isVoid else ->
-     * insert that contents to Transaction table and update Group Serial Number of batch table.
-     * Update dialog with success message if database operations result without an error.
+    /** Add values to content with respect to parameters and transactionCode after that
+     * @return TransactionResponse with required parameters for notifying where it is called.
      */
     fun getTransactionResponse (amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues?, onlinePin: String?,
                                    isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse,batchNo: Int, groupSn: Int
     ): TransactionResponse {
         val content = ContentValues()
-        var responseCode = ResponseCode.SUCCESS //TODO CONTROLLER EKLE
+        val responseCode = ResponseCode.SUCCESS //TODO CONTROLLER EKLE
         content.put(TransactionCols.Col_UUID, uuid)
         content.put(TransactionCols.Col_BatchNo, batchNo)
         content.put(TransactionCols.Col_GUP_SN,groupSn)
@@ -156,9 +159,8 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         return TransactionResponse(responseCode, onlineTransactionResponse, content, extraContent, transactionCode)
     }
 
-    /** This method is called from doSale() method. It puts required values to bundle (something like contentValues for data transferring).
-     * After that, this bundle is put to intent and that intent is assigned to mainActivity.
-     * This intent ensures IPC between application and GiB.
+    /** This method puts required values to bundle (something like contentValues for data transferring).
+     * After that, an intent will be created with this bundle to provide communication between GiB and Application Template via IPC
      */
     fun prepareSaleIntent(transactionResponse: TransactionResponse, amount: Int, batchNo: Int, groupSN: Int, card: ICCCard, MID: String?, TID: String?, mainActivity:MainActivity)
             : Intent{
@@ -167,7 +169,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         val intent = Intent()
         if (responseCode == ResponseCode.SUCCESS){
             val bundle = Bundle()
-            bundle.putInt("ResponseCode", responseCode.ordinal) //TODO bunu diğerlerinde de yap
+            bundle.putInt("ResponseCode", responseCode.ordinal)
             bundle.putInt("PaymentStatus", 0) // #2 Payment Status
             bundle.putInt("Amount", amount ) // #3 Amount
             bundle.putInt("Amount2", 0)
@@ -177,7 +179,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             bundle.putString("MID", MID.toString())
             bundle.putString("TID", TID.toString())
             bundle.putInt("TxnNo",groupSN)
-            bundle.putInt("PaymentType", PaymentTypes.CREDITCARD.type) //TODO check it
+            bundle.putInt("PaymentType", PaymentTypes.CREDITCARD.type)
 
             var slipType: SlipType = SlipType.NO_SLIP
             if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
@@ -186,7 +188,6 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             else{
                 if (transactionResponse.responseCode == ResponseCode.SUCCESS){
                     val printHelper = PrintService()
-                    //TODO mainsiz yapabiliyorsan yap
                     bundle.putString("customerSlipData", printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
                     bundle.putString("merchantSlipData", printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
                     bundle.putString("RefundInfo", getRefundInfo(transactionResponse,batchNo,groupSN,amount,MID,TID,card))
@@ -198,14 +199,14 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
                     }
                 }
             }
-            bundle.putInt("SlipType", slipType.value) //TODO fail receipt yap
+            bundle.putInt("SlipType", slipType.value)
             intent.putExtras(bundle)
         }
         return intent
     }
 
-    /** @return refundInfo which is Json with necessary components
-     *
+    /**
+     * @return refundInfo which is Json with necessary components
      */
     private fun getRefundInfo(transactionResponse: TransactionResponse, batchNo: Int, groupSN: Int, amount: Int, MID: String?, TID: String?, card: ICCCard): String {
         val json = JSONObject()
@@ -222,10 +223,8 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             json.put("CardNo",card.mCardNumber!!)
             if (transaction.getAsInteger(TransactionCols.Col_InstCnt) != null && transaction.getAsInteger(
                     TransactionCols.Col_InstCnt) > 0) {
-                //val installment = JSONObject()
                 json.put("InstCount", transaction.getAsInteger(TransactionCols.Col_InstCnt))
                 json.put("InstAmount", transaction.getAsInteger(TransactionCols.Col_InstAmount))
-                //json.put("Installment", installment)
             }
             else{
                 json.put("InstCount", 0)
@@ -274,7 +273,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         return intent
     }
 
-    fun print(printText: String?, mainActivity: MainActivity) {
+    private fun print(printText: String?, mainActivity: MainActivity) {
         val styledText = StyledString()
         styledText.addStyledText(printText)
         styledText.finishPrintingProcedure()

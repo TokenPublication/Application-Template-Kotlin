@@ -14,8 +14,8 @@ open class BasePrintHelper {
         addText(styledText, text, alignment, 11, 0f)
     }
 
-    fun addText(styledText: StyledString, text: String?, alignment: PrinterDefinitions.Alignment?,
-        fontSize: Int, lineSpacing: Float
+    private fun addText(styledText: StyledString, text: String?, alignment: PrinterDefinitions.Alignment?,
+                        fontSize: Int, lineSpacing: Float
     ) {
         styledText.setFontFace(PrinterDefinitions.Font_E.SourceCodePro)
         styledText.setFontSize(fontSize)

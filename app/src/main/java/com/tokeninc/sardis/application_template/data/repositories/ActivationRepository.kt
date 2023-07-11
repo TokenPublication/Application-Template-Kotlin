@@ -4,8 +4,7 @@ import com.tokeninc.sardis.application_template.data.database.activation.Activat
 import javax.inject.Inject
 
 /**
- * @param database is database class, it's coming from Dependency Injection thanks to Inject annotation,
- * I define it in AppModule
+ * @param activationDao is Data Access Object which comes from Dependency Injection thanks to Inject annotation,
  */
 
 class ActivationRepository @Inject constructor(private val activationDao: ActivationDao) {

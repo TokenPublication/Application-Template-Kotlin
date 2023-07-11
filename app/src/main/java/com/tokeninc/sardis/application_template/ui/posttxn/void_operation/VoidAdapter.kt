@@ -32,7 +32,7 @@ class VoidAdapter(private val transactionList: MutableList<Transaction?>): Recyc
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
         val transaction = transactionList[position]
         val hb = holder.binding
-        hb.textCardNo.text = StringHelper().MaskTheCardNo(transaction!!.Col_PAN)
+        hb.textCardNo.text = StringHelper().maskTheCardNo(transaction!!.Col_PAN)
         hb.textDate.text = transaction.Col_TranDate
         if (transaction.Col_TransCode == 4 || transaction.Col_TransCode == 6)
             hb.textAmount.text = StringHelper().getAmount(transaction.Col_Amount2)
