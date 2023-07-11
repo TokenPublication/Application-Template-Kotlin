@@ -26,12 +26,9 @@ import javax.inject.Inject
 @HiltViewModel
 class BatchViewModel @Inject constructor(private val batchRepository: BatchRepository): ViewModel() {
 
-    //val groupSN = batchRepository.groupSN
     fun getGroupSN()  = batchRepository.getGroupSN()
-    val batchNo = batchRepository.batchNo
+    fun getBatchNo() = batchRepository.getBatchNo()
     fun getPreviousBatchSlip(): LiveData<String?> = batchRepository.getPreviousBatchSlip()
-    val allBatch = batchRepository.allBatch
-
     fun updateBatchNo(batchNo: Int){
         viewModelScope.launch(Dispatchers.IO) {
             batchRepository.updateBatchNo(batchNo)
@@ -110,10 +107,10 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
             uiState.postValue(UIState.Success("Grup Kapama Başarılı"))
         }
         val printService = BatchClosePrintHelper()
-        val copySlip = printService.batchText(batchNo.toString(),transactions!!,mainActivity,true)
-        updateBatchSlip(copySlip,batchNo) //update the batch slip for previous day
-        val slip = printService.batchText(batchNo.toString(),transactions,mainActivity,false)
-        updateBatchNo(batchNo) //update the batch number
+        val copySlip = printService.batchText(getBatchNo().toString(),transactions!!,mainActivity,true)
+        updateBatchSlip(copySlip,getBatchNo()) //update the batch slip for previous day
+        val slip = printService.batchText(getBatchNo().toString(),transactions,mainActivity,false)
+        updateBatchNo(getBatchNo()) //update the batch number
         transactionViewModel.deleteAll() //delete all the transactions
         val batchCloseResponse = BatchCloseResponse(BatchResult.SUCCESS, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()))
         val intent = batchRepository.prepareBatchIntent(batchCloseResponse,mainActivity,slip) //prepare intent and print slip

@@ -1,7 +1,6 @@
 package com.tokeninc.sardis.application_template.data.database.transaction
 
 class TransactionCols {
-    //TODO kullandığın her yeri checkle patlama, transaction eskiden ContentVal iken şimdi entity oldu
     companion object{
         const val Col_UUID = "Col_UUID"
         const val Col_GUP_SN = "Col_GUP_SN"

@@ -31,7 +31,7 @@ abstract class AppTempDB: RoomDatabase() {
                 if (instance == null) {
                     instance = Room.databaseBuilder(
                         context.applicationContext,
-                        AppTempDB::class.java, DatabaseInfo.DATABASENAME2
+                        AppTempDB::class.java, DatabaseInfo.DATABASENAME
                     )
                         .allowMainThreadQueries()
                         .addCallback(object : RoomDatabase.Callback() {
@@ -47,9 +47,7 @@ abstract class AppTempDB: RoomDatabase() {
                                         val firstBatch = Batch(null)
                                         val daobatch = instance.batchDao
                                         daobatch.initBatch(firstBatch)
-                                        val lst = daobatch.getAllBatch()
-                                        Log.d("FIRST INSTANCE","ads")
-                                        //firstInstance!!.activationDao.initActivation(firstActivation)
+                                        Log.d("FIRST INSTANCE","created")
                                     }
                             }
                         })

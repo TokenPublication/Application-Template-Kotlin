@@ -80,6 +80,13 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         }
     }
 
+    //these variables should only for storing the operation's result and intents' responses.
+    // they don't have to be a LiveData because they won't be used for UI updating
+
+    var refundInfo: String? = null
+    lateinit var refNo: String
+    var extraContents : ContentValues? = null
+
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
@@ -153,7 +160,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent,ContentValues(),transactionCode) //it comes from parameters
         } else{
             groupSn = batchViewModel.getGroupSN()
-            batchNo = batchViewModel.batchNo
+            batchNo = batchViewModel.getBatchNo()
             batchViewModel.updateGUPSN(groupSn)
             groupSn = batchViewModel.getGroupSN()
             transactionResponse = transactionRepository.getTransactionResponse(amount,card,

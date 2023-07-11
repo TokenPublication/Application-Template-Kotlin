@@ -23,9 +23,6 @@ interface BatchDao {
 
     @Query("UPDATE ${DatabaseInfo.BATCHTABLE} SET ${BatchCols.col_previous_batch_slip} = :batchSlip WHERE ${BatchCols.col_batchNo} = :batchNo")
     suspend fun updateBatchSlip(batchSlip: String?,batchNo: Int?)
-
-    @Query("SELECT * FROM ${DatabaseInfo.BATCHTABLE}")
-    fun getAllBatch(): List<Batch?>
     @Query("SELECT ${BatchCols.col_ulGUP_SN} FROM ${DatabaseInfo.BATCHTABLE} LIMIT 1")
     fun getGUPSN(): Int //livedata gereksiz UIla işi yoksa
 

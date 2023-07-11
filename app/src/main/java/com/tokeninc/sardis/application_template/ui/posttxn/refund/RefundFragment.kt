@@ -23,6 +23,7 @@ import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentRefundBinding
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
+import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
@@ -81,12 +82,9 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
     }
 
     /**
-     * After reading card, refund transaction will be added Transaction table with this function in parallel.
+     * After reading card, refund will be added to Transaction table with this function in parallel.
      */
-    private fun afterReadCard(mCard: ICCCard?, transactionCode: Int, mExtraContent: ContentValues?){
-        if (mExtraContent != null){
-            stringExtraContent = mExtraContent
-        }
+    private fun refundRoutine(mCard: ICCCard?, transactionCode: Int, mExtraContent: ContentValues?){
         card = mCard!!
         CoroutineScope(Dispatchers.Default).launch {
                 transactionViewModel.transactionRoutine(stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
@@ -331,10 +329,28 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
                 cardViewModel.getCardLiveData().observe(mainActivity){card ->
                     if (card != null) { //when the cardData is not null (it is updated after onCardDataReceived)
                         Log.d("CardResult", card.mCardNumber.toString())
-                        afterReadCard(card,transactionCode,null) // start this operation with the card data
-                        cardViewModel.resetCard() // make it clear for the next operations
+                        refundRoutine(card,transactionCode,null) // start this operation with the card data
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * It is called when refund action received by gib. It checks if the card data are matching, if it is then call refundRoutine
+     */
+    fun gibRefund(extraContents: ContentValues){
+        cardViewModel.setTransactionCode(TransactionCode.MATCHED_REFUND.type)
+        transactionViewModel.extraContents = extraContents
+        cardViewModel.getCardLiveData().observe(mainActivity){ cardData ->
+            if (cardData != null) {
+                Log.d("Card Read", cardData.mCardNumber.toString())
+                if (extraContents.getAsString(ExtraKeys.CARD_NO.name).equals(cardData.mCardNumber)){
+                    stringExtraContent = extraContents
+                    refundRoutine(cardData,TransactionCode.MATCHED_REFUND.type,extraContents)
+                }
+                else
+                    mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
             }
         }
     }
