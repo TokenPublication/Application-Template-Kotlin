@@ -1,8 +1,11 @@
 package com.tokeninc.sardis.application_template.ui.sale
 
+import android.app.Activity
 import android.content.ContentValues
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -11,8 +14,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import com.google.gson.Gson
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.infodialog.InfoDialog
@@ -174,6 +175,47 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
                 doSale(null)
             else if (cardReadType == CardReadType.ICC.type)
                 prepareSaleMenu(card)
+            else if (cardReadType == CardReadType.QrPay.type){
+                qrSale()
+            }
+            }
+
+        }
+    }
+
+    private var isCancelable = true
+    var qrSuccess = true
+    private fun qrSale() {
+        val dialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Progress, "Please Wait", true)
+        Handler(Looper.getMainLooper()).postDelayed({
+            cardViewModel.getCardServiceBinding().showQR(
+                "PLEASE READ THE QR CODE",
+                StringHelper().getAmount(amount),
+                "QR Code Test"
+            ) // Shows QR on the back screen
+            dialog!!.setQr(
+                "QR Code Test",
+                "Waiting For the QR Code to Read"
+            ) // Shows the same QR on Info Dialog
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (qrSuccess) {
+                    mainActivity.showInfoDialog(
+                        InfoDialog.InfoType.Confirmed,
+                        "QR " + getString(R.string.trans_successful),
+                        false
+                    )
+                    isCancelable = false
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        doSale(null)
+                    }, 3000)
+                }
+            }, 5000)
+        }, 2000)
+        dialog!!.setDismissedListener {
+            if (isCancelable) {
+                qrSuccess = false
+                mainActivity.setResult(Activity.RESULT_CANCELED)
+                mainActivity.callbackMessage(ResponseCode.CANCELED)
             }
         }
     }

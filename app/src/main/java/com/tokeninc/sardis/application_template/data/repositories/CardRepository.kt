@@ -8,6 +8,7 @@ import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.enums.CardServiceResult
+import com.tokeninc.sardis.application_template.enums.EmvProcessType
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import org.json.JSONException
@@ -89,7 +90,9 @@ class CardRepository @Inject constructor() :
         try {
             obj.put("forceOnline", 0)
             obj.put("zeroAmount", 1)
-            obj.put("showAmount", if (getTransactionCode().value == TransactionCode.VOID.type) 0 else 1)
+            val isVoid = getTransactionCode().value == TransactionCode.VOID.type
+            obj.put("emvProcessType", if (isVoid) EmvProcessType.READ_CARD.ordinal else EmvProcessType.FULL_EMV.ordinal)
+            obj.put("showAmount", if (isVoid) 0 else 1)
             obj.put("partialEMV", 1)
             if (gibSale)
                 obj.put("showCardScreen", 0)
@@ -143,6 +146,10 @@ class CardRepository @Inject constructor() :
     override fun onCardServiceConnected() {
         isCardServiceConnected.value = true
         mainActivity!!.setEMVConfiguration(true)
+    }
+
+    fun getCardServiceBinding(): CardServiceBinding {
+        return cardServiceBinding
     }
 
     override fun onPinReceived(s: String) {}

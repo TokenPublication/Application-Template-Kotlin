@@ -9,6 +9,7 @@ import com.tokeninc.sardis.application_template.AppTemp
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
 import com.tokeninc.sardis.application_template.data.entities.responses.OnlineTransactionResponse
+import com.tokeninc.sardis.application_template.enums.CardReadType
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
@@ -155,6 +156,12 @@ class PrintService:BasePrintHelper() {
                 styledText.newLine()
                 styledText.addTextToLine("İMZAYA GEREK YOKTUR", PrinterDefinitions.Alignment.Center)
             }
+            if (contentValues.getAsString(TransactionCols.Col_CardReadType).toInt() == CardReadType.QrPay.type) {
+                styledText.newLine()
+                styledText.addTextToLine("Bu işlem TR Karekod", PrinterDefinitions.Alignment.Center)
+                styledText.newLine()
+                styledText.addTextToLine("ile yapılmıştır", PrinterDefinitions.Alignment.Center)
+            }
         }
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)
         styledText.setFontSize(12)
@@ -169,9 +176,11 @@ class PrintService:BasePrintHelper() {
         styledText.newLine()
         styledText.addTextToLine("GRUP NO: " + contentValues.getAsString(TransactionCols.Col_BatchNo))
         styledText.addTextToLine("REF NO: " + contentValues.getAsString(TransactionCols.Col_HostLogKey), PrinterDefinitions.Alignment.Right)
-        styledText.newLine()
-        styledText.addTextToLine("AID: " + contentValues.getAsString(TransactionCols.Col_Aid))
-        styledText.addTextToLine(contentValues.getAsString(TransactionCols.Col_AidLabel), PrinterDefinitions.Alignment.Right)
+        if (contentValues.getAsString(TransactionCols.Col_CardReadType).toInt() == CardReadType.QrPay.type)  {
+            styledText.newLine()
+            styledText.addTextToLine("AID: " + contentValues.getAsString(TransactionCols.Col_Aid))
+            styledText.addTextToLine(contentValues.getAsString(TransactionCols.Col_AidLabel), PrinterDefinitions.Alignment.Right)
+        }
         styledText.newLine()
         styledText.addTextToLine("Ver: 92.12.05")
         if (transactionCode == TransactionCode.SALE.type){
