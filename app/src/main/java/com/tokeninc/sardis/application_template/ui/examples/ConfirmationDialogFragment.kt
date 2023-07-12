@@ -8,7 +8,7 @@ import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.ui.examples.viewmodels.ConfirmationDialogViewModel
+import com.tokeninc.sardis.application_template.ui.examples.viewModels.ConfirmationDialogViewModel
 
 /** It can be deleted
  * This fragment includes Confirmation Dialog methods for example activity
@@ -27,7 +27,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
     }
 
     private fun prepareData() {
-        menuItems.add(MenuItem("Confirmed", { menuItem ->
+        menuItems.add(MenuItem("Confirmed", {
             showConfirmationDialog(
                 InfoDialog.InfoType.Confirmed,
                 "Confirmed",
@@ -37,7 +37,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 exampleActivity!!
             )
         }) )
-        menuItems.add(MenuItem("Warning", { menuItem ->
+        menuItems.add(MenuItem("Warning", {
             showConfirmationDialog(
                 InfoDialog.InfoType.Warning,
                 "Warning",
@@ -47,7 +47,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 exampleActivity!!
             )
         }))
-        menuItems.add(MenuItem("Error", { menuItem ->
+        menuItems.add(MenuItem("Error", {
             showConfirmationDialog(
                 InfoDialog.InfoType.Error,
                 "Error",
@@ -57,7 +57,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 exampleActivity!!
             )
         }))
-        menuItems.add(MenuItem("Info", { menuItem ->
+        menuItems.add(MenuItem("Info", {
             showConfirmationDialog(
                 InfoDialog.InfoType.Info,
                 "Info",
@@ -66,7 +66,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 96,
                 exampleActivity!!
                 ) }))
-        menuItems.add(MenuItem("Declined", { menuItem ->
+        menuItems.add(MenuItem("Declined", {
             showConfirmationDialog(
                 InfoDialog.InfoType.Declined,
                 "Declined",
@@ -76,7 +76,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 exampleActivity!!
             )
         }))
-        menuItems.add(MenuItem("Connecting", { menuItem ->
+        menuItems.add(MenuItem("Connecting", {
             showConfirmationDialog(
                 InfoDialog.InfoType.Connecting,
                 "Connecting",
@@ -86,7 +86,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 exampleActivity!!
             )
         }))
-        menuItems.add(MenuItem("Downloading", { menuItem ->
+        menuItems.add(MenuItem("Downloading", {
             showConfirmationDialog(
                 InfoDialog.InfoType.Downloading,
                 "Downloading",
@@ -96,7 +96,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 exampleActivity!!
             )
         }))
-        menuItems.add(MenuItem("Uploading", { menuItem ->
+        menuItems.add(MenuItem("Uploading", {
             showConfirmationDialog(
                 InfoDialog.InfoType.Uploading,
                 "Uploading",
@@ -106,7 +106,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 exampleActivity!!
             )
         }))
-        menuItems.add(MenuItem("Processing", { menuItem ->
+        menuItems.add(MenuItem("Processing", {
             showConfirmationDialog(
                 InfoDialog.InfoType.Processing,
                 "Processing",
@@ -116,7 +116,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 exampleActivity!!
             )
         }))
-        menuItems.add(MenuItem("Progress", { menuItem ->
+        menuItems.add(MenuItem("Progress", {
             showConfirmationDialog(
                 InfoDialog.InfoType.Progress,
                 "Progress",
@@ -126,7 +126,7 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 exampleActivity!!
             )
         }))
-        menuItems.add(MenuItem("None", { menuItem ->
+        menuItems.add(MenuItem("None", {
             showConfirmationDialog(
                 InfoDialog.InfoType.None,
                 "None",
@@ -136,7 +136,6 @@ class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialo
                 exampleActivity!!
             ) }))
     }
-
 
     /**
      * Shows a dialog to the user which asks for a confirmation.

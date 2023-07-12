@@ -1,11 +1,11 @@
-package com.tokeninc.sardis.application_template.ui.posttxn.void_operation
+package com.tokeninc.sardis.application_template.ui.postTxn.void_operation
 
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.tokeninc.sardis.application_template.ui.posttxn.PostTxnFragment
+import com.tokeninc.sardis.application_template.ui.postTxn.PostTxnFragment
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding
@@ -49,5 +49,4 @@ class VoidAdapter(private val transactionList: MutableList<Transaction?>): Recyc
     override fun getItemCount(): Int {
         return transactionList.size
     }
-
 }

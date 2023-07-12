@@ -6,7 +6,6 @@ import javax.inject.Inject
 /**
  * @param activationDao is Data Access Object which comes from Dependency Injection thanks to Inject annotation,
  */
-
 class ActivationRepository @Inject constructor(private val activationDao: ActivationDao) {
     val merchantID = activationDao.getMerchantId()
     val terminalID = activationDao.getTerminalId()
@@ -20,5 +19,4 @@ class ActivationRepository @Inject constructor(private val activationDao: Activa
     suspend fun updateConnection(ip: String?, port: String?, old_ip: String?){
         activationDao.updateConnection(ip,port,old_ip)
     }
-
 }

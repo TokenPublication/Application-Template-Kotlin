@@ -6,5 +6,4 @@ import java.text.SimpleDateFormat
 /**
  * This class is for holding data after batch close operation ends.
  */
-class BatchCloseResponse(var batchResult: BatchResult, var date: SimpleDateFormat) {
-}
+class BatchCloseResponse(var batchResult: BatchResult, var date: SimpleDateFormat)

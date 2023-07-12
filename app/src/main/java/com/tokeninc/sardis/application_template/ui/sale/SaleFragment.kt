@@ -29,7 +29,7 @@ import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.ui.MenuItem
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
-import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -161,7 +161,6 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         }
     }
 
-
     private fun startSaleAfterConnected(){
         cardViewModel.setTransactionCode(TransactionCode.SALE.type)  //make its transactionCode Sale
         cardViewModel.setAmount(amount) // set its sale amount
@@ -177,9 +176,8 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
                 prepareSaleMenu(card)
             else if (cardReadType == CardReadType.QrPay.type){
                 qrSale()
+                }
             }
-            }
-
         }
     }
 
@@ -247,7 +245,6 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         }
     }
 
-
     /**
      * This is a dummy response, it is doing nothing its only mission is to show how to simulate buttons for now.
      */
@@ -280,7 +277,6 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             else if (text == valueOf(PaymentTypes.OTHER))
                 paymentType = PaymentTypes.OTHER.type
         }
-
         //onSaleResponseRetrieved(amount, code, true, slipType, "1234 **** **** 7890", "OWNER NAME", paymentType)
     }
 
@@ -299,5 +295,4 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     private fun getStrings(resID: Int): String{
         return mainActivity.getString(resID)
     }
-
 }

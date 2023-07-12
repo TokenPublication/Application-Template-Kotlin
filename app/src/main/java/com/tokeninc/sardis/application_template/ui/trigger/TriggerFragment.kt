@@ -12,13 +12,10 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 
-
 class TriggerFragment(val mainActivity: MainActivity) : Fragment() {
-
 
     private var _binding: FragmentTriggerBinding? = null
     private val binding get() = _binding!!
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,14 +31,11 @@ class TriggerFragment(val mainActivity: MainActivity) : Fragment() {
         startDummyParameterUploading() //TODO do it in model, just update UI
     }
 
-
     private fun startDummyParameterUploading(){
-
         // If Parameter is success
         val resultIntent = Intent()
         val bundle = Bundle()
         val assetManager = mainActivity.assets
-
         var clConfigFile = ""
 
         try {
@@ -75,5 +69,4 @@ class TriggerFragment(val mainActivity: MainActivity) : Fragment() {
         super.onDestroy()
         _binding = null
     }
-
 }

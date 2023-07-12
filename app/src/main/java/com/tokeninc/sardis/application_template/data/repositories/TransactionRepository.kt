@@ -26,7 +26,6 @@ import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
 
-
 class TransactionRepository @Inject constructor(private val transactionDao: TransactionDao) {
 
     suspend fun allTransactions(): List<Transaction?>? = transactionDao.getAllTransactions()
@@ -72,7 +71,6 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         return onlineTransactionResponse
     }
 
-
     /** Add values to content with respect to parameters and transactionCode after that
      * @return TransactionResponse with required parameters for notifying where it is called.
      */
@@ -80,7 +78,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
                                    isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse,batchNo: Int, groupSn: Int
     ): TransactionResponse {
         val content = ContentValues()
-        val responseCode = ResponseCode.SUCCESS //TODO CONTROLLER EKLE
+        val responseCode = ResponseCode.SUCCESS
         content.put(TransactionCols.Col_UUID, uuid)
         content.put(TransactionCols.Col_BatchNo, batchNo)
         content.put(TransactionCols.Col_GUP_SN,groupSn)
@@ -125,7 +123,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         }
         content.put(TransactionCols.Col_ExpDate, card.mExpireDate)
         content.put(TransactionCols.Col_Track2, card.mTrack2Data)
-        content.put(TransactionCols.Col_CustName, card.ownerName)
+        content.put(TransactionCols.Col_CustomerName, card.ownerName)
         content.put(TransactionCols.Col_IsVoid, 0)
         if (isPinByPass)
             content.put(TransactionCols.Col_isPinByPass, 1)
@@ -168,7 +166,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
      */
     fun prepareSaleIntent(transactionResponse: TransactionResponse, amount: Int, batchNo: Int, groupSN: Int, card: ICCCard, MID: String?, TID: String?, mainActivity:MainActivity)
             : Intent{
-        Log.i("Transaction/Response","responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
+        Log.i("Transaction/Response","responseCode:${transactionResponse.responseCode} ContentValues: ${transactionResponse.contentVal}")
         val responseCode = transactionResponse.responseCode
         val intent = Intent()
         if (responseCode == ResponseCode.SUCCESS){
@@ -182,7 +180,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             if (card.mCardReadType != CardReadType.QrPay.type) {
                 bundle.putString("CardNo", StringHelper().maskCardForBundle(card.mCardNumber!!))
             } else {
-                card.mCardNumber = "5209305830592013";  //Dummy for QR sale
+                card.mCardNumber = "5209305830592013"  //Dummy for QR sale
             }
             bundle.putString("MID", MID.toString())
             bundle.putString("TID", TID.toString())
@@ -196,8 +194,8 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             else{
                 if (transactionResponse.responseCode == ResponseCode.SUCCESS){
                     val printHelper = PrintService()
-                    bundle.putString("customerSlipData", printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
-                    bundle.putString("merchantSlipData", printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
+                    //bundle.putString("customerSlipData", printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
+                    //bundle.putString("merchantSlipData", printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
                     bundle.putString("RefundInfo", getRefundInfo(transactionResponse,batchNo,groupSN,amount,MID,TID,card))
                     if(transactionResponse.contentVal != null) {
                         bundle.putString("RefNo", transactionResponse.contentVal!!.getAsString(
@@ -248,12 +246,12 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
      * It prepares refund intent both for gib and normal refund and also print the slip
      */
     fun prepareRefundIntent(transactionResponse: TransactionResponse, mainActivity: MainActivity): Intent{
-        Log.d("TransactionResponse/Refund", "responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
+        Log.d("TransactionResponse/Refund", "responseCode:${transactionResponse.responseCode} ContentValues: ${transactionResponse.contentVal}")
         val printHelper = PrintService()
         val customerSlip = printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         val merchantSlip = printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
-        print(customerSlip, mainActivity)
-        print(merchantSlip, mainActivity)
+        //print(customerSlip, mainActivity)
+        //print(merchantSlip, mainActivity)
         val responseCode = transactionResponse.responseCode
         val intent = Intent()
         val bundle = Bundle()
@@ -267,12 +265,12 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
      * passes the response code to liveData intent which is observed in its fragment and finishes the mainActivity
      */
     fun prepareVoidIntent(transactionResponse: TransactionResponse, mainActivity: MainActivity): Intent {
-        Log.d("TransactionResponse/PostTxn", "responseCode:${transactionResponse.responseCode} ContentVals: ${transactionResponse.contentVal}")
+        Log.d("TransactionResponse/PostTxn", "responseCode:${transactionResponse.responseCode} ContentValues: ${transactionResponse.contentVal}")
         val printService = PrintService()
         val customerSlip = printService.getFormattedText(SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         val merchantSlip = printService.getFormattedText(SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
-        print(customerSlip,mainActivity)
-        print(merchantSlip,mainActivity)
+        //print(customerSlip,mainActivity)
+        //print(merchantSlip,mainActivity)
         val responseCode = transactionResponse.responseCode
         val intent = Intent()
         val bundle = Bundle()
@@ -287,5 +285,4 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         styledText.finishPrintingProcedure()
         styledText.print(PrinterService.getService(mainActivity.applicationContext))
     }
-
 }

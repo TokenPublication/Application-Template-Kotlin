@@ -1,12 +1,10 @@
-package com.tokeninc.sardis.application_template.ui.posttxn.batch
+package com.tokeninc.sardis.application_template.ui.postTxn.batch
 
 import android.content.Intent
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
@@ -16,7 +14,6 @@ import com.tokeninc.sardis.application_template.utils.printHelpers.BatchClosePri
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -82,12 +79,10 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
      * It also calls finishBatchClose functions in parallel in IO coroutine thread.
      */
     suspend fun batchRoutine(mainActivity: MainActivity, transactionViewModel: TransactionViewModel){
-
-        var downloadNumber: Int = 0
+        var downloadNumber = 0
         coroutineScope.launch(Dispatchers.Main){//firstly updating the UI as loading
             uiState.postValue(UIState.Loading)
         }
-
         coroutineScope.launch {
             for (i in 0..10) {
                 delay(300L)
@@ -103,8 +98,6 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
             }
         }.join()
     }
-
-
 
     /** It gets all transactions from transaction View Model, then makes up slip from printService.
      * Lastly insert this slip to database, to print it again in next day. If it inserts it successfully, ui is updating
@@ -125,5 +118,4 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
         val intent = batchRepository.prepareBatchIntent(batchCloseResponse,mainActivity,slip) //prepare intent and print slip
         liveIntent.postValue(intent)
     }
-
 }

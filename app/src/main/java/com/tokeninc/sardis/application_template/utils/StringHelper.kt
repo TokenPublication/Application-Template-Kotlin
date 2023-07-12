@@ -17,10 +17,6 @@ class StringHelper {
         return "$s1,$s2$currency"
     }
 
-    fun generateApprovalCode(BatchNo: String, TransactionNo: String, SaleID: String): String {
-        return BatchNo + TransactionNo + SaleID
-    }
-
     /**
      * It forms card number as **** **** **** 4321
      */
@@ -74,5 +70,4 @@ class StringHelper {
         val formatted = StringBuilder(masked)
         return formatted.toString()
     }
-
 }

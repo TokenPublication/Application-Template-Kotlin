@@ -56,5 +56,4 @@ object AppModule {
     @Provides
     @Singleton
     fun provideCardRepository(): CardRepository = CardRepository()
-
 }

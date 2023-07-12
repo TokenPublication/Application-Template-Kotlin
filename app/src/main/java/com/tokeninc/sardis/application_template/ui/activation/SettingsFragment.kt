@@ -22,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
 
-
 /**
  * This fragment is for Setting Configuration, it depends on Activation Database
  */
@@ -185,8 +184,6 @@ class SettingsFragment(private val mainActivity: MainActivity,
                 startActivation()
                 mainActivity.popFragment()
             })
-
         mainActivity.addFragment(tidMidFragment as Fragment)
-
     }
 }

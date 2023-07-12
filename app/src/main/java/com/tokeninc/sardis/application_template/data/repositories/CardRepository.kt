@@ -22,9 +22,7 @@ import javax.inject.Inject
 class CardRepository @Inject constructor() :
     CardServiceListener {
 
-
-
-    // these variables are both updating from here and mainActivity, they also observed from different classes therefore they are LiveData
+    // These variables are both updating from here and mainActivity, they also observed from different classes therefore they are LiveData
     private var transactionCode = MutableLiveData(0)
     fun getTransactionCode(): LiveData<Int> {
         return transactionCode
@@ -56,12 +54,11 @@ class CardRepository @Inject constructor() :
         return card
     }
 
-    //these variables should only for storing the operation's result and intents' responses, because they won't be used
+    //These variables should only for storing the operation's result and intents' responses, because they won't be used
     //for UI updating they don't have to be a LiveData
     var gibSale = false
     var timeOut = false
     var mainActivity: MainActivity? = null
-
 
     private lateinit var cardServiceBinding: CardServiceBinding
 
@@ -94,7 +91,7 @@ class CardRepository @Inject constructor() :
             obj.put("zeroAmount", 1)
             val isVoid = getTransactionCode().value == TransactionCode.VOID.type
             obj.put("emvProcessType", if (isVoid) EmvProcessType.READ_CARD.ordinal else EmvProcessType.FULL_EMV.ordinal)
-            obj.put("reqEMVData", "575A5F245F204F84959F12");
+            obj.put("reqEMVData", "575A5F245F204F84959F12")
             obj.put("showAmount", if (isVoid) 0 else 1)
             if (gibSale)
                 obj.put("showCardScreen", 0)
@@ -118,7 +115,6 @@ class CardRepository @Inject constructor() :
      * It will be observed where this function is called, then it will finish the mainActivity with respect to resultCode
      * After reading card operations are done, unbind the cardService.
      */
-
     override fun onCardDataReceived(cardData: String?) {
         try {
             val card: ICCCard = Gson().fromJson(cardData, ICCCard::class.java) //get the ICC cardModel from cardData

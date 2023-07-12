@@ -18,7 +18,7 @@ import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.ui.examples.viewmodels.ExampleViewModel
+import com.tokeninc.sardis.application_template.ui.examples.viewModels.ExampleViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
 
@@ -26,17 +26,15 @@ import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
  * This is the class for showing how to simulate examples on this device to developers
  * This package can be deleted by the developer.
  */
-class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListener {
+class ExampleActivity: TimeOutActivity(), InfoDialogListener,CardServiceListener {
 
     private val timeOut = 60
     private var qrAmount = 100
     private var qrString = "QR Code Test"
     private var menuItems = mutableListOf<IListMenuItem>()
     private val viewModel = ExampleViewModel()
-    lateinit var cardServiceBinding: CardServiceBinding
+    private lateinit var cardServiceBinding: CardServiceBinding
 
-
-    //bi de eksikleri tamamlamaya çalış
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_example)
@@ -53,8 +51,7 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
         styledText.print(PrinterService.getService(applicationContext))
     }
 
-
-    fun addFragment(fragment: Fragment)
+    private fun addFragment(fragment: Fragment)
     {
         val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
         ft.replace(R.id.container, fragment)
@@ -70,7 +67,6 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
         }
     }
 
-
     override fun onBackPressed() {
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStack()
@@ -79,26 +75,25 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
         }
     }
 
-
     private fun prepareData() {
         val subList1 = mutableListOf<IListMenuItem>()
-        subList1.add( MenuItem( "com.tokeninc.sardis.application_template.ui.MenuItem 1", { menuItem: IListMenuItem? ->
+        subList1.add(MenuItem( "MenuItem 1", {
             Toast.makeText(this, "Sub Menu 1", Toast.LENGTH_LONG).show() } ))
         subList1.add(
             MenuItem(
-            "com.tokeninc.sardis.application_template.ui.MenuItem 2",
-            { menuItem ->
-                Toast.makeText(this, "Sub Menu 2", Toast.LENGTH_LONG).show()
-            },
-        )
+            "MenuItem 2",
+                {
+                    Toast.makeText(this, "Sub Menu 2", Toast.LENGTH_LONG).show()
+                },
+            )
         )
         subList1.add(
             MenuItem(
-            "com.tokeninc.sardis.application_template.ui.MenuItem 3",
-            { menuItem ->
-                Toast.makeText(this, "Sub Menu 3", Toast.LENGTH_LONG).show()
-            },
-        )
+            "MenuItem 3",
+                {
+                    Toast.makeText(this, "Sub Menu 3", Toast.LENGTH_LONG).show()
+                },
+            )
         )
         menuItems.add(MenuItem("Sub Menu", subList1, null) )
 
@@ -107,17 +102,17 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
             customInputListFragment.exampleActivity = this
             addFragment(customInputListFragment)
         }))
-        menuItems.add(MenuItem("Info Dialog", { menuItem ->
+        menuItems.add(MenuItem("Info Dialog", {
             val infoDialogFragment = InfoDialogFragment()
             infoDialogFragment.exampleActivity = this
             addFragment(infoDialogFragment)
         }))
-        menuItems.add(MenuItem("Confirmation Dialog", { menuItem ->
+        menuItems.add(MenuItem("Confirmation Dialog", {
             val confirmationDialogFragment = ConfirmationDialogFragment()
             confirmationDialogFragment.exampleActivity = this
-            addFragment(confirmationDialogFragment) //burada stacke ekliyo içerde replace yapıyo
+            addFragment(confirmationDialogFragment)
         }))
-        menuItems.add(MenuItem("Device Info",{ menuItem ->
+        menuItems.add(MenuItem("Device Info",{
             /*    [Device Info](https://github.com/TokenPublication/DeviceInfoClientApp)    */
             val deviceInfo = DeviceInfo(applicationContext)
             deviceInfo.getFields(
@@ -150,7 +145,7 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
                 DeviceInfo.Field.OPERATION_MODE
             )
         }))
-        menuItems.add(MenuItem("Num Pad", { menuItem ->
+        menuItems.add(MenuItem("Num Pad", {
             val dialog = NumPadDialog.newInstance(object : NumPadListener {
                 override fun enter(pin: String) {}
                 override fun onCanceled() {
@@ -159,7 +154,7 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
             }, "Please enter PIN", 8)
             dialog.show(supportFragmentManager, "Num Pad")
         }))
-        menuItems.add(MenuItem("Show QR", { menuItem ->
+        menuItems.add(MenuItem("Show QR", {
             val dialog = showInfoDialog(InfoDialog.InfoType.Progress, "QR Loading", true)
             // For detailed usage; SaleActivity
             cardServiceBinding.showQR(
@@ -167,7 +162,7 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
                 StringHelper().getAmount(qrAmount),
                 qrString
             ) // Shows QR on the back screen
-            dialog!!.setQr(qrString, "WAITING FOR THE QR CODE") // Shows the same QR on Info Dialog
+            dialog.setQr(qrString, "WAITING FOR THE QR CODE") // Shows the same QR on Info Dialog
         }))
         val subListPrint = mutableListOf<IListMenuItem>()
         subListPrint.add(MenuItem("Print Load Success", {
@@ -176,32 +171,7 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
         subListPrint.add(MenuItem("Print Load Error", {
             print(PrintHelper().printError()) // Message print: Load Error
         }))
-        //subListPrint.add(com.tokeninc.sardis.application_template.ui.MenuItem("Print Bitmap", { }))
         menuItems.add(MenuItem("Print Functions", subListPrint, null))
-    }
-
-
-
-
-
-
-    /**
-     * Shows a dialog to the user which asks for a confirmation.
-     * Dialog will be dismissed automatically when user taps on to confirm/cancel button.
-     * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, String, InfoDialog.InfoDialogButtons, int, InfoDialogListener)}
-     */
-    private fun showConfirmationDialog(
-        type: InfoDialog.InfoType,
-        title: String,
-        info: String,
-        buttons: InfoDialog.InfoDialogButtons,
-        arg: Int,
-        listener: InfoDialogListener
-    ):InfoDialog? {
-        //created a dialog with InfoDialog newInstance method
-        val dialog = InfoDialog.newInstance(type, title, info, buttons, arg, listener)
-        dialog.show(supportFragmentManager, "")
-        return dialog
     }
 
     /**
@@ -213,12 +183,11 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
         type: InfoDialog.InfoType,
         text: String,
         isCancelable: Boolean
-    ): InfoDialog? {
+    ): InfoDialog {
         val fragment = InfoDialog.newInstance(type, text, isCancelable)
         fragment.show(supportFragmentManager, "")
         return fragment as InfoDialog
     }
-
 
     override fun getTimeOutSec() = timeOut
 
@@ -235,20 +204,15 @@ class ExampleActivity(): TimeOutActivity(), InfoDialogListener,CardServiceListen
     }
 
     override fun onCardServiceConnected() {
-
     }
 
     override fun onCardDataReceived(p0: String?) {
-
     }
 
     override fun onPinReceived(p0: String?) {
-
     }
 
     override fun onICCTakeOut() {
-
     }
-
 
 }

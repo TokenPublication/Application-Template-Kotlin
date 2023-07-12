@@ -17,7 +17,7 @@ import com.tokeninc.sardis.application_template.data.entities.responses.Transact
 import com.tokeninc.sardis.application_template.data.repositories.TransactionRepository
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
-import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.utils.ContentValHelper
 import com.tokeninc.sardis.application_template.utils.printHelpers.DateUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -81,10 +81,8 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
 
     //these variables should only for storing the operation's result and intents' responses.
     // they don't have to be a LiveData because they won't be used for UI updating
-
     lateinit var refNo: String
     var extraContents : ContentValues? = null
-
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
@@ -139,7 +137,6 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         }.join() //wait that job to finish to return it
     }
 
-
     /** Add values to content with respect to parameters, then if it is Void update transaction as changing isVoid else ->
      * insert that contents to Transaction table and update Group Serial Number of batch table.
      * Update dialog with success message if database operations result without an error.
@@ -189,6 +186,4 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             liveIntent.postValue(intent)
         }
     }
-
 }
-

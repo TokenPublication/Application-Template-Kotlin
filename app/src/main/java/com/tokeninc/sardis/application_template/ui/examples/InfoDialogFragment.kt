@@ -9,7 +9,7 @@ import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialog.InfoType
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.ui.examples.viewmodels.InfoDialogViewModel
+import com.tokeninc.sardis.application_template.ui.examples.viewModels.InfoDialogViewModel
 
 /** It can be deleted
  * This fragment includes Info Dialog methods for example activity
@@ -21,9 +21,9 @@ class InfoDialogFragment : Fragment(R.layout.fragment_info_dialog) {
 
     class InfoDialogItem: IListMenuItem {
 
-        lateinit var mType: InfoType
-        lateinit var mText: String
-        lateinit var mListener: MenuItemClickListener<*>
+        var mType: InfoType
+        var mText: String
+        var mListener: MenuItemClickListener<*>
         var mAuthenticator: IAuthenticator? = null
 
         constructor(type: InfoType, text: String, listener: MenuItemClickListener<*>, authenticator: IAuthenticator?) {
@@ -35,19 +35,15 @@ class InfoDialogFragment : Fragment(R.layout.fragment_info_dialog) {
         override fun getName(): String {
             return mText
         }
-
         override fun getSubMenuItemList(): MutableList<IListMenuItem>? {
             return null
         }
-
         override fun getClickListener(): MenuItemClickListener<*> {
             return mListener
         }
-
         override fun getAuthenticator(): IAuthenticator? {
             return mAuthenticator
         }
-
     }
 
     private var menuItems = mutableListOf<IListMenuItem>()
@@ -58,7 +54,6 @@ class InfoDialogFragment : Fragment(R.layout.fragment_info_dialog) {
         viewModel.list = menuItems
         viewModel.replaceFragment(exampleActivity!!)
     }
-
 
     private fun prepareData() {
         val listener = MenuItemClickListener<InfoDialogItem>{
@@ -88,5 +83,4 @@ class InfoDialogFragment : Fragment(R.layout.fragment_info_dialog) {
         fragment.show(parentFragmentManager, "")
         return fragment
     }
-
 }

@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.ui.posttxn.refund
+package com.tokeninc.sardis.application_template.ui.postTxn.refund
 
 import com.tokeninc.sardis.application_template.ui.MenuItem
 import android.annotation.SuppressLint
@@ -20,13 +20,13 @@ import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.databinding.FragmentRefundBinding
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.databinding.FragmentRefundBinding
 import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
-import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -42,7 +42,6 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
                      private val transactionViewModel: TransactionViewModel, private val batchViewModel: BatchViewModel) : Fragment() {
     private var _binding: FragmentRefundBinding? = null
     private val binding get() = _binding!!
-
 
     private lateinit var card: ICCCard
     private var extraContent = ContentValues()  //at the end of every Refund we finish mainActivity so no need to delete it at everytime
@@ -160,7 +159,6 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
         )
        mainActivity.addFragment(instFragment as Fragment)
     }
-
 
     /**
      * It adds values to stringExtraContent to use it later. Then calls readCard operation.
@@ -358,5 +356,4 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
         )
         inputList.add(inputTranDate)
     }
-
 }

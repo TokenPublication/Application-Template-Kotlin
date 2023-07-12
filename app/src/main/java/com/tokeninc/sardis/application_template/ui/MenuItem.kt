@@ -53,5 +53,4 @@ class MenuItem @JvmOverloads constructor(
     override fun getAuthenticator(): IAuthenticator? {
         return authenticator
     }
-
 }

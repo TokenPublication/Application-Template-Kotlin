@@ -1,7 +1,5 @@
 package com.tokeninc.sardis.application_template.ui.activation
 
-import android.content.Intent
-import android.provider.Contacts.Intents.UI
 import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
@@ -86,7 +84,6 @@ class ActivationViewModel @Inject constructor(private val activationRepository: 
     /** It runs functions in parallel while ui updating dynamically in main thread
      * Additionally, in IO coroutine thread make setEMVConfiguration method
      */
-
     suspend fun setupRoutine(mainActivity: MainActivity) {
         coroutineScope.launch {
             updateUIState(UIState.Starting)
@@ -103,5 +100,4 @@ class ActivationViewModel @Inject constructor(private val activationRepository: 
             uiState.postValue(UIState.Finished)
         }.join() //wait that job to finish to return it
     }
-
 }

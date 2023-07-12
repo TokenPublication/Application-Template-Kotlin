@@ -5,8 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.tokeninc.sardis.application_template.data.database.DatabaseInfo
 
-
-@Entity(tableName = DatabaseInfo.ACTTABLE)
+@Entity(tableName = DatabaseInfo.ACTIVATION_TABLE)
 data class Activation(
     @ColumnInfo(name = ActivationCols.ColTerminalId)
     val ColTerminalId: String?,
@@ -17,6 +16,4 @@ data class Activation(
     val ColIPNo: String = "195.87.189.169",
     @ColumnInfo(name = ActivationCols.ColPortNo)
     val ColPortNo: String = "1000",
-) {
-
-}
+)
