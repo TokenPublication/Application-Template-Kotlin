@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.ui.examples.viewmodels
+package com.tokeninc.sardis.application_template.ui.examples.viewModels
 
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
@@ -15,6 +15,4 @@ class ExampleViewModel:ViewModel() {
         val fragment = ListMenuFragment.newInstance(list, exampleActivity.getString(R.string.examples), false, R.drawable.token_logo)
         exampleActivity.replaceFragment(fragment as Fragment)
     }
-
-
 }

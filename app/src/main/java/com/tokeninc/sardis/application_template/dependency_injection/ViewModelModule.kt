@@ -5,7 +5,7 @@ import com.tokeninc.sardis.application_template.data.repositories.BatchRepositor
 import com.tokeninc.sardis.application_template.data.repositories.CardRepository
 import com.tokeninc.sardis.application_template.data.repositories.TransactionRepository
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
-import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import dagger.Module

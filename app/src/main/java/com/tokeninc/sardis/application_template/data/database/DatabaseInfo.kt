@@ -5,9 +5,9 @@ package com.tokeninc.sardis.application_template.data.database
  */
 class DatabaseInfo {
     companion object {
-        const val DATABASENAME: String = "APP_TEMP_MVVM"
-        const val ACTTABLE: String = "ACTIVATION"
-        const val TRANSACTIONTABLE: String = "TRANSACTIONS"
-        const val BATCHTABLE: String = "BATCH"
+        const val DATABASE: String = "APP_TEMP_MVVM"
+        const val ACTIVATION_TABLE: String = "ACTIVATION"
+        const val TRANSACTION_TABLE: String = "TRANSACTIONS"
+        const val BATCH_TABLE: String = "BATCH"
     }
 }

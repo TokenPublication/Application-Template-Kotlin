@@ -29,9 +29,9 @@ import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.ui.*
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.activation.SettingsFragment
-import com.tokeninc.sardis.application_template.ui.posttxn.PostTxnFragment
-import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
-import com.tokeninc.sardis.application_template.ui.posttxn.refund.RefundFragment
+import com.tokeninc.sardis.application_template.ui.postTxn.PostTxnFragment
+import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.postTxn.refund.RefundFragment
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.SaleFragment
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
@@ -43,7 +43,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
-
 
 /** This is the Main Activity class,
  * all operations are run here because this application is designed as a single-activity architecture
@@ -87,13 +86,13 @@ class MainActivity : TimeOutActivity() {
     /**
     Firstly, added TR1000 and TR400 configurations to build.gradle file. After that,
     related to Build Variant (400TRDebug or 1000TRDebug) the manifest file created with apk
-    and the appname in manifest file will be 1000TR or 400TR.
+    and the app name in manifest file will be 1000TR or 400TR.
      */
     private fun buildConfigs(){
-        if (BuildConfig.FLAVOR.equals("TR1000")) {
+        if (BuildConfig.FLAVOR == "TR1000") {
             Log.d("TR1000 APP","Application Template for 1000TR")
         }
-        if(BuildConfig.FLAVOR.equals("TR400")) {
+        if(BuildConfig.FLAVOR == "TR400") {
             Log.d("TR400 APP","Application Template for 400TR")
         }
     }
@@ -122,12 +121,10 @@ class MainActivity : TimeOutActivity() {
         triggerFragment = TriggerFragment(this)
         refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel)
         postTxnFragment = PostTxnFragment(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel)
-        //cardServiceBinding = CardServiceBinding(this, this)
         observeTIDMID()
 
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-
 
         actionChanged(intent.action)
     }
@@ -150,7 +147,6 @@ class MainActivity : TimeOutActivity() {
                 }else{ //else implementing batch closing and finish that activity
                     postTxnFragment.startBatchClose()
                 }
-
             }
             getString(R.string.Parameter_Action) ->  replaceFragment(triggerFragment)
             getString(R.string.Refund_Action) ->  {
@@ -174,11 +170,11 @@ class MainActivity : TimeOutActivity() {
         cardViewModel.setAmount(amount)
         saleFragment.setAmount(amount)
         //controlling whether the request coming from gib
-        val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.GIB.name)
+        val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.GIB.name
         val bundle = intent.extras
         val cardData: String? = bundle?.getString("CardData")
         // when sale operation is called from pgw which has multi bank and app temp is the only issuer of this card
-        if (!isGIB && cardData != null && !cardData.equals("CardData") && !cardData.equals(" ")) {
+        if (!isGIB && cardData != null && cardData != "CardData" && cardData != " ") {
             replaceFragment(saleFragment)
             saleFragment.doSale(cardData)
         }
@@ -238,7 +234,7 @@ class MainActivity : TimeOutActivity() {
     }
 
     /**
-     * Whenever mainActivity is destoryed, it calls the onDestroy method of cardViewModel and CardRepository from there.
+     * Whenever mainActivity is destroyed, it calls the onDestroy method of cardViewModel and CardRepository from there.
      * It is needed because the lifecycle of CardRepository is different than the mainActivity, it couldn't finish with the mainActivity,
      * thus some variable's values are preserved and that gives an error in the following operations.
      */
@@ -253,7 +249,6 @@ class MainActivity : TimeOutActivity() {
      * else -> it transforms refundInfo to JSON object to parse it easily. Then get ReferenceNo and BatchNo
      * Then it compares intent batch number with current Batch Number from database, if they are equal then start Void operation
      * else start refund operation. */
-
     private fun refundActionReceived(){
         if (intent.extras == null || intent.extras!!.getString("RefundInfo") == null){
             callbackMessage(ResponseCode.ERROR)
@@ -349,7 +344,6 @@ class MainActivity : TimeOutActivity() {
     /**
      * This pops the fragment from fragment stack
      */
-
     fun popFragment(){
         supportFragmentManager.popBackStack()
     }
@@ -456,24 +450,28 @@ class MainActivity : TimeOutActivity() {
         val bundle = Bundle()
         bundle.putInt("ResponseCode", responseCode.ordinal)
         intent.putExtras(bundle)
-        if (responseCode == ResponseCode.OFFLINE_DECLINE){
-            val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning, "Card Numbers are Mismatching", true)
-            Handler(Looper.getMainLooper()).postDelayed({
-                infoDialog!!.dismiss()
-                setResult(intent)
-            }, 2000)
-        }
-        else if (responseCode == ResponseCode.CANCELED){
-            val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning, "İşlem İptal Edildi", false)
-            if (cardViewModel.getTimeOut()){
-                infoDialog?.update(InfoDialog.InfoType.Warning,"İşlem Zaman Aşımına Uğradı")
+
+        when (responseCode){
+            ResponseCode.OFFLINE_DECLINE -> {
+                val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning, "Card Numbers are Mismatching", true)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    infoDialog!!.dismiss()
+                    setResult(intent)
+                }, 2000)
             }
-            Handler(Looper.getMainLooper()).postDelayed({
-                infoDialog!!.dismiss()
-                setResult(intent)
-            }, 2000)
-        } else{
+            ResponseCode.CANCELED -> {
+                val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning, "İşlem İptal Edildi", false)
+                if (cardViewModel.getTimeOut()){
+                    infoDialog?.update(InfoDialog.InfoType.Warning,"İşlem Zaman Aşımına Uğradı")
+                }
+                Handler(Looper.getMainLooper()).postDelayed({
+                    infoDialog!!.dismiss()
+                    setResult(intent)
+                }, 2000)
+            }
+            else -> {
             setResult(intent)
+            }
         }
     }
 
@@ -487,7 +485,6 @@ class MainActivity : TimeOutActivity() {
         styledText.print(PrinterService.getService(applicationContext))
     }
 
-    //TODO redisgn them
     //This is for holding MID and TID, Because this values are LiveData,
     // instead of writing this functions everywhere it is used call it from mainActivity.
     var currentMID: String? = ""

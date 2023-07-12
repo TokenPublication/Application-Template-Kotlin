@@ -99,5 +99,4 @@ class PrintHelper: BasePrintHelper() {
         styledText.newLine()
         return styledText.toString()
     }
-
 }

@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.tokeninc.sardis.application_template.data.database.DatabaseInfo
 
-@Entity(tableName = DatabaseInfo.TRANSACTIONTABLE,
+@Entity(tableName = DatabaseInfo.TRANSACTION_TABLE,
 indices = [Index(value = [TransactionCols.Col_GUP_SN],unique = true)])
 data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_UUID)
@@ -34,8 +34,8 @@ data class Transaction(
     var Col_ExpDate: String?,
     @ColumnInfo(name = TransactionCols.Col_Track2)
     var Col_Track2: String?,
-    @ColumnInfo(name = TransactionCols.Col_CustName)
-    var Col_CustName: String?,
+    @ColumnInfo(name = TransactionCols.Col_CustomerName)
+    var Col_CustomerName: String?,
     @ColumnInfo(name = TransactionCols.Col_IsVoid)
     var Col_IsVoid: Int,
     @ColumnInfo(name = TransactionCols.Col_InstCnt)
@@ -94,5 +94,4 @@ data class Transaction(
     var Col_Ext_Ref: Int = 0,
     @ColumnInfo(name = TransactionCols.Col_Ext_RefundDateTime)
     var Col_Ext_RefundDateTime: String
-){
-}
+)

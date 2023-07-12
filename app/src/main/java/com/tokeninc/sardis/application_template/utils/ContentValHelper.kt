@@ -4,9 +4,7 @@ import android.content.ContentValues
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
 
-
 class ContentValHelper {
-
     fun getContentVal(transaction: Transaction): ContentValues{
         val contentVal = ContentValues()
         contentVal.put(TransactionCols.Col_UUID,transaction.Col_UUID)
@@ -21,7 +19,7 @@ class ContentValHelper {
         contentVal.put(TransactionCols.Col_Amount2,transaction.Col_Amount2)
         contentVal.put(TransactionCols.Col_ExpDate,transaction.Col_ExpDate)
         contentVal.put(TransactionCols.Col_Track2,transaction.Col_Track2)
-        contentVal.put(TransactionCols.Col_CustName,transaction.Col_CustName)
+        contentVal.put(TransactionCols.Col_CustomerName,transaction.Col_CustomerName)
         contentVal.put(TransactionCols.Col_IsVoid,transaction.Col_IsVoid)
         contentVal.put(TransactionCols.Col_InstCnt,transaction.Col_InstCnt)
         contentVal.put(TransactionCols.Col_InstAmount,transaction.Col_InstAmount)
@@ -67,7 +65,7 @@ class ContentValHelper {
         val Col_Amount2 = contentVal.getAsString(TransactionCols.Col_Amount2).toInt()
         val Col_ExpDate = contentVal.getAsString(TransactionCols.Col_ExpDate)
         val Col_Track2 = contentVal.getAsString(TransactionCols.Col_Track2)
-        val Col_CustName =  contentVal.getAsString(TransactionCols.Col_CustName)
+        val Col_CustName =  contentVal.getAsString(TransactionCols.Col_CustomerName)
         val Col_IsVoid = contentVal.getAsString(TransactionCols.Col_IsVoid).toInt()
         val Col_InstCnt = contentVal.getAsString(TransactionCols.Col_InstCnt).toInt()
         val Col_InstAmount = contentVal.getAsString(TransactionCols.Col_InstAmount).toInt()
@@ -104,6 +102,4 @@ class ContentValHelper {
             Col_KeySequenceNumber, Col_isPinByPass, Col_isOffline, Col_AC, Col_CID, Col_ATC, Col_TVR, Col_TSI,
             Col_AIP, Col_CVM, Col_AID2, Col_UN, Col_IAD, Col_SID, Col_Ext_Conf, Col_Ext_Ref, Col_Ext_RefundDateTime)
     }
-
-
 }

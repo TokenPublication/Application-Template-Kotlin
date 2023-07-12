@@ -17,5 +17,4 @@ class DateUtil {
         val calDate: Date = Calendar.getInstance().time
         return SimpleDateFormat(format, Locale.getDefault()).format(calDate)
     }
-
 }

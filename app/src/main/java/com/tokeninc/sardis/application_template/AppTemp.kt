@@ -4,9 +4,9 @@ import android.app.Application
 import com.tokeninc.deviceinfo.DeviceInfo
 import dagger.hilt.android.HiltAndroidApp
 
-//Because Hilt needs to know application, Application should be annotated with @HiltAndroidApp
+//Hilt needs to know application, Application should be annotated with @HiltAndroidApp
 @HiltAndroidApp
-public class AppTemp constructor(): Application() {
+class AppTemp: Application() {
     private var currentDeviceMode = DeviceInfo.PosModeEnum.VUK507.name
     private var currentFiscalID: String? = null
     private var currentCardRedirection = DeviceInfo.CardRedirect.NOT_ASSIGNED.name
@@ -16,11 +16,11 @@ public class AppTemp constructor(): Application() {
         startDeviceInfo()
     }
 
-    fun getCurrentDeviceMode(): String? {
+    fun getCurrentDeviceMode(): String {
         return currentDeviceMode
     }
 
-    fun setCurrentDeviceMode(currentDeviceMode: String) {
+    private fun setCurrentDeviceMode(currentDeviceMode: String) {
         this.currentDeviceMode = currentDeviceMode
     }
 
@@ -28,15 +28,15 @@ public class AppTemp constructor(): Application() {
         return currentFiscalID
     }
 
-    fun setCurrentFiscalID(currentFiscalID: String?) {
+    private fun setCurrentFiscalID(currentFiscalID: String?) {
         this.currentFiscalID = currentFiscalID
     }
 
-    fun getCurrentCardRedirection(): String? {
+    fun getCurrentCardRedirection(): String {
         return currentCardRedirection
     }
 
-    fun setCurrentCardRedirection(currentCardRedirection: String) {
+    private fun setCurrentCardRedirection(currentCardRedirection: String) {
         this.currentCardRedirection = currentCardRedirection
     }
 

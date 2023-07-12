@@ -9,7 +9,6 @@ import com.tokeninc.sardis.application_template.R
  * This class includes styledText methods.
  */
 open class BasePrintHelper {
-
     fun addText(styledText: StyledString, text: String?, alignment: PrinterDefinitions.Alignment?) {
         addText(styledText, text, alignment, 11, 0f)
     }
@@ -54,5 +53,4 @@ open class BasePrintHelper {
         styledText.setFontFace(PrinterDefinitions.Font_E.SourceSansPro)
         styledText.addTextToLine(mainActivity.currentTID, PrinterDefinitions.Alignment.Right)
     }
-
 }

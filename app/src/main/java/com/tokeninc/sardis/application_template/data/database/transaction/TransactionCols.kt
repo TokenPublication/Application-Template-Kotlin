@@ -14,7 +14,7 @@ class TransactionCols {
         const val Col_Amount2 = "Col_Amount2"
         const val Col_ExpDate = "Col_ExpDate"
         const val Col_Track2 = "Col_Track2"
-        const val Col_CustName = "Col_CustName"
+        const val Col_CustomerName = "Col_CustomerName"
         const val Col_IsVoid = "Col_IsVoid"
         const val Col_InstCnt = "Col_InstCnt"
         const val Col_InstAmount = "Col_InstAmount"
@@ -46,12 +46,3 @@ class TransactionCols {
         const val Col_Ext_RefundDateTime = "Col_Ext_RefundDateTime"
     }
 }
-
-
-
-
-
-
-
-
-

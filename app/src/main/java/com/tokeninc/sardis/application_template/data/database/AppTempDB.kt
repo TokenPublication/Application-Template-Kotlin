@@ -20,7 +20,6 @@ abstract class AppTempDB: RoomDatabase() {
     abstract val activationDao: ActivationDao
     abstract val batchDao: BatchDao
     abstract val transactionDao: TransactionDao
-
     companion object{
         @Volatile //this makes this field visible to other threads
         private var firstInstance: AppTempDB? = null
@@ -31,20 +30,20 @@ abstract class AppTempDB: RoomDatabase() {
                 if (instance == null) {
                     instance = Room.databaseBuilder(
                         context.applicationContext,
-                        AppTempDB::class.java, DatabaseInfo.DATABASENAME
+                        AppTempDB::class.java, DatabaseInfo.DATABASE
                     )
                         .allowMainThreadQueries()
-                        .addCallback(object : RoomDatabase.Callback() {
+                        .addCallback(object : Callback() {
                             // it only enters this at first when database is created
                             override fun onCreate(db: SupportSQLiteDatabase) {
                                 Log.d("FIRST INSTANCE", "HEY")
                                 super.onCreate(db)
                                     coroutineScope.launch{
                                         val firstActivation = Activation(null, null)
-                                        val instance = getInstance(context)
-                                        instance.activationDao.initActivation(firstActivation)
+                                        val dbInstance = getInstance(context)
+                                        dbInstance.activationDao.initActivation(firstActivation)
                                         val firstBatch = Batch(null)
-                                        instance.batchDao.initBatch(firstBatch)
+                                        dbInstance.batchDao.initBatch(firstBatch)
                                         Log.d("FIRST INSTANCE","created")
                                     }
                             }

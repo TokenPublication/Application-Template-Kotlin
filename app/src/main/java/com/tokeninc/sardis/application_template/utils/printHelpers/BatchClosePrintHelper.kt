@@ -12,8 +12,6 @@ import com.tokeninc.sardis.application_template.utils.StringHelper
  * This class constructs Batch Close slip.
  */
 class BatchClosePrintHelper(): BasePrintHelper() {
-
-
     fun batchText(batch_no: String, transactions: List<Transaction?>, mainActivity: MainActivity, isCopy: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
@@ -80,5 +78,4 @@ class BatchClosePrintHelper(): BasePrintHelper() {
         styledText.addSpace(50)
         return styledText.toString()
     }
-
 }

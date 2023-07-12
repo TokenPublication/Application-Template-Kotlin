@@ -7,7 +7,7 @@ import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputValidator
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.ui.examples.viewmodels.CustomInputViewModel
+import com.tokeninc.sardis.application_template.ui.examples.viewModels.CustomInputViewModel
 
 /** It can be deleted
  * This fragment includes Custom Input List methods for example activity
@@ -31,7 +31,6 @@ class CustomInputListFragment : Fragment(R.layout.fragment_custom_input_list) {
         val customInputFormat = CustomInputFormat("Text", EditTextInputType.Text, 8, null, null)
         customInputFormat.text = "00000016"
         inputList.add(customInputFormat)
-
         inputList.add(CustomInputFormat("Card Number", EditTextInputType.CreditCardNumber,null, "Invalid card number!", validator))
         inputList.add(CustomInputFormat("Expire Date", EditTextInputType.ExpiryDate,null, null, null))
         inputList.add(CustomInputFormat("CVV", EditTextInputType.CVV, null,null, null))
@@ -45,6 +44,4 @@ class CustomInputListFragment : Fragment(R.layout.fragment_custom_input_list) {
         inputList.add(CustomInputFormat("New Text", EditTextInputType.Text, null, "Max text size 10", validator2))
         inputList[1].text = "1234"
     }
-
-
 }

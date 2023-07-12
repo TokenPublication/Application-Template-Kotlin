@@ -22,11 +22,7 @@ import java.util.Locale
  * This class forms slips with respect to type of Transaction, it can arrange slip for
  * Sale, Void and all types of refund.
  */
-
-
 class PrintService:BasePrintHelper() {
-
-
     fun getFormattedText(slipType: SlipType, contentValues: ContentValues, extraContentValues: ContentValues?, onlineTransactionResponse: OnlineTransactionResponse,
                          transactionCode: Int, context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
         val styledText = StyledString()
@@ -216,6 +212,4 @@ class PrintService:BasePrintHelper() {
         styledText.addSpace(50)
         return styledText.toString()
     }
-
-
 }

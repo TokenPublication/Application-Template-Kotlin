@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.ui.posttxn.void_operation
+package com.tokeninc.sardis.application_template.ui.postTxn.void_operation
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import com.tokeninc.sardis.application_template.databinding.ListTransactionBinding
-import com.tokeninc.sardis.application_template.ui.posttxn.PostTxnFragment
+import com.tokeninc.sardis.application_template.ui.postTxn.PostTxnFragment
 
 /**
  * This is the Fragment that holds all the Void transactions in recyclerView, transactions one by one are set in TransactionAdapter
@@ -39,5 +39,4 @@ class TransactionList(private var cardNumber: String?, private val viewModel: Tr
         }
         return binding.root
     }
-
 }

@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.ui.posttxn
+package com.tokeninc.sardis.application_template.ui.postTxn
 
 import android.content.Intent
 import android.os.Bundle
@@ -23,9 +23,9 @@ import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.ui.MenuItem
 import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
-import com.tokeninc.sardis.application_template.ui.posttxn.batch.BatchViewModel
-import com.tokeninc.sardis.application_template.ui.posttxn.refund.RefundFragment
-import com.tokeninc.sardis.application_template.ui.posttxn.void_operation.TransactionList
+import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.postTxn.refund.RefundFragment
+import com.tokeninc.sardis.application_template.ui.postTxn.void_operation.TransactionList
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import com.tokeninc.sardis.application_template.utils.ContentValHelper

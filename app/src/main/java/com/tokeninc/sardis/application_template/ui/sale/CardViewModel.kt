@@ -38,5 +38,5 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     }
 
     fun readCard() { cardRepository.readCard() }
-
 }
+

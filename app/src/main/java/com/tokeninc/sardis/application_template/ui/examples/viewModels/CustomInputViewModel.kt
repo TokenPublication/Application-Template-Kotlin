@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.ui.examples.viewmodels
+package com.tokeninc.sardis.application_template.ui.examples.viewModels
 
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
@@ -14,5 +14,4 @@ class CustomInputViewModel:ViewModel() {
         val fragment = InputListFragment.newInstance(list)
         exampleActivity.replaceFragment(fragment as Fragment)
     }
-
 }
