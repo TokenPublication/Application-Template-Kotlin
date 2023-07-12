@@ -1,19 +1,24 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-android'
     id 'kotlin-kapt'
     id 'org.jetbrains.dokka'
+    id 'dagger.hilt.android.plugin'
+    id 'com.google.dagger.hilt.android'
 }
 kapt {
     correctErrorTypes = true
 }
 
 android {
-    compileSdk 32
+    namespace 'com.tokeninc.sardis.application_template'
+    compileSdk 33
     // I added this for binding
     buildFeatures {
         viewBinding = true
         dataBinding true
+        aidl true
     }
     packagingOptions {
         exclude 'META-INF/retrofit.kotlin_module'
@@ -21,11 +26,12 @@ android {
     defaultConfig {
         applicationId "com.tokeninc.sardis.application_template"
         minSdk 28
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -35,40 +41,62 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
+    }
+
+    flavorDimensions "default"
+    productFlavors{
+        TR400{
+            manifestPlaceholders = [
+                    APP_LABEL:"Application Template",
+                    MODEL_NAME:"400TR",
+                    APP_NAME:"BNK_000_TMPLT"
+            ]
+        }
+        TR1000{
+            manifestPlaceholders = [
+                    APP_LABEL:"Application Template",
+                    MODEL_NAME:"400TR",
+                    APP_NAME:"BNK_000_TMPLT"
+            ]
+        }
     }
 }
 
 
+configurations {
+    TR400
+    TR1000
+}
+
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'androidx.appcompat:appcompat:1.5.1'
-    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'androidx.core:core-ktx:1.10.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation fileTree(dir: 'libs', include: ['*.aar'])
 
-    //barcode scanner
     implementation("com.google.zxing:core:3.4.0")
 
-
     //lifecycle
-    def lifecycle_version = "2.5.1"
+    def lifecycle_version = "2.6.1"
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version") // ViewModel
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version")
     implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version")
+    //noinspection LifecycleAnnotationProcessorWithJava8
     kapt("androidx.lifecycle:lifecycle-compiler:$lifecycle_version")
 
-    def room_version = "2.4.3"
-    implementation("androidx.room:room-runtime:$room_version")
+    def room_version = "2.5.1"
+    implementation("androidx.room:room-runtime:2.5.1")
     annotationProcessor("androidx.room:room-compiler:$room_version")
     // To use Kotlin annotation processing tool (kapt)
     kapt("androidx.room:room-compiler:$room_version")
@@ -77,24 +105,39 @@ dependencies {
     implementation("androidx.concurrent:concurrent-futures-ktx:1.1.0")
 
     // Kotlin Extensions and Coroutines support for Room
-    implementation "androidx.room:room-ktx:2.4.3"
+    implementation "androidx.room:room-ktx:2.5.1"
 
     // Coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
 
     //lifecycle
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation "androidx.lifecycle:lifecycle-common-java8:2.5.1"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"
+    implementation "androidx.lifecycle:lifecycle-common-java8:2.6.1"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1"
 
     // Coroutine Lifecycle Scopes
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.1"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.1"
 
     //apache for string utils
     implementation 'org.apache.commons:commons-text:1.9'
 
+    //dagger-hilt
+    implementation("com.google.dagger:hilt-android:2.46")
+    //because it gives an error with hilt-android 2.46 it's older version. I wastes my 2 hours..
+    kapt("com.google.dagger:hilt-android-compiler:2.44")
+    //to add dagger-hilt by viewModel()
+    implementation "androidx.fragment:fragment-ktx:1.5.7"
+
     //Gson
-    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.google.code.gson:gson:2.8.9'
+
+    // qr sale
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+}
+
+// Allow references to generated code
+kapt {
+    correctErrorTypes true
 }

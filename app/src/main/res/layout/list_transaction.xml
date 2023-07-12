@@ -6,14 +6,14 @@
     <data>
         <variable
             name="adapter"
-            type="com.tokeninc.sardis.application_template.adapters.TransactionAdapter" />
+            type="com.tokeninc.sardis.application_template.ui.postTxn.void_operation.VoidAdapter" />
     </data>
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".ui.TransactionList">
+        tools:context=".ui.postTxn.void_operation.TransactionList">
 
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
