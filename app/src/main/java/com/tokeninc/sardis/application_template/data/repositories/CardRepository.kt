@@ -92,8 +92,8 @@ class CardRepository @Inject constructor() :
             obj.put("zeroAmount", 1)
             val isVoid = getTransactionCode().value == TransactionCode.VOID.type
             obj.put("emvProcessType", if (isVoid) EmvProcessType.READ_CARD.ordinal else EmvProcessType.FULL_EMV.ordinal)
+            obj.put("reqEMVData", "575A5F245F204F84959F12");
             obj.put("showAmount", if (isVoid) 0 else 1)
-            obj.put("partialEMV", 1)
             if (gibSale)
                 obj.put("showCardScreen", 0)
             // TODO Developer: Check from Allowed Operations Parameter
@@ -122,11 +122,11 @@ class CardRepository @Inject constructor() :
             val card: ICCCard = Gson().fromJson(cardData, ICCCard::class.java) //get the ICC cardModel from cardData
             if (card.resultCode == CardServiceResult.USER_CANCELLED.resultCode()) { //if user pressed back button
                 Log.d("CardDataReceived","Card Result Code: User Cancelled")
-                setCallBackMessage(ResponseCode.CANCELED)
+                setCallBackMessage(ResponseCode.CANCELED) //TODO ekranda mesaj yazdır
             }
             if (card.resultCode == CardServiceResult.ERROR_TIMEOUT.resultCode()) { //if there timeout is occurred
                 Log.d("CardDataReceived","Card Result Code: TIMEOUT")
-                setCallBackMessage(ResponseCode.CANCELED)
+                setCallBackMessage(ResponseCode.CANCELED) //TODO ekranda mesaj yazdır sarı üçgen warning
             }
             if (card.resultCode == CardServiceResult.ERROR.resultCode()) {
                 setCallBackMessage(ResponseCode.ERROR)

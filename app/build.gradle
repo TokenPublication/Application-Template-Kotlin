@@ -60,7 +60,7 @@ android {
         TR1000{
             manifestPlaceholders = [
                     APP_LABEL:"Application Template",
-                    MODEL_NAME:"1000TR",
+                    MODEL_NAME:"400TR",
                     APP_NAME:"BNK_000_TMPLT"
             ]
         }
@@ -134,6 +134,9 @@ dependencies {
 
     //Gson
     implementation 'com.google.code.gson:gson:2.8.9'
+
+    // qr sale
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 }
 
 // Allow references to generated code
