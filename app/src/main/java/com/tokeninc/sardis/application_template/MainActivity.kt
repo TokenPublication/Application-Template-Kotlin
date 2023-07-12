@@ -462,6 +462,16 @@ class MainActivity : TimeOutActivity() {
                 infoDialog!!.dismiss()
                 setResult(intent)
             }, 2000)
+        }
+        else if (responseCode == ResponseCode.CANCELED){
+            val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning, "İşlem İptal Edildi", false)
+            if (cardViewModel.getTimeOut()){
+                infoDialog?.update(InfoDialog.InfoType.Warning,"İşlem Zaman Aşımına Uğradı")
+            }
+            Handler(Looper.getMainLooper()).postDelayed({
+                infoDialog!!.dismiss()
+                setResult(intent)
+            }, 2000)
         } else{
             setResult(intent)
         }

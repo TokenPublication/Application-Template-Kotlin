@@ -23,6 +23,7 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     fun getCardLiveData(): LiveData<ICCCard> = cardRepository.getCard()
     fun getCardServiceConnected() = cardRepository.getCardServiceConnected()
     fun getCardServiceBinding(): CardServiceBinding { return cardRepository.getCardServiceBinding() }
+    fun getTimeOut() = cardRepository.timeOut
 
     //these functions only updating from UI, they don't need to be observed
     fun setGibSale(isGibSale: Boolean) { cardRepository.gibSale = isGibSale }
