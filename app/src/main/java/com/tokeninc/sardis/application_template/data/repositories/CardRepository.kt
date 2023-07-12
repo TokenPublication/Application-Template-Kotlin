@@ -59,6 +59,7 @@ class CardRepository @Inject constructor() :
     //these variables should only for storing the operation's result and intents' responses, because they won't be used
     //for UI updating they don't have to be a LiveData
     var gibSale = false
+    var timeOut = false
     var mainActivity: MainActivity? = null
 
 
@@ -79,6 +80,7 @@ class CardRepository @Inject constructor() :
         isCardServiceConnected = MutableLiveData(false)
         card =  MutableLiveData<ICCCard>()
         gibSale = false
+        timeOut = false
         mainActivity = null
     }
 
@@ -122,11 +124,12 @@ class CardRepository @Inject constructor() :
             val card: ICCCard = Gson().fromJson(cardData, ICCCard::class.java) //get the ICC cardModel from cardData
             if (card.resultCode == CardServiceResult.USER_CANCELLED.resultCode()) { //if user pressed back button
                 Log.d("CardDataReceived","Card Result Code: User Cancelled")
-                setCallBackMessage(ResponseCode.CANCELED) //TODO ekranda mesaj yazdır
+                setCallBackMessage(ResponseCode.CANCELED)
             }
             if (card.resultCode == CardServiceResult.ERROR_TIMEOUT.resultCode()) { //if there timeout is occurred
                 Log.d("CardDataReceived","Card Result Code: TIMEOUT")
-                setCallBackMessage(ResponseCode.CANCELED) //TODO ekranda mesaj yazdır sarı üçgen warning
+                timeOut = true
+                setCallBackMessage(ResponseCode.CANCELED)
             }
             if (card.resultCode == CardServiceResult.ERROR.resultCode()) {
                 setCallBackMessage(ResponseCode.ERROR)
