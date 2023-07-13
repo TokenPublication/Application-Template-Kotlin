@@ -7,6 +7,7 @@ import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.enums.CardReadType
 import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.enums.EmvProcessType
 import com.tokeninc.sardis.application_template.enums.ResponseCode
@@ -49,9 +50,12 @@ class CardRepository @Inject constructor() :
         return isCardServiceConnected
     }
 
-    private var card =  MutableLiveData<ICCCard>()
+    private var mutableCardData =  MutableLiveData<ICCCard>()
     fun getCard(): LiveData<ICCCard> {
-        return card
+        return mutableCardData
+    }
+    fun setCard(){
+        mutableCardData = MutableLiveData<ICCCard>()
     }
 
     //These variables should only for storing the operation's result and intents' responses, because they won't be used
@@ -59,6 +63,7 @@ class CardRepository @Inject constructor() :
     var gibSale = false
     var timeOut = false
     var mainActivity: MainActivity? = null
+    private var readICC = false //this is a flag for checking whether it is ICC sale (for implementing continue emv)
 
     private lateinit var cardServiceBinding: CardServiceBinding
 
@@ -71,14 +76,15 @@ class CardRepository @Inject constructor() :
      * keep variables again at an initial point won't be needed.
      */
     fun onDestroyed(){
+        mutableCardData =  MutableLiveData<ICCCard>()
         transactionCode = MutableLiveData(0)
         amount = MutableLiveData(0)
         callBackMessage = MutableLiveData<ResponseCode>()
         isCardServiceConnected = MutableLiveData(false)
-        card =  MutableLiveData<ICCCard>()
         gibSale = false
         timeOut = false
         mainActivity = null
+        readICC = false
     }
 
     /**
@@ -90,7 +96,14 @@ class CardRepository @Inject constructor() :
             obj.put("forceOnline", 0)
             obj.put("zeroAmount", 1)
             val isVoid = getTransactionCode().value == TransactionCode.VOID.type
-            obj.put("emvProcessType", if (isVoid) EmvProcessType.READ_CARD.ordinal else EmvProcessType.FULL_EMV.ordinal)
+            val isSale = getTransactionCode().value == TransactionCode.SALE.type
+            if (!readICC){ //if it is not the second readCard (reading ICC card for sale)
+                // in sale and void emv process should be EmvProcessType.READ_CARD, for refunds it should be EmvProcessType.FULL_EMV
+                obj.put("emvProcessType", if (isVoid || isSale) EmvProcessType.READ_CARD.ordinal else EmvProcessType.FULL_EMV.ordinal)
+            }
+            if (readICC){ //if this was the second reading when sale process for ICC card it should be continue emv to ask card's password
+                obj.put("emvProcessType", EmvProcessType.CONTINUE_EMV.ordinal)
+            }
             obj.put("reqEMVData", "575A5F245F204F84959F12")
             obj.put("showAmount", if (isVoid) 0 else 1)
             if (gibSale)
@@ -131,7 +144,10 @@ class CardRepository @Inject constructor() :
                 setCallBackMessage(ResponseCode.ERROR)
                 Log.d("CardDataReceived","Card Result Code: ERROR")
             }
-            this.card.postValue(card)
+            if (card.mCardReadType == CardReadType.ICC.type && getTransactionCode().value == TransactionCode.SALE.type){
+                readICC = true //make this flag true for the second reading for asking password with continue emv.
+            }
+            mutableCardData.postValue(card)
             cardServiceBinding.unBind() //unbinding the cardService
         } catch (e: java.lang.Exception) {
             e.printStackTrace()

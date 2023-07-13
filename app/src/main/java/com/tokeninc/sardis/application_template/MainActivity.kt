@@ -116,7 +116,7 @@ class MainActivity : TimeOutActivity() {
         cardViewModel = getCardViewModel
         cardViewModel.setMainActivity(this) //this is for making setEMVConfiguration method
 
-        saleFragment = SaleFragment(transactionViewModel,this,activationViewModel,batchViewModel,cardViewModel)
+        saleFragment = SaleFragment(transactionViewModel,this,batchViewModel,cardViewModel)
         settingsFragment = SettingsFragment(this, activationViewModel, intent)
         triggerFragment = TriggerFragment(this)
         refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel)

@@ -28,7 +28,6 @@ import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.ui.MenuItem
-import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import kotlinx.coroutines.CoroutineScope
@@ -38,11 +37,10 @@ import java.lang.String.valueOf
 
 /**
  * This Class is for Sale operations, it depends on Transaction View Model
- * It has dummy sale layout, which is the only view that we created. Other ui elements come from tokeninc.ui library
+ * It has dummy sale layout, which is the only view that we created. Other ui elements come from ui library
  */
 class SaleFragment(private val transactionViewModel: TransactionViewModel, private val mainActivity: MainActivity,
-                   private val activationViewModel: ActivationViewModel, private val batchViewModel: BatchViewModel,
-                   private val cardViewModel: CardViewModel) : Fragment() {
+                   private val batchViewModel: BatchViewModel, private val cardViewModel: CardViewModel) : Fragment() {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
@@ -88,10 +86,20 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
      */
     private fun prepareSaleMenu(mCard: ICCCard?) {
         card = mCard
-        //cardViewModel.setTransactionCode(0)
         val menuItemList = transactionViewModel.menuItemList
         menuItemList.add(MenuItem( getStrings(R.string.sale), {
-            doSale(null)
+            cardViewModel.resetCard()
+            cardViewModel.initializeCardServiceBinding(mainActivity)
+            cardViewModel.getCardServiceConnected().observe(mainActivity) { isConnected ->
+                if (isConnected)
+                    cardViewModel.readCard()
+            }
+            cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
+                if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
+                    Log.d("CardResult", cardData.mCardNumber.toString())
+                    doSale(null)
+                }
+            }
         }))
         menuItemList.add(MenuItem(getStrings(R.string.Installment_sale), { }))
         menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))
@@ -170,19 +178,17 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             this.card = cardData
             val cardReadType = cardData.mCardReadType
             Log.d("Card Read type",cardReadType.toString())
-            if (cardReadType == CardReadType.CLCard.type)
-                doSale(null)
-            else if (cardReadType == CardReadType.ICC.type)
-                prepareSaleMenu(card)
-            else if (cardReadType == CardReadType.QrPay.type){
-                qrSale()
+            when (cardReadType){
+                CardReadType.CLCard.type -> doSale(null)
+                CardReadType.ICC.type -> prepareSaleMenu(card)
+                CardReadType.QrPay.type -> qrSale()
                 }
             }
         }
     }
 
     private var isCancelable = true
-    var qrSuccess = true
+    private var qrSuccess = true
     private fun qrSale() {
         val dialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Progress, "Please Wait", true)
         Handler(Looper.getMainLooper()).postDelayed({

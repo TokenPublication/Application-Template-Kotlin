@@ -28,6 +28,7 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     //these functions only updating from UI, they don't need to be observed
     fun setGibSale(isGibSale: Boolean) { cardRepository.gibSale = isGibSale }
     fun setMainActivity(main: MainActivity){ cardRepository.mainActivity =main}
+    fun resetCard(){ cardRepository.setCard()}
 
     fun onDestroyed(){ cardRepository.onDestroyed()}
 
