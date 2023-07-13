@@ -40,7 +40,7 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
         val responseCode = batchCloseResponse.batchResult
         val intent = Intent()
         val bundle = Bundle()
-        //print(slip,mainActivity)
+        print(slip,mainActivity)
         bundle.putInt("ResponseCode", responseCode.ordinal)
         intent.putExtras(bundle)
         return intent
