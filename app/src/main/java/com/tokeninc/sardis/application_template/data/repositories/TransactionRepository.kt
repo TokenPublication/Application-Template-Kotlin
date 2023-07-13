@@ -194,8 +194,8 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             else{
                 if (transactionResponse.responseCode == ResponseCode.SUCCESS){
                     val printHelper = PrintService()
-                    //bundle.putString("customerSlipData", printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
-                    //bundle.putString("merchantSlipData", printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
+                    bundle.putString("customerSlipData", printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
+                    bundle.putString("merchantSlipData", printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, null, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false))
                     bundle.putString("RefundInfo", getRefundInfo(transactionResponse,batchNo,groupSN,amount,MID,TID,card))
                     if(transactionResponse.contentVal != null) {
                         bundle.putString("RefNo", transactionResponse.contentVal!!.getAsString(
@@ -250,8 +250,8 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         val printHelper = PrintService()
         val customerSlip = printHelper.getFormattedText( SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         val merchantSlip = printHelper.getFormattedText( SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!,transactionResponse.extraContent!!, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
-        //print(customerSlip, mainActivity)
-        //print(merchantSlip, mainActivity)
+        print(customerSlip, mainActivity)
+        print(merchantSlip, mainActivity)
         val responseCode = transactionResponse.responseCode
         val intent = Intent()
         val bundle = Bundle()
@@ -269,8 +269,8 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         val printService = PrintService()
         val customerSlip = printService.getFormattedText(SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
         val merchantSlip = printService.getFormattedText(SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.extraContent, transactionResponse.onlineTransactionResponse, transactionResponse.transactionCode, mainActivity,1, 1,false)
-        //print(customerSlip,mainActivity)
-        //print(merchantSlip,mainActivity)
+        print(customerSlip,mainActivity)
+        print(merchantSlip,mainActivity)
         val responseCode = transactionResponse.responseCode
         val intent = Intent()
         val bundle = Bundle()
