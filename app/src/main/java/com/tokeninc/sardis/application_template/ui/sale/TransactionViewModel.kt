@@ -173,7 +173,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 uiState.postValue(UIState.Success("Transaction is Successful"))
             }
         }
-        if (transactionCode == TransactionCode.SALE.type){
+        if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
             val intent = transactionRepository.prepareSaleIntent(transactionResponse,amount, batchNo!!, groupSn!!, card,MID, TID, mainActivity)
             liveIntent.postValue(intent)
         }

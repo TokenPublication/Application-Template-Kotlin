@@ -62,10 +62,12 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         onlineTransactionResponse.mHostLogKey = (0..99999999).random().toString()
         onlineTransactionResponse.mDisplayData = "Display Data"
         onlineTransactionResponse.mKeySequenceNumber = "3"
-        if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type)
+        if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type) {
             onlineTransactionResponse.insCount = contentVal!!.getAsString(ExtraKeys.INST_COUNT.name).toInt()
-        else
+        }
+        else {
             onlineTransactionResponse.insCount = 0
+        }
         onlineTransactionResponse.instAmount = 0
         onlineTransactionResponse.dateTime = "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}"
         return onlineTransactionResponse
@@ -134,7 +136,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         else
             content.put(TransactionCols.Col_isOffline, 0)
         content.put(TransactionCols.Col_InstCnt, onlineTransactionResponse.insCount)
-        Log.d("Inst cnt","${onlineTransactionResponse.insCount}")
+        Log.d("InstallmentCount","${onlineTransactionResponse.insCount}")
         content.put(TransactionCols.Col_InstAmount, onlineTransactionResponse.instAmount)
         content.put(TransactionCols.Col_TranDate, "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}")
         content.put(TransactionCols.Col_HostLogKey, onlineTransactionResponse.mHostLogKey)
