@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import com.tokeninc.sardis.application_template.data.database.DatabaseInfo
 
+
 @Dao
 interface BatchDao {
     @Insert
@@ -27,4 +28,9 @@ interface BatchDao {
 
     @Query("SELECT ${BatchCols.col_previous_batch_slip} FROM ${DatabaseInfo.BATCH_TABLE} LIMIT 1")
     fun getBatchPreviousSlip(): LiveData<String?>
+
+    //TODO doğru çalışıyor mu kontrolle rowID tanımlıyor mu
+    @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulSTN} = ${BatchCols.col_ulSTN} + 1 WHERE ROWID = (SELECT rowID FROM ${DatabaseInfo.BATCH_TABLE} LIMIT 1)")
+    fun updateSTN()
+
 }

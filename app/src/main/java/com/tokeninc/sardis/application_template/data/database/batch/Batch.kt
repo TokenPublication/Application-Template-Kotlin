@@ -9,6 +9,8 @@ import com.tokeninc.sardis.application_template.data.database.DatabaseInfo
 data class Batch(
     @ColumnInfo(name = BatchCols.col_previous_batch_slip)
     var col_previous_batch_slip: String?,
+    @ColumnInfo (name = BatchCols.col_ulSTN)
+    var col_ulSTN: Int,
     @PrimaryKey
     @ColumnInfo(name = BatchCols.col_batchNo)
     var col_batchNo: Int = 1,

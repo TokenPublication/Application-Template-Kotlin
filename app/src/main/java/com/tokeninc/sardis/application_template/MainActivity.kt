@@ -125,14 +125,28 @@ class MainActivity : TimeOutActivity() {
 
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-
         actionChanged(intent.action)
+    }
+
+    /** This function checks activation by checking MID and TID parameters
+     *  if they are empty, warns the customer to activate application then finishes the mainActivity
+     */
+    private fun checkActivation(){
+        if (currentMID.isNullOrEmpty() || currentTID.isNullOrEmpty()){
+            showInfoDialog(InfoDialog.InfoType.Warning,"You must activate the application template!", false)
+            Handler(Looper.getMainLooper()).postDelayed({
+                    finish()
+            }, 2000)
+        }
     }
 
     /**
      * This function calls corresponding functions whenever an action of intent is changed
      */
     private fun actionChanged(action: String?){
+        if (action != getString(R.string.Settings_Action)){ // if the action is not settings action it checks for the activation
+            checkActivation()
+        }
         when (action){
             getString(R.string.PosTxn_Action) ->  {
                 replaceFragment(postTxnFragment)
