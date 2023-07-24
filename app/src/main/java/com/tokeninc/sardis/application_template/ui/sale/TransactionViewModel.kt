@@ -176,6 +176,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 uiState.postValue(UIState.Success("Transaction is Successful"))
             }
         }
+        val kmsService = mainActivity.initializeKMSService() //to use it later
         if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
             val intent = transactionRepository.prepareSaleIntent(transactionResponse,amount, batchNo!!, groupSn!!, card,MID, TID, mainActivity)
             liveIntent.postValue(intent)

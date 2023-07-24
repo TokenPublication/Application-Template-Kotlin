@@ -23,6 +23,8 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.BuildConfig
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.deviceinfo.DeviceInfo
+import com.tokeninc.libtokenkms.KMSWrapperInterface.InitCallbacks
+import com.tokeninc.libtokenkms.TokenKMS
 import com.tokeninc.sardis.application_template.*
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.enums.*
@@ -43,6 +45,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
+
 
 /** This is the Main Activity class,
  * all operations are run here because this application is designed as a single-activity architecture
@@ -122,6 +125,7 @@ class MainActivity : TimeOutActivity() {
         refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel)
         postTxnFragment = PostTxnFragment(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel)
         observeTIDMID()
+        initializeKMSService()
 
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
@@ -218,6 +222,29 @@ class MainActivity : TimeOutActivity() {
         } else{ // when user select application template as a banking application
             replaceFragment(saleFragment)
         }
+    }
+
+    /**
+     * This function binds Token KMS lib. If it fails, it warns the user and finishes the activity.
+     */
+    fun initializeKMSService(): TokenKMS{
+        val kms = TokenKMS()
+        kms.setInitCallbacks(object : InitCallbacks {
+            override fun onInitSuccess() {
+                Log.i("KMS","Success")
+                Log.i("Token KMS onInitSuccess", "KMS Init OK")
+            }
+
+            override fun onInitFailed() {
+                Log.v("Token KMS onInitSuccess", "KMS Init Failed")
+                showInfoDialog(InfoDialog.InfoType.Declined,"KMS Initilization Failed",false)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    finish()
+                }, 2000)
+            }
+        })
+        kms.init(applicationContext)
+        return kms
     }
 
     /**
