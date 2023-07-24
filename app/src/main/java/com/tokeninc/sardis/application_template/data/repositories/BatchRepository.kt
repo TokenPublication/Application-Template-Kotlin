@@ -17,6 +17,7 @@ import javax.inject.Inject
 class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
     fun getGroupSN() = batchDao.getGUPSN()
     fun getBatchNo() = batchDao.getBatchNo()
+    fun getSTN() = batchDao.getSTN()
     fun getPreviousBatchSlip(): LiveData<String?> = batchDao.getBatchPreviousSlip()
     suspend fun updateBatchNo(batchNo: Int){
         batchDao.updateBatchNo(batchNo)
@@ -28,6 +29,10 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
 
     suspend fun updateGUPSN(groupSn: Int){
         batchDao.updateGUPSN(groupSn)
+    }
+
+    suspend fun updateSTN(){
+        batchDao.updateSTN()
     }
 
     /**

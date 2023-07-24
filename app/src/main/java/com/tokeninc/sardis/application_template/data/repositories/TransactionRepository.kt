@@ -77,7 +77,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
      * @return TransactionResponse with required parameters for notifying where it is called.
      */
     fun getTransactionResponse (amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues?, onlinePin: String?,
-                                   isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse,batchNo: Int, groupSn: Int
+                                   isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse,batchNo: Int, groupSn: Int, stn: Int
     ): TransactionResponse {
         val content = ContentValues()
         val responseCode = ResponseCode.SUCCESS
@@ -159,6 +159,9 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         content.put(TransactionCols.Col_UN, card.UN)
         content.put(TransactionCols.Col_IAD, card.IAD)
         content.put(TransactionCols.Col_SID, card.SID)
+        content.put(TransactionCols.col_ulSTN, stn)
+        Log.i("Number Stn",stn.toString())
+        Log.i("Number UUID ",uuid.toString())
         Log.d("Service","Transaction Code: $transactionCode")
         return TransactionResponse(responseCode, onlineTransactionResponse, content, extraContent, transactionCode)
     }

@@ -44,7 +44,7 @@ abstract class AppTempDB: RoomDatabase() {
                                     firstActivation = Activation("0123456789", "12344321")
                                     val dbInstance = getInstance(context)
                                     dbInstance.activationDao.initActivation(firstActivation)
-                                    val firstBatch = Batch(null,0)
+                                    val firstBatch = Batch(null)
                                     dbInstance.batchDao.initBatch(firstBatch)
                                     Log.d("FIRST INSTANCE","created")
                                 }

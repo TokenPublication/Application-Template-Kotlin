@@ -49,12 +49,13 @@ class ContentValHelper {
         contentVal.put(TransactionCols.Col_Ext_Conf,transaction.Col_Ext_Conf)
         contentVal.put(TransactionCols.Col_Ext_Ref,transaction.Col_Ext_Ref)
         contentVal.put(TransactionCols.Col_Ext_RefundDateTime,transaction.Col_Ext_RefundDateTime)
+        contentVal.put(TransactionCols.col_ulSTN,transaction.col_ulSTN)
         return contentVal
     }
 
     fun getTransaction(contentVal: ContentValues): Transaction {
         val Col_UUID = contentVal.getAsString(TransactionCols.Col_UUID)
-        val Col_GUP_SN = contentVal.getAsString(TransactionCols.Col_GUP_SN).toInt() //boş geliyor
+        val Col_GUP_SN = contentVal.getAsString(TransactionCols.Col_GUP_SN).toInt()
         val Col_BatchNo = contentVal.getAsString(TransactionCols.Col_BatchNo).toInt()
         val Col_ReceiptNo = contentVal.getAsString(TransactionCols.Col_ReceiptNo).toInt()
         val Col_CardReadType = contentVal.getAsString(TransactionCols.Col_CardReadType).toInt()
@@ -95,11 +96,12 @@ class ContentValHelper {
         val Col_Ext_Conf = contentVal.getAsString(TransactionCols.Col_Ext_Conf).toInt()
         val Col_Ext_Ref = contentVal.getAsString(TransactionCols.Col_Ext_Ref).toInt()
         val Col_Ext_RefundDateTime = contentVal.getAsString(TransactionCols.Col_Ext_RefundDateTime)
+        val Col_ulSTN = contentVal.getAsString(TransactionCols.col_ulSTN).toInt()
         return Transaction(Col_UUID,Col_GUP_SN,Col_BatchNo,Col_ReceiptNo,Col_CardReadType,Col_PAN,
             Col_CardSequenceNumber, Col_TransCode, Col_Amount, Col_Amount2, Col_ExpDate, Col_Track2,
             Col_CustName, Col_IsVoid, Col_InstCnt, Col_InstAmount, Col_TranDate, Col_HostLogKey, Col_VoidDateTime,
             Col_AuthCode, Col_Aid, Col_AidLabel, Col_TextPrintCode1, Col_TextPrintCode2, Col_DisplayData,
             Col_KeySequenceNumber, Col_isPinByPass, Col_isOffline, Col_AC, Col_CID, Col_ATC, Col_TVR, Col_TSI,
-            Col_AIP, Col_CVM, Col_AID2, Col_UN, Col_IAD, Col_SID, Col_Ext_Conf, Col_Ext_Ref, Col_Ext_RefundDateTime)
+            Col_AIP, Col_CVM, Col_AID2, Col_UN, Col_IAD, Col_SID, Col_Ext_Conf, Col_Ext_Ref, Col_Ext_RefundDateTime,Col_ulSTN)
     }
 }
