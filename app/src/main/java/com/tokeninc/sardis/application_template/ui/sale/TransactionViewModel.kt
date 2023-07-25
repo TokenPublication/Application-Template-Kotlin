@@ -14,11 +14,14 @@ import com.tokeninc.sardis.application_template.data.database.transaction.Transa
 import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
 import com.tokeninc.sardis.application_template.data.entities.responses.OnlineTransactionResponse
 import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
+import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
 import com.tokeninc.sardis.application_template.data.repositories.TransactionRepository
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.utils.ContentValHelper
+import com.tokeninc.sardis.application_template.utils.objects.SampleReceipt
 import com.tokeninc.sardis.application_template.utils.printHelpers.DateUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -109,8 +112,9 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
      * @param uuid comes from Payment Gateway in Sale Transaction. It can be null
      */
     suspend fun transactionRoutine( amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues,
-                                onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean, batchViewModel: BatchViewModel,
-    MID: String?, TID: String?, mainActivity:MainActivity) {
+                                onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean,
+                                    batchViewModel: BatchViewModel, MID: String?, TID: String?,
+                                    mainActivity:MainActivity, activationRepository: ActivationRepository) {
         var downloadNumber = 0
         coroutineScope.launch(Dispatchers.Main){//firstly updating the UI as loading
             uiState.postValue(UIState.Loading)
@@ -131,7 +135,8 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                         coroutineScope.launch(Dispatchers.Main) {
                             uiState.postValue(UIState.Success("Preparing The Data"))
                         }
-                        finishTransaction(amount, card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,onlineTransactionResponse,batchViewModel,MID, TID, mainActivity)
+                        finishTransaction(amount, card,transactionCode,extraContent,onlinePin,isPinByPass,uuid,isOffline,
+                            onlineTransactionResponse,batchViewModel,MID, TID, mainActivity,activationRepository)
                     }
                 }
             }
@@ -144,7 +149,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
      */
     private fun finishTransaction (amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues?, onlinePin: String?,
                                   isPinByPass: Boolean, uuid: String?, isOffline: Boolean, onlineTransactionResponse: OnlineTransactionResponse, batchViewModel: BatchViewModel,
-                                   MID: String?, TID: String?, mainActivity: MainActivity
+                                   MID: String?, TID: String?, mainActivity: MainActivity, activationRepository: ActivationRepository
     ) {
         var transactionResponse: TransactionResponse? = null
         var batchNo: Int? = null
@@ -178,15 +183,20 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         }
         val kmsService = mainActivity.initializeKMSService() //to use it later
         if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
-            val intent = transactionRepository.prepareSaleIntent(transactionResponse,amount, batchNo!!, groupSn!!, card,MID, TID, mainActivity)
+            val transaction = ContentValHelper().getTransaction(transactionResponse.contentVal!!)
+            val receipt = SampleReceipt(transaction,activationRepository,batchViewModel.batchRepository)
+            val intent = transactionRepository.prepareSaleIntent(transactionResponse,amount, card, mainActivity, receipt)
             liveIntent.postValue(intent)
         }
         else if (transactionCode == TransactionCode.CASH_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.MATCHED_REFUND.type){
-            val intent = transactionRepository.prepareRefundIntent(transactionResponse,mainActivity)
+            val transaction = ContentValHelper().getTransaction(transactionResponse.contentVal!!)
+            val receipt = SampleReceipt(transaction,activationRepository,batchViewModel.batchRepository)
+            val intent = transactionRepository.prepareRefundIntent(transactionResponse,mainActivity,receipt)
             liveIntent.postValue(intent)
         }
         else if(transactionCode == TransactionCode.VOID.type){
-            val intent = transactionRepository.prepareVoidIntent(transactionResponse,mainActivity)
+            val receipt = SampleReceipt(ContentValHelper().getTransaction(extraContent!!),activationRepository,batchViewModel.batchRepository)
+            val intent = transactionRepository.prepareVoidIntent(transactionResponse,mainActivity,receipt)
             liveIntent.postValue(intent)
         }
     }

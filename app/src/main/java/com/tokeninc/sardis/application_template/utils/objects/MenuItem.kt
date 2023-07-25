@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.ui
+package com.tokeninc.sardis.application_template.utils.objects
 
 import com.token.uicomponents.ListMenuFragment.IAuthenticator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem

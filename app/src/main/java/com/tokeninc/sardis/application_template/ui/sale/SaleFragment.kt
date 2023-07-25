@@ -30,7 +30,8 @@ import com.tokeninc.sardis.application_template.enums.PaymentTypes
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
-import com.tokeninc.sardis.application_template.ui.MenuItem
+import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
+import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import kotlinx.coroutines.CoroutineScope
@@ -43,7 +44,8 @@ import java.lang.String.valueOf
  * It has dummy sale layout, which is the only view that we created. Other ui elements come from ui library
  */
 class SaleFragment(private val transactionViewModel: TransactionViewModel, private val mainActivity: MainActivity,
-                   private val batchViewModel: BatchViewModel, private val cardViewModel: CardViewModel) : Fragment() {
+                   private val batchViewModel: BatchViewModel, private val cardViewModel: CardViewModel,
+                   private val activationViewModel: ActivationViewModel) : Fragment() {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
@@ -285,7 +287,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         CoroutineScope(Dispatchers.Default).launch {
             transactionViewModel.transactionRoutine(amount, card!!,transactionCode,
                 extraContents, null,false,uuid ,false,batchViewModel,
-                mainActivity.currentMID,mainActivity.currentTID,mainActivity)
+                mainActivity.currentMID,mainActivity.currentTID,mainActivity,activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->

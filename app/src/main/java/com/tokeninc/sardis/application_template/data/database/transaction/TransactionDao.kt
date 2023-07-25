@@ -15,6 +15,9 @@ interface TransactionDao {
     @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} WHERE ${TransactionCols.Col_HostLogKey} = :refNo")
     fun getTransactionsByRefNo(refNo: String): List<Transaction?>?
 
+    @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} WHERE ${TransactionCols.Col_UUID} = :uuid")
+    fun getTransactionsByUUID(uuid: String): List<Transaction?>?
+
     //To implement getter without using livedata (when using function in IO thread), it needs to be in IO thread.
     @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} ORDER BY ${TransactionCols.Col_GUP_SN}")
     suspend fun getAllTransactions(): List<Transaction?>?

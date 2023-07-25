@@ -119,11 +119,11 @@ class MainActivity : TimeOutActivity() {
         cardViewModel = getCardViewModel
         cardViewModel.setMainActivity(this) //this is for making setEMVConfiguration method
 
-        saleFragment = SaleFragment(transactionViewModel,this,batchViewModel,cardViewModel)
+        saleFragment = SaleFragment(transactionViewModel,this,batchViewModel,cardViewModel,activationViewModel)
         settingsFragment = SettingsFragment(this, activationViewModel, intent)
         triggerFragment = TriggerFragment(this)
-        refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel)
-        postTxnFragment = PostTxnFragment(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel)
+        refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel,activationViewModel)
+        postTxnFragment = PostTxnFragment(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel,activationViewModel)
         observeTIDMID()
         initializeKMSService()
 
