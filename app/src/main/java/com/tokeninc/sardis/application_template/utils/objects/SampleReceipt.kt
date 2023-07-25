@@ -16,6 +16,7 @@ class SampleReceipt(
     batchRepository: BatchRepository
 ) {
     var merchantName = "Token Financial Technologies"
+    //TODO in powercut it prints null because there is no observer for livedata
     var merchantID = activationRepository.merchantID.value
     var terminalID = activationRepository.terminalID.value
     var aid = transaction.Col_Aid
