@@ -125,14 +125,41 @@ class MainActivity : TimeOutActivity() {
 
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-
         actionChanged(intent.action)
+    }
+
+    /** This function checks activation by checking MID and TID parameters
+     *  if they are empty, warns the customer to activate application then finishes the mainActivity
+     *  TODO in first installation it enters here although it has default MID and TID ?
+     */
+    private fun checkActivation(){
+        activationViewModel.merchantID.observe(this){
+            activationWarning(it == null)
+        }
+        activationViewModel.terminalID.observe(this){
+            activationWarning(it == null)
+        }
+    }
+
+    /**
+     * It shows a warning if isNull is true then finishes the activity
+     */
+    private fun activationWarning(isNull: Boolean){
+        if (isNull){
+            showInfoDialog(InfoDialog.InfoType.Warning,"You must activate the application template!", false)
+            Handler(Looper.getMainLooper()).postDelayed({
+                finish()
+            }, 2000)
+        }
     }
 
     /**
      * This function calls corresponding functions whenever an action of intent is changed
      */
     private fun actionChanged(action: String?){
+        if (action != getString(R.string.Settings_Action)){ // if the action is not settings action it checks for the activation
+            checkActivation()
+        }
         when (action){
             getString(R.string.PosTxn_Action) ->  {
                 replaceFragment(postTxnFragment)
@@ -491,26 +518,16 @@ class MainActivity : TimeOutActivity() {
     var currentTID: String? = ""
 
     /**
-     * It holds the last updated values in there
-     */
-    private fun setMID(MerchantID: String?) {
-        currentMID = MerchantID
-    }
-
-    private fun setTID(TerminalID: String?) {
-        currentTID = TerminalID
-    }
-    /**
      * After TID and MID is changed, it is called from there and hold data for it. It also called everytime whenever MainActivity is created.
      */
     fun observeTIDMID(){
         activationViewModel.merchantID.observe(this){
             if (it != null)
-                setMID(it)
+                currentMID = it
         }
         activationViewModel.terminalID.observe(this){
             if (it != null)
-                setTID(it)
+                currentTID = it
         }
     }
 }

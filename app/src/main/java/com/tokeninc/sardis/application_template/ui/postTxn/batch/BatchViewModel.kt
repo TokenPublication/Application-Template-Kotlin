@@ -25,6 +25,7 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
 
     fun getGroupSN()  = batchRepository.getGroupSN()
     fun getBatchNo() = batchRepository.getBatchNo()
+    fun getSTN() = batchRepository.getSTN()
     fun getPreviousBatchSlip(): LiveData<String?> = batchRepository.getPreviousBatchSlip()
 
     /**
@@ -54,6 +55,16 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
     fun updateGUPSN(groupSn: Int){
         viewModelScope.launch(Dispatchers.IO) {
             batchRepository.updateGUPSN(groupSn)
+        }
+    }
+
+    /**
+     * This function works in IO thread, so it doesn't lock the main thread.
+     * It increases STN as one.
+     */
+    fun updateSTN(){
+        viewModelScope.launch(Dispatchers.IO) {
+            batchRepository.updateSTN()
         }
     }
 

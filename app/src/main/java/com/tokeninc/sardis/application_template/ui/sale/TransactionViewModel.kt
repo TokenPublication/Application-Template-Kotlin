@@ -106,6 +106,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
      * Additionally, in IO coroutine thread it parses the response and make it OnlineTransactionResponse
      * then call Finish Transaction operation with that parameter.
      * @param extraContent is null if it is sale, refund inputs if it is refund, the whole transaction if it is void type transaction.
+     * @param uuid comes from Payment Gateway in Sale Transaction. It can be null
      */
     suspend fun transactionRoutine( amount: Int, card: ICCCard, transactionCode: Int, extraContent: ContentValues,
                                 onlinePin: String?, isPinByPass: Boolean, uuid: String?, isOffline: Boolean, batchViewModel: BatchViewModel,
@@ -149,7 +150,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         var batchNo: Int? = null
         var groupSn: Int? = null
         var responseCode = ResponseCode.ERROR
-        if (transactionCode == TransactionCode.VOID.type){
+        if (transactionCode == TransactionCode.VOID.type){ // if it is a void operation
             setVoid(extraContent!!.getAsString(TransactionCols.Col_GUP_SN).toInt(),"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card.SID)
             responseCode = ResponseCode.SUCCESS
             transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent,ContentValues(),transactionCode) //it comes from parameters
@@ -158,8 +159,10 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             batchNo = batchViewModel.getBatchNo()
             batchViewModel.updateGUPSN(groupSn)
             groupSn = batchViewModel.getGroupSN()
+            batchViewModel.updateSTN()
+            val stn = batchViewModel.getSTN() + 1 //since it's not fast as get the updated version simultaneous it's increased by to equalize updated number.
             transactionResponse = transactionRepository.getTransactionResponse(amount,card,
-                transactionCode,extraContent,onlinePin,isPinByPass, uuid,isOffline,onlineTransactionResponse,batchNo,groupSn)
+                transactionCode,extraContent,onlinePin,isPinByPass, uuid,isOffline,onlineTransactionResponse,batchNo,groupSn, stn)
             val responseTransactionCode = transactionResponse.transactionCode
             if (responseTransactionCode != 0){
                 val content = transactionResponse.contentVal!!

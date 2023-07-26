@@ -13,6 +13,7 @@ import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.infodialog.InfoDialog
+import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
 import com.tokeninc.sardis.application_template.ui.MenuItem
@@ -107,7 +108,6 @@ class SettingsFragment(private val mainActivity: MainActivity,
 
         mainActivity.addFragment(hostFragment as Fragment)
     }
-
     private fun startActivation(){
         CoroutineScope(Dispatchers.Default).launch {
             activationViewModel.setupRoutine(mainActivity)
@@ -123,8 +123,17 @@ class SettingsFragment(private val mainActivity: MainActivity,
                 is ActivationViewModel.UIState.KeyBlockLoading -> dialog.update(InfoDialog.InfoType.Progress,"Key Blok Yükleniyor")
                 is ActivationViewModel.UIState.ActivationCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,"Aktivasyon Tamamlandı")
                 is ActivationViewModel.UIState.Finished -> {
+                    //TODO Developer: If you don't implement this your application couldn't be activated and couldn't seen in atms
+                    val deviceInfo = DeviceInfo(mainActivity)
+                    deviceInfo.setBankParams({ success -> //it informs atms with new terminal and merchant ID
+                        if (success) {
+                            mainActivity.print(PrintHelper().printSuccess())
+                        } else {
+                            mainActivity.print(PrintHelper().printError())
+                        }
+                        deviceInfo.unbind()
+                    }, terminalId, merchantId)
                     dialog.dismiss()
-                    mainActivity.print(PrintHelper().printSuccess())
                 }
             }
         }
