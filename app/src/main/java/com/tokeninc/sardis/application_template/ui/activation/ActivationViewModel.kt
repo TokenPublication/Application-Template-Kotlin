@@ -25,7 +25,7 @@ import javax.inject.Inject
  * We won't call repository while we call ViewModel class because we define our repository in AppModule with Hilt.
  */
 @HiltViewModel
-class ActivationViewModel @Inject constructor(private val activationRepository: ActivationRepository): ViewModel() {
+class ActivationViewModel @Inject constructor(val activationRepository: ActivationRepository): ViewModel() {
 
     val merchantID = activationRepository.merchantID
     val terminalID = activationRepository.terminalID

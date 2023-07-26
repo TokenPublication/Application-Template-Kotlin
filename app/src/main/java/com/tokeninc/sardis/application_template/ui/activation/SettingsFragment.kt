@@ -16,7 +16,7 @@ import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
-import com.tokeninc.sardis.application_template.ui.MenuItem
+import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

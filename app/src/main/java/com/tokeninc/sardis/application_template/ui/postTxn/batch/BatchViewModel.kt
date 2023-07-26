@@ -21,7 +21,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class BatchViewModel @Inject constructor(private val batchRepository: BatchRepository): ViewModel() {
+class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): ViewModel() {
 
     fun getGroupSN()  = batchRepository.getGroupSN()
     fun getBatchNo() = batchRepository.getBatchNo()

@@ -1,6 +1,6 @@
 package com.tokeninc.sardis.application_template.utils
 
-import java.util.*
+import java.util.Locale
 
 /**
  * This class is helper for printing some strings
@@ -69,5 +69,12 @@ class StringHelper {
         masked.append(last)
         val formatted = StringBuilder(masked)
         return formatted.toString()
+    }
+
+    /**
+     * It generates approval code
+     */
+    fun generateApprovalCode(BatchNo: String, TransactionNo: String, SaleID: String): String? {
+        return BatchNo + TransactionNo + SaleID
     }
 }

@@ -1,6 +1,6 @@
 package com.tokeninc.sardis.application_template.ui.examples
 
-import com.tokeninc.sardis.application_template.ui.MenuItem
+import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast

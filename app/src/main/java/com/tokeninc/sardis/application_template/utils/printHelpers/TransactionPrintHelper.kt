@@ -6,14 +6,13 @@ import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.AppTemp
-import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
-import com.tokeninc.sardis.application_template.data.entities.responses.OnlineTransactionResponse
 import com.tokeninc.sardis.application_template.enums.CardReadType
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
 import com.tokeninc.sardis.application_template.utils.StringHelper
+import com.tokeninc.sardis.application_template.utils.objects.SampleReceipt
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -22,24 +21,23 @@ import java.util.Locale
  * This class forms slips with respect to type of Transaction, it can arrange slip for
  * Sale, Void and all types of refund.
  */
-class PrintService:BasePrintHelper() {
-    fun getFormattedText(slipType: SlipType, contentValues: ContentValues, extraContentValues: ContentValues?, onlineTransactionResponse: OnlineTransactionResponse,
+class TransactionPrintHelper:BasePrintHelper() {
+    fun getFormattedText(receipt: SampleReceipt, slipType: SlipType, contentValues: ContentValues, extraContentValues: ContentValues?,
                          transactionCode: Int, context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
-        val mainActivity = context as MainActivity
         if (transactionCode == TransactionCode.SALE.type){
             if (slipType === SlipType.CARDHOLDER_SLIP) {
                 if (!(context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.ECR.name) &&
                     !(context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.VUK507.name))  {
-                    printSlipHeader(styledText, context)
+                    printSlipHeader(styledText, receipt)
                 }
             } else {
-                printSlipHeader(styledText, context)
+                printSlipHeader(styledText, receipt)
             }
         }
         else
-            printSlipHeader(styledText, context)
+            printSlipHeader(styledText, receipt)
         styledText.newLine()
         if (slipType === SlipType.CARDHOLDER_SLIP) {
             styledText.addTextToLine("MÜŞTERİ NÜSHASI", PrinterDefinitions.Alignment.Center)
@@ -50,8 +48,9 @@ class PrintService:BasePrintHelper() {
         }
         if (transactionCode == TransactionCode.VOID.type){
             var transactionType = ""
-            when(contentValues.getAsString(TransactionCols.Col_TransCode).toInt()){
+            when(receipt.transactionCode){
                 1 -> transactionType = "SATIŞ İPTALİ"
+                2 -> transactionType = "TAKSİTLİ SATIŞ"
                 3 -> transactionType = "İPTAL İŞLEMİ"
                 4 -> transactionType = "E. İADE İPTALİ"
                 5 -> transactionType = "N. İADE İPTALİ"
@@ -82,8 +81,7 @@ class PrintService:BasePrintHelper() {
         styledText.newLine()
         styledText.addTextToLine(lineTime, PrinterDefinitions.Alignment.Center )
         styledText.newLine()
-        styledText.addTextToLine(stringHelper.maskCardNumber(contentValues.getAsString(
-            TransactionCols.Col_PAN)), PrinterDefinitions.Alignment.Center)
+        styledText.addTextToLine(receipt.cardNo, PrinterDefinitions.Alignment.Center)
         styledText.newLine()
         val ddMMyy = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
         val date = ddMMyy.format(Calendar.getInstance().time)
@@ -102,7 +100,7 @@ class PrintService:BasePrintHelper() {
             styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(
                 TransactionCols.Col_Amount2).toInt()), PrinterDefinitions.Alignment.Right)
         else
-            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(TransactionCols.Col_Amount).toInt()), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine(receipt.amount, PrinterDefinitions.Alignment.Right)
         styledText.setLineSpacing(0.5f)
         styledText.setFontSize(10)
         styledText.newLine()
@@ -127,7 +125,7 @@ class PrintService:BasePrintHelper() {
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TARİHİ: ${extraContentValues!!.getAsString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
-            styledText.addTextToLine("ORJ. İŞ YERİ NO: ${mainActivity.currentMID }",PrinterDefinitions.Alignment.Center)
+            styledText.addTextToLine("ORJ. İŞ YERİ NO: ${receipt.merchantID }",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
             styledText.addTextToLine("İŞLEM TEMASSIZ TAMAMLANMIŞTIR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
@@ -152,7 +150,7 @@ class PrintService:BasePrintHelper() {
                 styledText.newLine()
                 styledText.addTextToLine("İMZAYA GEREK YOKTUR", PrinterDefinitions.Alignment.Center)
             }
-            if (contentValues.getAsString(TransactionCols.Col_CardReadType).toInt() == CardReadType.QrPay.type) {
+            if (receipt.cardReadType == CardReadType.QrPay.type) {
                 styledText.newLine()
                 styledText.addTextToLine("Bu işlem TR Karekod", PrinterDefinitions.Alignment.Center)
                 styledText.newLine()
@@ -165,17 +163,17 @@ class PrintService:BasePrintHelper() {
         if (transactionCode == TransactionCode.VOID.type)
             styledText.addTextToLine("SN: " + extraContentValues!!.getAsString(TransactionCols.Col_GUP_SN))
         else
-            styledText.addTextToLine("SN: " + contentValues.getAsString(TransactionCols.Col_GUP_SN))
-        styledText.addTextToLine("ONAY KODU: " + contentValues.getAsString(TransactionCols.Col_AuthCode), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine("SN: " + receipt.groupSerialNo)
+        styledText.addTextToLine("ONAY KODU: " + receipt.authCode, PrinterDefinitions.Alignment.Right)
         styledText.setFontSize(8)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.newLine()
-        styledText.addTextToLine("GRUP NO: " + contentValues.getAsString(TransactionCols.Col_BatchNo))
-        styledText.addTextToLine("REF NO: " + contentValues.getAsString(TransactionCols.Col_HostLogKey), PrinterDefinitions.Alignment.Right)
-        if (contentValues.getAsString(TransactionCols.Col_CardReadType).toInt() == CardReadType.QrPay.type)  {
+        styledText.addTextToLine("GRUP NO: " + receipt.groupSerialNo)
+        styledText.addTextToLine("REF NO: " + receipt.refNo, PrinterDefinitions.Alignment.Right)
+        if (receipt.cardReadType == CardReadType.QrPay.type)  {
             styledText.newLine()
-            styledText.addTextToLine("AID: " + contentValues.getAsString(TransactionCols.Col_Aid))
-            styledText.addTextToLine(contentValues.getAsString(TransactionCols.Col_AidLabel), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine("AID: " + receipt.aid)
+            styledText.addTextToLine(receipt.aidLabel, PrinterDefinitions.Alignment.Right)
         }
         styledText.newLine()
         styledText.addTextToLine("Ver: 92.12.05")
