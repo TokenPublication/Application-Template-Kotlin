@@ -20,7 +20,7 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     fun setTransactionCode(code: Int){ cardRepository.setTransactionCode(code) }
     fun setAmount(amount: Int){ cardRepository.setAmount(amount) }
     fun getCallBackMessage(): LiveData<ResponseCode>  = cardRepository.getCallBackMessage()
-    fun getCardLiveData(): LiveData<ICCCard> = cardRepository.getCard()
+    fun getCardLiveData(): LiveData<ICCCard> = cardRepository.getCardData()
     fun getCardServiceConnected() = cardRepository.getCardServiceConnected()
     fun getCardServiceBinding(): CardServiceBinding { return cardRepository.getCardServiceBinding() }
     fun getTimeOut() = cardRepository.timeOut
@@ -28,6 +28,7 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     //these functions only updating from UI, they don't need to be observed
     fun setGibSale(isGibSale: Boolean) { cardRepository.gibSale = isGibSale }
     fun setMainActivity(main: MainActivity){ cardRepository.mainActivity =main}
+    fun resetCard(){ cardRepository.setCard()}
 
     fun onDestroyed(){ cardRepository.onDestroyed()}
 
