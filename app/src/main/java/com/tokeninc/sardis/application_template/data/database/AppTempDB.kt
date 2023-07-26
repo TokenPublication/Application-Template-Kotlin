@@ -41,7 +41,7 @@ abstract class AppTempDB: RoomDatabase() {
                                 coroutineScope.launch{
                                     // TODO Developer: Default Terminal and Merchant ID is given for testing, you need to close this in your real application as the following line and activate your application from settings.
                                     var firstActivation = Activation(null, null)
-                                    firstActivation = Activation("0123456789", "12344321")
+                                    firstActivation = Activation("12344321", "1234567890")
                                     val dbInstance = getInstance(context)
                                     dbInstance.activationDao.initActivation(firstActivation)
                                     val firstBatch = Batch(null)
