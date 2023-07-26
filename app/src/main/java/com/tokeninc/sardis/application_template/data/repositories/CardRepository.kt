@@ -95,8 +95,8 @@ class CardRepository @Inject constructor() :
         try {
             if (!isApprove) { //if it is not the second readCard (reading ICC card for sale)
                 // in sale and void emv process should be EmvProcessType.READ_CARD, for refunds it should be EmvProcessType.FULL_EMV
-                obj.put("forceOnline", 0)
-                obj.put("zeroAmount", 1)
+                obj.put("forceOnline", 1)
+                obj.put("zeroAmount", 0)
                 val isVoid = getTransactionCode().value == TransactionCode.VOID.type
                 val isSale = getTransactionCode().value == TransactionCode.SALE.type
                 obj.put("emvProcessType", if (isVoid || isSale) EmvProcessType.READ_CARD.ordinal else EmvProcessType.FULL_EMV.ordinal)
