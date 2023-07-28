@@ -47,7 +47,7 @@ class TriggerViewModel: ViewModel() {
             val bundle = Bundle()
             var clConfigFile = ""
             try {
-                val xmlCLStream: InputStream = assetManager.open("custom_emv_cl_config.xml")
+                val xmlCLStream: InputStream = assetManager.open("emv_cl_config.xml")
                 val rCL = BufferedReader(InputStreamReader(xmlCLStream))
                 val totalCL = StringBuilder()
                 var line: String?
