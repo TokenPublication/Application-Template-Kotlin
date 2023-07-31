@@ -10,8 +10,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:logo="@drawable/token_logo"
         android:supportsRtl="true"
+        android:logo="@drawable/token_logo"
         android:theme="@style/AppTheme.NoActionBar"
         tools:targetApi="s"> <!-- Token theme without Actionbar -->
         <activity android:name=".ui.examples.ExampleActivity"/>
