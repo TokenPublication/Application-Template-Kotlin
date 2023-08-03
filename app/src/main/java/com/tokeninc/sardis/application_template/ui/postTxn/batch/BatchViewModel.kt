@@ -33,9 +33,9 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
      * This function works in IO thread, so it doesn't lock the main thread.
      * It increases batch number 1 and make groupSn 1
      */
-    private fun updateBatchNo(batchNo: Int){
+    private fun updateBatchNo(){
         viewModelScope.launch(Dispatchers.IO) {
-            batchRepository.updateBatchNo(batchNo)
+            batchRepository.updateBatchNo()
         }
     }
 
@@ -53,9 +53,9 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
      * This function works in IO thread, so it doesn't lock the main thread.
      * It increases the group Serial No as one.
      */
-    fun updateGUPSN(groupSn: Int){
+    fun updateGUPSN(){
         viewModelScope.launch(Dispatchers.IO) {
-            batchRepository.updateGUPSN(groupSn)
+            batchRepository.updateGUPSN()
         }
     }
 
@@ -124,7 +124,7 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
         val copySlip = printService.batchText(getBatchNo().toString(),transactions!!,mainActivity,activationViewModel,true)
         updateBatchSlip(copySlip,getBatchNo()) //update the batch slip for previous day
         val slip = printService.batchText(getBatchNo().toString(),transactions,mainActivity,activationViewModel,false)
-        updateBatchNo(getBatchNo()) //update the batch number
+        updateBatchNo() //update the batch number
         transactionViewModel.deleteAll() //delete all the transactions
         val batchCloseResponse = BatchCloseResponse(BatchResult.SUCCESS, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())) //TODO
         val intent = batchRepository.prepareBatchIntent(batchCloseResponse,mainActivity,slip) //prepare intent and print slip

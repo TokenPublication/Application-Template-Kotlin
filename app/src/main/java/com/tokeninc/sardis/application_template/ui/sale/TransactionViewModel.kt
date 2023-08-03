@@ -161,12 +161,11 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             responseCode = ResponseCode.SUCCESS
             transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent,ContentValues(),transactionCode) //it comes from parameters
         } else{
-            groupSn = batchViewModel.getGroupSN()
             batchNo = batchViewModel.getBatchNo()
-            batchViewModel.updateGUPSN(groupSn)
+            batchViewModel.updateGUPSN()
             groupSn = batchViewModel.getGroupSN()
             batchViewModel.updateSTN()
-            val stn = batchViewModel.getSTN() + 1 //since it's not fast as get the updated version simultaneous it's increased by to equalize updated number.
+            val stn = batchViewModel.getSTN() + 1 //since it's not fast as get the updated version simultaneous it's increased by 1 to equalize updated number.
             transactionResponse = transactionRepository.getTransactionResponse(amount,card,
                 transactionCode,extraContent,onlinePin,isPinByPass, uuid,isOffline,onlineTransactionResponse,batchNo,groupSn, stn)
             val responseTransactionCode = transactionResponse.transactionCode

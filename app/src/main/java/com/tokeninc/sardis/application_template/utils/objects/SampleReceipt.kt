@@ -29,6 +29,4 @@ class SampleReceipt(
     var cardReadType = transaction.Col_CardReadType
     var groupSerialNo =  batchRepository.getGroupSN().toString()
     var approvalCode = StringHelper().generateApprovalCode(batchNo, groupSerialNo, (groupSerialNo.toInt() - 1).toString())!!
-
-
 }

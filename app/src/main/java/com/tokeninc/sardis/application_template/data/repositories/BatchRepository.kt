@@ -19,16 +19,16 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
     fun getBatchNo() = batchDao.getBatchNo()
     fun getSTN() = batchDao.getSTN()
     fun getPreviousBatchSlip(): LiveData<String?> = batchDao.getBatchPreviousSlip()
-    suspend fun updateBatchNo(batchNo: Int){
-        batchDao.updateBatchNo(batchNo)
+    suspend fun updateBatchNo(){
+        batchDao.updateBatchNo()
     }
 
     suspend fun updateBatchSlip(batchSlip: String?,batchNo: Int?){
-        batchDao.updateBatchSlip(batchSlip, batchNo)
+        batchDao.updateBatchSlip(batchSlip)
     }
 
-    suspend fun updateGUPSN(groupSn: Int){
-        batchDao.updateGUPSN(groupSn)
+    suspend fun updateGUPSN(){
+        batchDao.updateGUPSN()
     }
 
     suspend fun updateSTN(){

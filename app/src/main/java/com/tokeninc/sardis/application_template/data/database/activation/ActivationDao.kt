@@ -12,12 +12,11 @@ interface ActivationDao {
     @Insert
     suspend fun insertActivation(activation: Activation)
     @Query("UPDATE ${DatabaseInfo.ACTIVATION_TABLE} SET ${ActivationCols.ColIPNo} = :ip, ${ActivationCols.ColPortNo} = :port ")
-    suspend fun updateConnection(ip: String?, port: String?) //users should get old_ip with getHostPort method
+    suspend fun updateConnection(ip: String?, port: String?)
 
     @Query("UPDATE ${DatabaseInfo.ACTIVATION_TABLE} SET ${ActivationCols.ColTerminalId} = :terminalId, ${ActivationCols.ColMerchantId} = :merchantId")
     suspend fun updateActivation(terminalId: String?, merchantId: String?)
 
-    //To see the current changes in UI you need to use observe method!
     @Query("SELECT ${ActivationCols.ColMerchantId} FROM ${DatabaseInfo.ACTIVATION_TABLE} LIMIT 1")
     fun getMerchantId(): String?
 

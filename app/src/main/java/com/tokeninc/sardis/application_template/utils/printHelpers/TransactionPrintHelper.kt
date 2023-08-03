@@ -170,7 +170,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         styledText.setFontSize(8)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.newLine()
-        styledText.addTextToLine("GRUP NO: " + receipt.groupSerialNo)
+        styledText.addTextToLine("GRUP NO: " + receipt.batchNo)
         styledText.addTextToLine("REF NO: " + receipt.refNo, PrinterDefinitions.Alignment.Right)
         if (receipt.cardReadType == CardReadType.QrPay.type)  {
             styledText.newLine()

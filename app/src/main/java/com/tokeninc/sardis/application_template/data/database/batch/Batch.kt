@@ -15,5 +15,5 @@ data class Batch(
     @ColumnInfo(name = BatchCols.col_batchNo)
     var col_batchNo: Int = 1,
     @ColumnInfo(name = BatchCols.col_ulGUP_SN)
-    var col_ulGUP_SN: Int = 1
+    var col_ulGUP_SN: Int = 0
 )
