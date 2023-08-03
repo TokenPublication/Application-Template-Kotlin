@@ -107,7 +107,7 @@ class MainActivity : TimeOutActivity() {
     private fun startActivity(){
         buildConfigs()
         val binding = ActivityMainBinding.inflate(layoutInflater)
-
+        //TODO connect Device Info here (it's already in appTemp)
         //get ViewModels from Dagger-Hilt easily, but to make this easy you need to implement each dependency clearly
         val getActivationViewModel : ActivationViewModel by viewModels()
         activationViewModel = getActivationViewModel
@@ -124,28 +124,15 @@ class MainActivity : TimeOutActivity() {
         triggerFragment = TriggerFragment(this)
         refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel,activationViewModel)
         postTxnFragment = PostTxnFragment(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel,activationViewModel)
-        observeTIDMID()
         initializeKMSService()
 
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-        actionChanged(intent.action)
+        actionControl(intent.action)
     }
 
     /** This function checks activation by checking MID and TID parameters
      *  if they are empty, warns the customer to activate application then finishes the mainActivity
-     *  TODO in first installation it enters here although it has default MID and TID ?
-     */
-    private fun checkActivation(){
-        activationViewModel.merchantID.observe(this){
-            activationWarning(it == null)
-        }
-        activationViewModel.terminalID.observe(this){
-            activationWarning(it == null)
-        }
-    }
-
-    /**
      * It shows a warning if isNull is true then finishes the activity
      */
     private fun activationWarning(isNull: Boolean){
@@ -160,9 +147,9 @@ class MainActivity : TimeOutActivity() {
     /**
      * This function calls corresponding functions whenever an action of intent is changed
      */
-    private fun actionChanged(action: String?){
+    private fun actionControl(action: String?){
         if (action != getString(R.string.Settings_Action)){ // if the action is not settings action it checks for the activation
-            checkActivation()
+            activationWarning(activationViewModel.merchantID() == null || activationViewModel.terminalID() == null )
         }
         when (action){
             getString(R.string.PosTxn_Action) ->  {
@@ -176,7 +163,7 @@ class MainActivity : TimeOutActivity() {
                 if (transactionViewModel.allTransactions().isNullOrEmpty()){ //if it is empty just show no transaction dialog
                     callbackMessage(ResponseCode.ERROR)
                 }else{ //else implementing batch closing and finish that activity
-                    postTxnFragment.startBatchClose()
+                    postTxnFragment.doBatchClose()
                 }
             }
             getString(R.string.Parameter_Action) ->  replaceFragment(triggerFragment)
@@ -215,7 +202,7 @@ class MainActivity : TimeOutActivity() {
             if(cardReadType == CardReadType.ICC.type){
                 cardViewModel.setGibSale(true)
                 connectCardService()
-                saleFragment.gibSale()
+                saleFragment.gibSale() //TODO ortakla
             } else{
                 replaceFragment(saleFragment)
             }
@@ -319,7 +306,7 @@ class MainActivity : TimeOutActivity() {
             if (transactionBatchNo == currentBatchNo){ // GIB Void Operation
                 cardViewModel.setTransactionCode(TransactionCode.VOID.type)
                 connectCardService()
-                postTxnFragment.gibVoidAfterConnected()
+                postTxnFragment.gibVoid()
             } else{ // GIB Refund Operation (because refund request is received after closing batch
                 val authCode = json.getString("AuthCode")
                 val tranDate = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
@@ -505,7 +492,7 @@ class MainActivity : TimeOutActivity() {
         bundle.putInt("ResponseCode", responseCode.ordinal)
         intent.putExtras(bundle)
 
-        when (responseCode){
+        when (responseCode){ //TODO error message ile
             ResponseCode.OFFLINE_DECLINE -> {
                 val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning, "Card Numbers are Mismatching", true)
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -537,24 +524,5 @@ class MainActivity : TimeOutActivity() {
         styledText.addStyledText(printText)
         styledText.finishPrintingProcedure()
         styledText.print(PrinterService.getService(applicationContext))
-    }
-
-    //This is for holding MID and TID, Because this values are LiveData,
-    // instead of writing this functions everywhere it is used call it from mainActivity.
-    var currentMID: String? = ""
-    var currentTID: String? = ""
-
-    /**
-     * After TID and MID is changed, it is called from there and hold data for it. It also called everytime whenever MainActivity is created.
-     */
-    fun observeTIDMID(){
-        activationViewModel.merchantID.observe(this){
-            if (it != null)
-                currentMID = it
-        }
-        activationViewModel.terminalID.observe(this){
-            if (it != null)
-                currentTID = it
-        }
     }
 }

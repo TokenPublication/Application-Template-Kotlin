@@ -52,7 +52,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     /**
      * It is for getting transactions with card number from database for recycler view on Void Operations.
      */
-    fun createLiveData(cardNumber: String?): MutableList<Transaction?> {
+    fun createLiveData(cardNumber: String?): MutableList<Transaction?> { //TODO rename
         list.value = getTransactionsByCardNo(cardNumber!!)!!
         return list.value!!.toMutableList()
     }
@@ -132,6 +132,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 if (downloadNumber == 10){
                     coroutineScope.launch(Dispatchers.IO) {
                         val onlineTransactionResponse = transactionRepository.parseResponse(extraContent,transactionCode)
+                        //TODO updateStn buraya
                         coroutineScope.launch(Dispatchers.Main) {
                             uiState.postValue(UIState.Success("Preparing The Data"))
                         }

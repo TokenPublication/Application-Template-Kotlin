@@ -283,11 +283,11 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             extraContents.put(ExtraKeys.INST_COUNT.name, installmentCount) // add installment count to pass onlineTransactionResponse
         }
         // uuid comes from Payment Gateway in Sale Transaction. It can be null
-        val uuid = mainActivity.intent.extras!!.getString("UUID")
+        val uuid = mainActivity.intent.extras!!.getString("UUID") //TODO bundle aç parametreleri azalt uuid receiptno zno..
         CoroutineScope(Dispatchers.Default).launch {
             transactionViewModel.transactionRoutine(amount, card!!,transactionCode,
                 extraContents, null,false,uuid ,false,batchViewModel,
-                mainActivity.currentMID,mainActivity.currentTID,mainActivity,activationViewModel.activationRepository)
+                activationViewModel.merchantID(),activationViewModel.terminalID(),mainActivity,activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->

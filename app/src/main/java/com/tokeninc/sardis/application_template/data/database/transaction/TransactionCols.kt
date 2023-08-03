@@ -3,6 +3,7 @@ package com.tokeninc.sardis.application_template.data.database.transaction
 class TransactionCols {
     companion object{
         const val Col_UUID = "Col_UUID"
+        const val col_ulSTN = "col_ulSTN"
         const val Col_GUP_SN = "Col_GUP_SN"
         const val Col_BatchNo = "Col_BatchNo"
         const val Col_ReceiptNo = "Col_ReceiptNo"
@@ -44,6 +45,5 @@ class TransactionCols {
         const val Col_Ext_Conf = "Col_Ext_Conf"
         const val Col_Ext_Ref = "Col_Ext_Ref"
         const val Col_Ext_RefundDateTime = "Col_Ext_RefundDateTime"
-        const val col_ulSTN = "col_ulSTN"
     }
 }

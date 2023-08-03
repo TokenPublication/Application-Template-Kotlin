@@ -26,8 +26,8 @@ class TransactionPrintHelper:BasePrintHelper() {
                          transactionCode: Int, context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
-        if (transactionCode == TransactionCode.SALE.type){
-            if (slipType === SlipType.CARDHOLDER_SLIP) {
+        if (transactionCode == TransactionCode.SALE.type){ //TODO kaldır
+            if (slipType === SlipType.CARDHOLDER_SLIP) { //TODO gib de
                 if (!(context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.ECR.name) &&
                     !(context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.VUK507.name))  {
                     printSlipHeader(styledText, receipt)
@@ -83,6 +83,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         styledText.newLine()
         styledText.addTextToLine(receipt.cardNo, PrinterDefinitions.Alignment.Center)
         styledText.newLine()
+        // TODO tarih saatte barışa bak ya da developerdan
         val ddMMyy = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
         val date = ddMMyy.format(Calendar.getInstance().time)
         val hhmmss = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
@@ -93,6 +94,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         styledText.setFontSize(14)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.newLine()
+        //TODO voidde owner name'in altına ilk işlem tarihini sağa ve sola koyman lazım
         styledText.addTextToLine("TUTAR:")
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type)
             styledText.addTextToLine(stringHelper.getAmount(extraContentValues!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()), PrinterDefinitions.Alignment.Right)
@@ -123,7 +125,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type){
             styledText.addTextToLine("MAL/HİZM İADE EDİLMİŞTİR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
-            styledText.addTextToLine("İŞLEM TARİHİ: ${extraContentValues!!.getAsString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
+            styledText.addTextToLine("ORJ. İŞLEM TARİHİ: ${extraContentValues!!.getAsString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
             styledText.addTextToLine("ORJ. İŞ YERİ NO: ${receipt.merchantID }",PrinterDefinitions.Alignment.Center)
             styledText.newLine()

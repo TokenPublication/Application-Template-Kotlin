@@ -9,6 +9,7 @@ import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
 import com.tokeninc.sardis.application_template.enums.BatchResult
+import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import com.tokeninc.sardis.application_template.utils.printHelpers.BatchClosePrintHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -89,7 +90,7 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
     /** It runs functions in parallel while ui updating dynamically in main thread with UI States
      * It also calls finishBatchClose functions in parallel in IO coroutine thread.
      */
-    suspend fun batchRoutine(mainActivity: MainActivity, transactionViewModel: TransactionViewModel){
+    suspend fun batchRoutine(mainActivity: MainActivity, transactionViewModel: TransactionViewModel, activationViewModel: ActivationViewModel){
         var downloadNumber = 0
         coroutineScope.launch(Dispatchers.Main){//firstly updating the UI as loading
             uiState.postValue(UIState.Loading)
@@ -105,7 +106,7 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
                 downloadNumber++
             }
             coroutineScope.launch(Dispatchers.IO) {
-                finishBatchClose(mainActivity,transactionViewModel)
+                finishBatchClose(mainActivity,transactionViewModel,activationViewModel)
             }
         }.join()
     }
@@ -114,18 +115,18 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
      * Lastly insert this slip to database, to print it again in next day. If it inserts it successfully, ui is updating
      * with Success Message. Finally, update Batch number and resets group number and delete all transactions from Transaction Table.
      */
-    private fun finishBatchClose(mainActivity: MainActivity, transactionViewModel: TransactionViewModel) {
+    private fun finishBatchClose(mainActivity: MainActivity, transactionViewModel: TransactionViewModel,activationViewModel: ActivationViewModel) {
         val transactions = transactionViewModel.allTransactions() //get all transactions from viewModel
         coroutineScope.launch(Dispatchers.Main) {
             uiState.postValue(UIState.Success("Grup Kapama Başarılı"))
         }
         val printService = BatchClosePrintHelper()
-        val copySlip = printService.batchText(getBatchNo().toString(),transactions!!,mainActivity,true)
+        val copySlip = printService.batchText(getBatchNo().toString(),transactions!!,mainActivity,activationViewModel,true)
         updateBatchSlip(copySlip,getBatchNo()) //update the batch slip for previous day
-        val slip = printService.batchText(getBatchNo().toString(),transactions,mainActivity,false)
+        val slip = printService.batchText(getBatchNo().toString(),transactions,mainActivity,activationViewModel,false)
         updateBatchNo(getBatchNo()) //update the batch number
         transactionViewModel.deleteAll() //delete all the transactions
-        val batchCloseResponse = BatchCloseResponse(BatchResult.SUCCESS, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()))
+        val batchCloseResponse = BatchCloseResponse(BatchResult.SUCCESS, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())) //TODO
         val intent = batchRepository.prepareBatchIntent(batchCloseResponse,mainActivity,slip) //prepare intent and print slip
         liveIntent.postValue(intent)
     }

@@ -90,19 +90,14 @@ class SettingsFragment(private val mainActivity: MainActivity,
             "Port", EditTextInputType.Number, 4, "Invalid Port!"
         ) { customInputFormat -> customInputFormat.text.length >= 2 && customInputFormat.text.toInt() > 0 })
 
-         activationViewModel.hostIP.observe(mainActivity) {
-             inputList[0].text = it
-         }
-        activationViewModel.hostPort.observe(mainActivity){
-            inputList[1].text = it
-        }
+        inputList[0].text = activationViewModel.hostIP()
+        inputList[1].text = activationViewModel.hostPort()
+
         val hostFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 val ipNo = inputList[0].text
                 val portNo = inputList[1].text
-                activationViewModel.hostIP.observe(mainActivity){//to get the current Val
-                    activationViewModel.updateConnection(ipNo, portNo,it)
-                }
+                activationViewModel.updateConnection(ipNo, portNo)
                 mainActivity.popFragment()
             })
 
@@ -177,19 +172,15 @@ class SettingsFragment(private val mainActivity: MainActivity,
             "Invalid Terminal No!"
         ) { input -> input.text.length == 8 })
 
-        mainActivity.observeTIDMID()
-        inputList[0].text = mainActivity.currentMID
-        inputList[1].text = mainActivity.currentTID
+        inputList[0].text = activationViewModel.merchantID()
+        inputList[1].text = activationViewModel.terminalID()
         val tidMidFragment = InputListFragment.newInstance(inputList, "Save",
             InputListFragment.ButtonListener{
                 merchantId = inputList[0].text
                 Log.d("Merchant ID",merchantId.toString())
                 terminalId = inputList[1].text
                 Log.d("Terminal ID",terminalId.toString())
-                activationViewModel.hostIP.observe(mainActivity){//to get the current Val
-                    activationViewModel.updateActivation(terminalId, merchantId,it)
-                }
-                mainActivity.observeTIDMID()
+                activationViewModel.updateActivation(terminalId, merchantId)
                 startActivation()
                 mainActivity.popFragment()
             })

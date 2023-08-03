@@ -10,7 +10,10 @@ import com.tokeninc.sardis.application_template.data.database.DatabaseInfo
 @Dao
 interface BatchDao {
     @Insert
-    suspend fun initBatch(batch: Batch)
+    suspend fun insertBatch(batch: Batch)
+
+    @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulSTN} = CASE WHEN ${BatchCols.col_ulSTN} >= 999 THEN 0 ELSE ${BatchCols.col_ulSTN} + 1 END WHERE ROWID = (SELECT rowID FROM ${DatabaseInfo.BATCH_TABLE} LIMIT 1)")
+    fun updateSTN()
 
     @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulGUP_SN} = :groupSn + 1 WHERE ${BatchCols.col_ulGUP_SN} = :groupSn")
     suspend fun updateGUPSN(groupSn: Int)
@@ -31,8 +34,5 @@ interface BatchDao {
 
     @Query("SELECT ${BatchCols.col_previous_batch_slip} FROM ${DatabaseInfo.BATCH_TABLE} LIMIT 1")
     fun getBatchPreviousSlip(): LiveData<String?>
-
-    @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulSTN} = CASE WHEN ${BatchCols.col_ulSTN} >= 999 THEN 0 ELSE ${BatchCols.col_ulSTN} + 1 END WHERE ROWID = (SELECT rowID FROM ${DatabaseInfo.BATCH_TABLE} LIMIT 1)")
-    fun updateSTN()
 
 }

@@ -103,7 +103,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
      * Original Amount && Return Amount && Transaction Date and also installment count
      * to extraContent which will be sent to Transaction Service
      */
-    private fun showInstallmentRefundFragment(){
+    private fun showInstallmentRefundFragment(){ //TODO you can do it as match refund
         val inputList = mutableListOf<CustomInputFormat>()
         cardViewModel.setTransactionCode(TransactionCode.INSTALLMENT_REFUND.type)
         addInputAmount(inputList,extraContent)
@@ -177,7 +177,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         mainActivity.addFragment(fragment)
     }
 
-    private var enterRefund = false
+    private var enterRefund = false //TODO bak buna
 
     /**
      * This function is called after card Service is connected.
@@ -213,7 +213,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
                 cardViewModel.getCardLiveData().observe(mainActivity){cardData ->
                     if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
                         Log.d("CardResult", cardData.mCardNumber.toString())
-                        refundRoutine(cardData,transactionCode) // start this operation with the card data
+                        doRefund(cardData,transactionCode) // start this operation with the card data
                     }
                 }
             }
@@ -223,7 +223,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
     /**
      * It is called when refund action received by gib. It checks if the card data are matching, if it is then call refundRoutine
      */
-    fun gibRefund(extraContents: ContentValues){
+    fun gibRefund(extraContents: ContentValues){ //TODO bundle alırsan, oradan çekersin. Ortaklarsın
         cardViewModel.setTransactionCode(TransactionCode.MATCHED_REFUND.type)
         transactionViewModel.extraContents = extraContents
         cardViewModel.getCardLiveData().observe(mainActivity){ cardData ->
@@ -231,7 +231,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
                 Log.d("Card Read", cardData.mCardNumber.toString())
                 if (extraContents.getAsString(ExtraKeys.CARD_NO.name).equals(cardData.mCardNumber)){
                     stringExtraContent = extraContents //initializing stringExtraContents to use it later.
-                    refundRoutine(cardData,TransactionCode.MATCHED_REFUND.type)
+                    doRefund(cardData,TransactionCode.MATCHED_REFUND.type)
                 }
                 else
                     mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
@@ -242,12 +242,12 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
     /**
      * After reading card, refund will be added to Transaction table with this function in parallel.
      */
-    private fun refundRoutine(mCard: ICCCard?, transactionCode: Int){
+    private fun doRefund(mCard: ICCCard?, transactionCode: Int){
         card = mCard!!
         CoroutineScope(Dispatchers.Default).launch {
             transactionViewModel.transactionRoutine(stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
-                ,card, transactionCode, stringExtraContent,null,false,null,false, batchViewModel, mainActivity.currentMID
-                ,mainActivity.currentTID, mainActivity,activationViewModel.activationRepository)
+                ,card, transactionCode, stringExtraContent,null,false,null,false, batchViewModel, activationViewModel.merchantID()
+                ,activationViewModel.terminalID(), mainActivity,activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->

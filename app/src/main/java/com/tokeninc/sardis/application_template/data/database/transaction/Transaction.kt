@@ -11,6 +11,8 @@ indices = [Index(value = [TransactionCols.Col_GUP_SN],unique = true)])
 data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_UUID)
     var Col_UUID: String?,
+    @ColumnInfo (name = TransactionCols.col_ulSTN)
+    var col_ulSTN: Int,
     @ColumnInfo(name = TransactionCols.Col_GUP_SN)
     @PrimaryKey
     var Col_GUP_SN: Int,
@@ -93,7 +95,5 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_Ext_Ref)
     var Col_Ext_Ref: Int = 0,
     @ColumnInfo(name = TransactionCols.Col_Ext_RefundDateTime)
-    var Col_Ext_RefundDateTime: String,
-    @ColumnInfo (name = TransactionCols.col_ulSTN)
-    var col_ulSTN: Int
+    var Col_Ext_RefundDateTime: String
 )

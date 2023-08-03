@@ -13,7 +13,7 @@ import com.tokeninc.sardis.application_template.utils.StringHelper
 
 /**
  * This adapter arranges Void transactions one by one.
- */
+ */ //TODO slip gelince yeni açma bunu kullan
 class VoidAdapter(private val transactionList: MutableList<Transaction?>): RecyclerView.Adapter<VoidAdapter.TransactionViewHolder>() {
 
     inner class TransactionViewHolder(val binding: TransactionItemsBinding): RecyclerView.ViewHolder(binding.root)
@@ -41,7 +41,7 @@ class VoidAdapter(private val transactionList: MutableList<Transaction?>): Recyc
         hb.textApprovalCode.text = transaction.Col_AuthCode
         hb.tvSN.text = transaction.Col_GUP_SN.toString()
         holder.itemView.setOnClickListener {
-            postTxnFragment!!.voidOperation(transaction)
+            postTxnFragment!!.doVoid(transaction)
             Log.d("RecyclerView/onClick","ContentVal: $transaction ")
         }
     }

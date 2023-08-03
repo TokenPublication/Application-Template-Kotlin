@@ -59,10 +59,11 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         onlineTransactionResponse.mResponseCode = ResponseCode.SUCCESS
         onlineTransactionResponse.mTextPrintCode1 = "Test Print 1"
         onlineTransactionResponse.mTextPrintCode2 = "Test Print 2"
-        onlineTransactionResponse.mAuthCode = (0..99999).random().toString()
-        onlineTransactionResponse.mHostLogKey = (0..99999999).random().toString()
+        onlineTransactionResponse.mAuthCode = (0..99999).random().toString() //TODO 6 haneli olacak
+        onlineTransactionResponse.mHostLogKey = (0..99999999).random().toString() //TODO 10 haneli olacak refNo
         onlineTransactionResponse.mDisplayData = "Display Data"
         onlineTransactionResponse.mKeySequenceNumber = "3"
+        // TODO Hosttan Inst Count gelmez kullanıcı seçtiği için, o yüzden transactionResponse'a ekle burayı
         if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type) {
             onlineTransactionResponse.insCount = contentVal!!.getAsString(ExtraKeys.INST_COUNT.name).toInt()
         }
@@ -93,15 +94,13 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             content.put(TransactionCols.Col_PAN, card.mCardNumber)
         content.put(TransactionCols.Col_CardSequenceNumber, card.CardSeqNum)
         content.put(TransactionCols.Col_TransCode, transactionCode)
-        content.put(TransactionCols.Col_Amount, amount)
+        content.put(TransactionCols.Col_Amount, amount) //todo extra_amount olacak matchedde
         when (transactionCode) {
             TransactionCode.MATCHED_REFUND.type -> {
                 content.put(TransactionCols.Col_Amount2,extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
                 content.put(TransactionCols.Col_Ext_Conf,extraContent.getAsString(ExtraKeys.AUTH_CODE.name).toInt())
                 content.put(TransactionCols.Col_Ext_Ref,extraContent.getAsString(ExtraKeys.REF_NO.name).toInt())
-                content.put(
-                    TransactionCols.Col_Ext_RefundDateTime,extraContent.getAsString(
-                        ExtraKeys.TRAN_DATE.name))
+                content.put(TransactionCols.Col_Ext_RefundDateTime,extraContent.getAsString(ExtraKeys.TRAN_DATE.name))
             }
             TransactionCode.INSTALLMENT_REFUND.type -> {
                 content.put(TransactionCols.Col_Amount2,extraContent!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
@@ -117,7 +116,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
                 content.put(TransactionCols.Col_Ext_Ref,0)
                 content.put(TransactionCols.Col_Ext_RefundDateTime,"")
             }
-            else -> {
+            else -> { //TODO sil hata vermezse np
                 content.put(TransactionCols.Col_Amount2,0)
                 content.put(TransactionCols.Col_Ext_Conf,0)
                 content.put(TransactionCols.Col_Ext_Ref,0)
@@ -240,11 +239,9 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             if (transaction.getAsInteger(TransactionCols.Col_InstCnt) != null && transaction.getAsInteger(
                     TransactionCols.Col_InstCnt) > 0) {
                 json.put("InstCount", transaction.getAsInteger(TransactionCols.Col_InstCnt))
-                json.put("InstAmount", transaction.getAsInteger(TransactionCols.Col_InstAmount))
             }
             else{
                 json.put("InstCount", 0)
-                json.put("InstAmount", 0)
             }
         } catch (e: JSONException) {
             e.printStackTrace()
@@ -254,7 +251,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
 
     /**
      * It prepares refund intent both for gib and normal refund and also print the slip
-     */
+     */ //TODO ortakla voidle aynı
     fun prepareRefundIntent(transactionResponse: TransactionResponse, mainActivity: MainActivity, receipt: SampleReceipt): Intent{
         Log.d("TransactionResponse/Refund", "responseCode:${transactionResponse.responseCode} ContentValues: ${transactionResponse.contentVal}")
         val printHelper = TransactionPrintHelper()

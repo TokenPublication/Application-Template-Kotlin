@@ -27,10 +27,10 @@ import javax.inject.Inject
 @HiltViewModel
 class ActivationViewModel @Inject constructor(val activationRepository: ActivationRepository): ViewModel() {
 
-    val merchantID = activationRepository.merchantID
-    val terminalID = activationRepository.terminalID
-    val hostIP = activationRepository.hostIP
-    val hostPort = activationRepository.hostPort
+    fun merchantID() = activationRepository.merchantID()
+    fun terminalID() = activationRepository.terminalID()
+    fun hostIP() = activationRepository.hostIP()
+    fun hostPort() = activationRepository.hostPort()
 
     var menuItemList = mutableListOf<IListMenuItem>()
 
@@ -42,15 +42,15 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
         }
     }
 
-    fun updateActivation(terminalId: String?, merchantId: String?, ip: String?){
+    fun updateActivation(terminalId: String?, merchantId: String?){
         viewModelScope.launch(Dispatchers.IO){
-            activationRepository.updateActivation(terminalId,merchantId,ip)
+            activationRepository.updateActivation(terminalId,merchantId)
         }
     }
 
-    fun updateConnection(ip: String?, port: String?, old_ip: String?){
+    fun updateConnection(ip: String?, port: String?){
         viewModelScope.launch(Dispatchers.IO){
-            activationRepository.updateConnection(ip,port,old_ip)
+            activationRepository.updateConnection(ip,port)
         }
     }
 

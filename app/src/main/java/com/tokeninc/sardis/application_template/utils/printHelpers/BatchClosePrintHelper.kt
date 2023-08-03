@@ -6,19 +6,20 @@ import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.enums.CardReadType
+import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
 
 /**
  * This class constructs Batch Close slip.
  */
 class BatchClosePrintHelper(): BasePrintHelper() {
-    fun batchText(batch_no: String, transactions: List<Transaction?>, mainActivity: MainActivity, isCopy: Boolean): String {
+    fun batchText(batch_no: String, transactions: List<Transaction?>, mainActivity: MainActivity, activationViewModel: ActivationViewModel, isCopy: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
         val printHelper = PrintHelper()
         var totalAmount = 0
-        val MID = mainActivity.currentMID
-        val TID = mainActivity.currentTID
+        val MID = activationViewModel.merchantID()
+        val TID = activationViewModel.terminalID()
         addTextToNewLine(styledText, "TOKEN", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "FINTECH", PrinterDefinitions.Alignment.Center)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)

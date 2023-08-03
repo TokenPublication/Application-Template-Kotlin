@@ -16,8 +16,8 @@ class SampleReceipt(
     batchRepository: BatchRepository
 ) {
     var merchantName = "Token Financial Technologies"
-    var merchantID = activationRepository.merchantID.value
-    var terminalID = activationRepository.terminalID.value
+    var merchantID = activationRepository.merchantID()
+    var terminalID = activationRepository.terminalID()
     var aid = transaction.Col_Aid
     var aidLabel = transaction.Col_AidLabel
     var cardNo = StringHelper().maskCardNumber(transaction.Col_PAN)

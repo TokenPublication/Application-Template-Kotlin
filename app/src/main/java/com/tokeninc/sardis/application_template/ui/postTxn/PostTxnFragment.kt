@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 
 /**
  * This is the class for Post Transaction Methods.
- */
+ */ //TODO dont pass refundFragment
 class PostTxnFragment(private val mainActivity: MainActivity, private val transactionViewModel: TransactionViewModel,
                       private val refundFragment: RefundFragment, private val batchViewModel: BatchViewModel,
                       private val cardViewModel: CardViewModel, private val activationViewModel: ActivationViewModel) : Fragment() {
@@ -89,7 +89,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
                 ),InfoDialog.InfoDialogButtons.Both,1,
                     object : InfoDialogListener {
                         override fun confirmed(i: Int) {
-                            startBatchClose()
+                            doBatchClose()
                         }
                         override fun canceled(i: Int) {}
                     })
@@ -112,7 +112,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
      * This function is called after card reading, it finds the corresponding transaction by reference number and void it
      * if the reading card and transaction's card numbers are matching.
      */
-    fun gibVoidAfterConnected() {
+    fun gibVoid() {
         cardViewModel.setTransactionCode(TransactionCode.VOID.type)
         cardViewModel.getCardLiveData().observe(mainActivity) { cardData ->
             if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) {
@@ -124,7 +124,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
                 if (transaction != null) {
                     if (cardData.mCardNumber == transaction.Col_PAN) {
                         this.card = cardData
-                        voidOperation(transaction)
+                        doVoid(transaction)
                     } else {
                         mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
                     }
@@ -151,7 +151,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
     /** After reading a card, this function is called only for Void operations.
      * If there was no operation with that card, it warns the user. Else ->
      * It shows transactions that has been operated with that card with recyclerview.
-     */
+     */ //TODO simplify it (from baris)
     private fun voidAfterCardRead(mCard: ICCCard?){
         if (transactionViewModel.getTransactionsByCardNo(mCard!!.mCardNumber.toString()) == null){
             val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
@@ -168,15 +168,15 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
     }
 
     /**
-     * It starts void operation in parallel with TransactionRoutine method.
+     * It starts void operation in parallel with TransactionRoutine method. //TODO methodlar do'lu olacak
      */
-    fun voidOperation(transaction: Transaction){
+    fun doVoid(transaction: Transaction){
         val contentValHelper = ContentValHelper()
         CoroutineScope(Dispatchers.Default).launch {
             transactionViewModel.transactionRoutine(transaction.Col_Amount,
                 card!!,TransactionCode.VOID.type,
                 contentValHelper.getContentVal(transaction),null,false,null,false,batchViewModel,
-                mainActivity.currentMID, mainActivity.currentTID,mainActivity,activationViewModel.activationRepository)
+                activationViewModel.merchantID(), activationViewModel.terminalID(),mainActivity,activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->
@@ -194,9 +194,9 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
     /**
      * It starts batch close with batch close service which runs parallel with Coroutine
      */
-    fun startBatchClose() {
+    fun doBatchClose() {
         CoroutineScope(Dispatchers.Default).launch {
-            batchViewModel.batchRoutine(mainActivity,transactionViewModel)
+            batchViewModel.batchRoutine(mainActivity,transactionViewModel,activationViewModel)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         batchViewModel.getUiState().observe(mainActivity) { state ->
