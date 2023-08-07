@@ -23,6 +23,8 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.BuildConfig
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.deviceinfo.DeviceInfo
+import com.tokeninc.libtokenkms.KMSWrapperInterface.InitCallbacks
+import com.tokeninc.libtokenkms.TokenKMS
 import com.tokeninc.sardis.application_template.*
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.enums.*
@@ -43,6 +45,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
+
 
 /** This is the Main Activity class,
  * all operations are run here because this application is designed as a single-activity architecture
@@ -116,23 +119,51 @@ class MainActivity : TimeOutActivity() {
         cardViewModel = getCardViewModel
         cardViewModel.setMainActivity(this) //this is for making setEMVConfiguration method
 
-        saleFragment = SaleFragment(transactionViewModel,this,activationViewModel,batchViewModel,cardViewModel)
+        saleFragment = SaleFragment(transactionViewModel,this,batchViewModel,cardViewModel,activationViewModel)
         settingsFragment = SettingsFragment(this, activationViewModel, intent)
         triggerFragment = TriggerFragment(this)
-        refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel)
-        postTxnFragment = PostTxnFragment(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel)
+        refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel,activationViewModel)
+        postTxnFragment = PostTxnFragment(this,transactionViewModel,refundFragment,batchViewModel,cardViewModel,activationViewModel)
         observeTIDMID()
+        initializeKMSService()
 
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-
         actionChanged(intent.action)
+    }
+
+    /** This function checks activation by checking MID and TID parameters
+     *  if they are empty, warns the customer to activate application then finishes the mainActivity
+     *  TODO in first installation it enters here although it has default MID and TID ?
+     */
+    private fun checkActivation(){
+        activationViewModel.merchantID.observe(this){
+            activationWarning(it == null)
+        }
+        activationViewModel.terminalID.observe(this){
+            activationWarning(it == null)
+        }
+    }
+
+    /**
+     * It shows a warning if isNull is true then finishes the activity
+     */
+    private fun activationWarning(isNull: Boolean){
+        if (isNull){
+            showInfoDialog(InfoDialog.InfoType.Warning,"You must activate the application template!", false)
+            Handler(Looper.getMainLooper()).postDelayed({
+                finish()
+            }, 2000)
+        }
     }
 
     /**
      * This function calls corresponding functions whenever an action of intent is changed
      */
     private fun actionChanged(action: String?){
+        if (action != getString(R.string.Settings_Action)){ // if the action is not settings action it checks for the activation
+            checkActivation()
+        }
         when (action){
             getString(R.string.PosTxn_Action) ->  {
                 replaceFragment(postTxnFragment)
@@ -191,6 +222,29 @@ class MainActivity : TimeOutActivity() {
         } else{ // when user select application template as a banking application
             replaceFragment(saleFragment)
         }
+    }
+
+    /**
+     * This function binds Token KMS lib. If it fails, it warns the user and finishes the activity.
+     */
+    fun initializeKMSService(): TokenKMS{
+        val kms = TokenKMS()
+        kms.setInitCallbacks(object : InitCallbacks {
+            override fun onInitSuccess() {
+                Log.i("KMS","Success")
+                Log.i("Token KMS onInitSuccess", "KMS Init OK")
+            }
+
+            override fun onInitFailed() {
+                Log.v("Token KMS onInitSuccess", "KMS Init Failed")
+                showInfoDialog(InfoDialog.InfoType.Declined,"KMS Initilization Failed",false)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    finish()
+                }, 2000)
+            }
+        })
+        kms.init(applicationContext)
+        return kms
     }
 
     /**
@@ -491,26 +545,16 @@ class MainActivity : TimeOutActivity() {
     var currentTID: String? = ""
 
     /**
-     * It holds the last updated values in there
-     */
-    private fun setMID(MerchantID: String?) {
-        currentMID = MerchantID
-    }
-
-    private fun setTID(TerminalID: String?) {
-        currentTID = TerminalID
-    }
-    /**
      * After TID and MID is changed, it is called from there and hold data for it. It also called everytime whenever MainActivity is created.
      */
     fun observeTIDMID(){
         activationViewModel.merchantID.observe(this){
             if (it != null)
-                setMID(it)
+                currentMID = it
         }
         activationViewModel.terminalID.observe(this){
             if (it != null)
-                setTID(it)
+                currentTID = it
         }
     }
 }

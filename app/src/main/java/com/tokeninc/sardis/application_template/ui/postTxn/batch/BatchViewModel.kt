@@ -21,10 +21,11 @@ import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class BatchViewModel @Inject constructor(private val batchRepository: BatchRepository): ViewModel() {
+class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): ViewModel() {
 
     fun getGroupSN()  = batchRepository.getGroupSN()
     fun getBatchNo() = batchRepository.getBatchNo()
+    fun getSTN() = batchRepository.getSTN()
     fun getPreviousBatchSlip(): LiveData<String?> = batchRepository.getPreviousBatchSlip()
 
     /**
@@ -54,6 +55,16 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
     fun updateGUPSN(groupSn: Int){
         viewModelScope.launch(Dispatchers.IO) {
             batchRepository.updateGUPSN(groupSn)
+        }
+    }
+
+    /**
+     * This function works in IO thread, so it doesn't lock the main thread.
+     * It increases STN as one.
+     */
+    fun updateSTN(){
+        viewModelScope.launch(Dispatchers.IO) {
+            batchRepository.updateSTN()
         }
     }
 

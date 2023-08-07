@@ -25,7 +25,7 @@ import javax.inject.Inject
  * We won't call repository while we call ViewModel class because we define our repository in AppModule with Hilt.
  */
 @HiltViewModel
-class ActivationViewModel @Inject constructor(private val activationRepository: ActivationRepository): ViewModel() {
+class ActivationViewModel @Inject constructor(val activationRepository: ActivationRepository): ViewModel() {
 
     val merchantID = activationRepository.merchantID
     val terminalID = activationRepository.terminalID
@@ -36,7 +36,7 @@ class ActivationViewModel @Inject constructor(private val activationRepository: 
 
     fun replaceFragment(mainActivity: MainActivity){
         val menuFragment = ListMenuFragment.newInstance(menuItemList,"Settings",
-            true, R.drawable.token_logo)
+            true, R.drawable.token_logo_png)
         viewModelScope.launch(Dispatchers.Main) {
             mainActivity.replaceFragment(menuFragment as Fragment)
         }

@@ -15,7 +15,9 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.google.gson.Gson
+import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
+import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
@@ -23,12 +25,13 @@ import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCC
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
 import com.tokeninc.sardis.application_template.enums.CardReadType
 import com.tokeninc.sardis.application_template.enums.CardServiceResult
+import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.PaymentTypes
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.SlipType
 import com.tokeninc.sardis.application_template.enums.TransactionCode
-import com.tokeninc.sardis.application_template.ui.MenuItem
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
+import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import kotlinx.coroutines.CoroutineScope
@@ -38,17 +41,19 @@ import java.lang.String.valueOf
 
 /**
  * This Class is for Sale operations, it depends on Transaction View Model
- * It has dummy sale layout, which is the only view that we created. Other ui elements come from tokeninc.ui library
+ * It has dummy sale layout, which is the only view that we created. Other ui elements come from ui library
  */
 class SaleFragment(private val transactionViewModel: TransactionViewModel, private val mainActivity: MainActivity,
-                   private val activationViewModel: ActivationViewModel, private val batchViewModel: BatchViewModel,
-                   private val cardViewModel: CardViewModel) : Fragment() {
+                   private val batchViewModel: BatchViewModel, private val cardViewModel: CardViewModel,
+                   private val activationViewModel: ActivationViewModel) : Fragment() {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
 
     var card: ICCCard? = null
     private var amount = 0
+    var installmentCount = 0 // this is for tracking instalment count if it will be an instalment sale
+    var transactionCode = TransactionCode.SALE.type // this is for tracking transaction code, it can be also installment sale
 
     companion object{
         //listener for spinner
@@ -82,23 +87,70 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         clickButtons()
     }
 
-
     /** Flow: Clicking Sale Button > Read Card > On Card Data Received > (if card is ICC) -> here
      * It is a sale menu, if user click sale it calls doSale() method
      */
     private fun prepareSaleMenu(mCard: ICCCard?) {
         card = mCard
-        //cardViewModel.setTransactionCode(0)
         val menuItemList = transactionViewModel.menuItemList
         menuItemList.add(MenuItem( getStrings(R.string.sale), {
-            doSale(null)
+            readICC()
         }))
-        menuItemList.add(MenuItem(getStrings(R.string.Installment_sale), { }))
-        menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))
-        menuItemList.add(MenuItem(getStrings(R.string.campaign_sale), { }))
-        val fragment = ListMenuFragment.newInstance(menuItemList,
-            getStrings(R.string.sale_type), false, null)
-        mainActivity.replaceFragment(fragment)
+        //TODO Developer check from parameterDB
+        val isInstallment = true
+        val isLoyalty = true
+        val isCampaign = true
+        if (isInstallment) menuItemList.add(MenuItem(getStrings(R.string.installment_sale), {
+            showInstallments()
+        })) //TODO installment göster sale'a gitsin, TransCode installment sale TransactionCode Installment_Sale, extraContent
+        if (isLoyalty) menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { })) //TODO transactionRoutine gitsin
+        if (isCampaign) menuItemList.add(MenuItem(getStrings(R.string.campaign_sale), { })) //TODO transactionRoutine gitsin
+        val listMenuFragment = ListMenuFragment.newInstance(menuItemList,
+            getStrings(R.string.sale_type), false, R.drawable.token_logo_png)
+        mainActivity.replaceFragment(listMenuFragment as Fragment)
+    }
+
+    /**
+     * This method is for reading ICC card again on SaleMenu
+     */
+    private fun readICC(){
+        cardViewModel.resetCard()
+        cardViewModel.initializeCardServiceBinding(mainActivity)
+        cardViewModel.getCardServiceConnected().observe(mainActivity) { isConnected ->
+            if (isConnected)
+                cardViewModel.readCard()
+        }
+        cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
+            if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
+                Log.d("CardResult", cardData.mCardNumber.toString())
+                doSale(null)
+            }
+        }
+    }
+
+    /**
+     * This method for show installment count choice screen. After user selects instCount, it calls cardReader method for read card.
+     */
+    private fun showInstallments() {
+        val listener = MenuItemClickListener { menuItem: MenuItem? ->
+            val itemName = menuItem!!.name.split(" ")
+            installmentCount = itemName[0].toInt()
+            mainActivity.popFragment()
+            readICC()
+        }
+        val maxInst = 12
+        val menuItems = mutableListOf<IListMenuItem>()
+        for (i in 2..maxInst) {
+            val menuItem = MenuItem(i.toString() + " " + getStrings(R.string.installment), listener)
+            menuItems.add(menuItem)
+        }
+        val instFragment = ListMenuFragment.newInstance(
+            menuItems,
+            getStrings(R.string.installment_sale),
+            true,
+            R.drawable.token_logo_png
+        )
+        mainActivity.replaceFragment(instFragment as Fragment)
     }
 
     /**
@@ -170,19 +222,17 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             this.card = cardData
             val cardReadType = cardData.mCardReadType
             Log.d("Card Read type",cardReadType.toString())
-            if (cardReadType == CardReadType.CLCard.type)
-                doSale(null)
-            else if (cardReadType == CardReadType.ICC.type)
-                prepareSaleMenu(card)
-            else if (cardReadType == CardReadType.QrPay.type){
-                qrSale()
+            when (cardReadType){
+                CardReadType.CLCard.type -> doSale(null)
+                CardReadType.ICC.type -> prepareSaleMenu(card)
+                CardReadType.QrPay.type -> qrSale()
                 }
             }
         }
     }
 
     private var isCancelable = true
-    var qrSuccess = true
+    private var qrSuccess = true
     private fun qrSale() {
         val dialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Progress, "Please Wait", true)
         Handler(Looper.getMainLooper()).postDelayed({
@@ -227,10 +277,17 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         if (!cardData.isNullOrEmpty()){
             card = Gson().fromJson(cardData, ICCCard::class.java)
         }
+        val extraContents = ContentValues()
+        if (installmentCount != 0){
+            transactionCode = TransactionCode.INSTALLMENT_SALE.type
+            extraContents.put(ExtraKeys.INST_COUNT.name, installmentCount) // add installment count to pass onlineTransactionResponse
+        }
+        // uuid comes from Payment Gateway in Sale Transaction. It can be null
+        val uuid = mainActivity.intent.extras!!.getString("UUID")
         CoroutineScope(Dispatchers.Default).launch {
-            transactionViewModel.transactionRoutine(amount, card!!,TransactionCode.SALE.type,
-            ContentValues(), null,false,null ,false,batchViewModel,
-                mainActivity.currentMID,mainActivity.currentTID,mainActivity)
+            transactionViewModel.transactionRoutine(amount, card!!,transactionCode,
+                extraContents, null,false,uuid ,false,batchViewModel,
+                mainActivity.currentMID,mainActivity.currentTID,mainActivity,activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->

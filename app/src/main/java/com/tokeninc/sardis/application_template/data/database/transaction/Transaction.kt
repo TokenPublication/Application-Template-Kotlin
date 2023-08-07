@@ -93,5 +93,7 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_Ext_Ref)
     var Col_Ext_Ref: Int = 0,
     @ColumnInfo(name = TransactionCols.Col_Ext_RefundDateTime)
-    var Col_Ext_RefundDateTime: String
+    var Col_Ext_RefundDateTime: String,
+    @ColumnInfo (name = TransactionCols.col_ulSTN)
+    var col_ulSTN: Int
 )

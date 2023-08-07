@@ -2,8 +2,7 @@ package com.tokeninc.sardis.application_template.utils.printHelpers
 
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
-import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.R
+import com.tokeninc.sardis.application_template.utils.objects.SampleReceipt
 
 /**
  * This class includes styledText methods.
@@ -35,22 +34,20 @@ open class BasePrintHelper {
         addText(styledText, text, alignment, fontSize, 0f)
     }
 
-    fun printSlipHeader(styledText: StyledString, mainActivity: MainActivity) {
+    fun printSlipHeader(styledText: StyledString, receipt: SampleReceipt) {
         styledText.setLineSpacing(0.5f)
         styledText.setFontSize(12)
         styledText.setFontFace(PrinterDefinitions.Font_E.SourceSansPro)
-        styledText.addTextToLine(mainActivity.getString(R.string.merchant_name), PrinterDefinitions.Alignment.Center)
-        styledText.newLine()
-        styledText.newLine()
+        styledText.addTextToLine(receipt.merchantName, PrinterDefinitions.Alignment.Center)
         styledText.newLine()
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.addTextToLine("İŞYERİ NO:", PrinterDefinitions.Alignment.Left)
         styledText.setFontFace(PrinterDefinitions.Font_E.SourceSansPro)
-        styledText.addTextToLine(mainActivity.currentMID, PrinterDefinitions.Alignment.Right)
+        styledText.addTextToLine(receipt.merchantID, PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.addTextToLine("TERMİNAL NO:", PrinterDefinitions.Alignment.Left)
         styledText.setFontFace(PrinterDefinitions.Font_E.SourceSansPro)
-        styledText.addTextToLine(mainActivity.currentTID, PrinterDefinitions.Alignment.Right)
+        styledText.addTextToLine(receipt.terminalID, PrinterDefinitions.Alignment.Right)
     }
 }

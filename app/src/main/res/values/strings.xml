@@ -44,7 +44,7 @@
     <string name="printing_the_receipt">Printing the receipt</string>
 
     <string name="sale">Sale</string>
-    <string name="Installment_sale">Installment Sale</string>
+    <string name="installment_sale">Installment Sale</string>
     <string name="loyalty_sale">Loyalty Sale</string>
     <string name="campaign_sale">Campaign Sale</string>
     <string name="sale_type">Sale Type</string>

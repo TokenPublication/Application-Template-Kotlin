@@ -1,6 +1,6 @@
 package com.tokeninc.sardis.application_template.ui.postTxn.refund
 
-import com.tokeninc.sardis.application_template.ui.MenuItem
+import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.os.Bundle
@@ -26,6 +26,7 @@ import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.enums.ExtraKeys
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
@@ -39,7 +40,8 @@ import java.util.*
  * This is the fragment for the Refund actions. Refund operation methods are defined here.
  */
 class RefundFragment(private val mainActivity: MainActivity, private val cardViewModel: CardViewModel,
-                     private val transactionViewModel: TransactionViewModel, private val batchViewModel: BatchViewModel) : Fragment() {
+                     private val transactionViewModel: TransactionViewModel, private val batchViewModel: BatchViewModel,
+private val activationViewModel: ActivationViewModel) : Fragment() {
     private var _binding: FragmentRefundBinding? = null
     private val binding get() = _binding!!
 
@@ -155,7 +157,7 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
             menuItems,
             getStrings(R.string.installment_refund),
             true,
-            R.drawable.token_logo
+            R.drawable.token_logo_png
         )
        mainActivity.addFragment(instFragment as Fragment)
     }
@@ -245,7 +247,7 @@ class RefundFragment(private val mainActivity: MainActivity, private val cardVie
         CoroutineScope(Dispatchers.Default).launch {
             transactionViewModel.transactionRoutine(stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
                 ,card, transactionCode, stringExtraContent,null,false,null,false, batchViewModel, mainActivity.currentMID
-                ,mainActivity.currentTID, mainActivity)
+                ,mainActivity.currentTID, mainActivity,activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->

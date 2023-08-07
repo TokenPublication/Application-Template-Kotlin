@@ -38,14 +38,16 @@ abstract class AppTempDB: RoomDatabase() {
                             override fun onCreate(db: SupportSQLiteDatabase) {
                                 Log.d("FIRST INSTANCE", "HEY")
                                 super.onCreate(db)
-                                    coroutineScope.launch{
-                                        val firstActivation = Activation(null, null)
-                                        val dbInstance = getInstance(context)
-                                        dbInstance.activationDao.initActivation(firstActivation)
-                                        val firstBatch = Batch(null)
-                                        dbInstance.batchDao.initBatch(firstBatch)
-                                        Log.d("FIRST INSTANCE","created")
-                                    }
+                                coroutineScope.launch{
+                                    // TODO Developer: Default Terminal and Merchant ID is given for testing, you need to close this in your real application as the following line and activate your application from settings.
+                                    var firstActivation = Activation(null, null)
+                                    firstActivation = Activation("12344321", "1234567890")
+                                    val dbInstance = getInstance(context)
+                                    dbInstance.activationDao.initActivation(firstActivation)
+                                    val firstBatch = Batch(null)
+                                    dbInstance.batchDao.initBatch(firstBatch)
+                                    Log.d("FIRST INSTANCE","created")
+                                }
                             }
                         })
                         .build()

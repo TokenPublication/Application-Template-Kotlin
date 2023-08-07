@@ -21,7 +21,8 @@ import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBindi
 import com.tokeninc.sardis.application_template.enums.CardServiceResult
 import com.tokeninc.sardis.application_template.enums.ResponseCode
 import com.tokeninc.sardis.application_template.enums.TransactionCode
-import com.tokeninc.sardis.application_template.ui.MenuItem
+import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
+import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.refund.RefundFragment
@@ -38,7 +39,7 @@ import kotlinx.coroutines.launch
  */
 class PostTxnFragment(private val mainActivity: MainActivity, private val transactionViewModel: TransactionViewModel,
                       private val refundFragment: RefundFragment, private val batchViewModel: BatchViewModel,
-                      private val cardViewModel: CardViewModel) : Fragment() {
+                      private val cardViewModel: CardViewModel, private val activationViewModel: ActivationViewModel) : Fragment() {
 
     private var _binding: FragmentPostTxnBinding? = null
     private val binding get() = _binding!!
@@ -175,7 +176,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             transactionViewModel.transactionRoutine(transaction.Col_Amount,
                 card!!,TransactionCode.VOID.type,
                 contentValHelper.getContentVal(transaction),null,false,null,false,batchViewModel,
-                mainActivity.currentMID, mainActivity.currentTID,mainActivity)
+                mainActivity.currentMID, mainActivity.currentTID,mainActivity,activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->

@@ -12,7 +12,7 @@ class InfoDialogViewModel: ViewModel() {
     var list = mutableListOf<IListMenuItem>()
 
     fun replaceFragment(exampleActivity: ExampleActivity){
-        val fragment = ListMenuFragment.newInstance(list, "Info Dialog", false, R.drawable.token_logo)
+        val fragment = ListMenuFragment.newInstance(list, "Info Dialog", false, R.drawable.token_logo_png)
         exampleActivity.replaceFragment(fragment as Fragment)
     }
 }
