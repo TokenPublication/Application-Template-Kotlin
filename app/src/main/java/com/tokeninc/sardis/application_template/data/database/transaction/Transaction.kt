@@ -42,12 +42,10 @@ data class Transaction(
     var Col_IsVoid: Int,
     @ColumnInfo(name = TransactionCols.Col_InstCnt)
     var Col_InstCnt: Int = 0,
-    @ColumnInfo(name = TransactionCols.Col_InstAmount)
-    var Col_InstAmount: Int = 0,
     @ColumnInfo(name = TransactionCols.Col_TranDate)
     var Col_TranDate: String,
-    @ColumnInfo(name = TransactionCols.Col_HostLogKey)
-    var Col_HostLogKey: String,
+    @ColumnInfo(name = TransactionCols.Col_RefNo)
+    var Col_RefNo: String,
     @ColumnInfo(name = TransactionCols.Col_VoidDateTime)
     var Col_VoidDateTime: String?,
     @ColumnInfo(name = TransactionCols.Col_AuthCode)
@@ -56,10 +54,8 @@ data class Transaction(
     var Col_Aid: String?,
     @ColumnInfo(name = TransactionCols.Col_AidLabel)
     var Col_AidLabel: String?,
-    @ColumnInfo(name = TransactionCols.Col_TextPrintCode1)
-    var Col_TextPrintCode1: String,
-    @ColumnInfo(name = TransactionCols.Col_TextPrintCode2)
-    var Col_TextPrintCode2: String,
+    @ColumnInfo(name = TransactionCols.Col_TextPrintCode)
+    var Col_TextPrintCode: String,
     @ColumnInfo(name = TransactionCols.Col_DisplayData)
     var Col_DisplayData: String,
     @ColumnInfo(name = TransactionCols.Col_KeySequenceNumber)

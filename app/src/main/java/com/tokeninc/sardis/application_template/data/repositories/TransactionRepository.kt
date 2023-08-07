@@ -57,8 +57,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
     fun parseResponse (contentVal: ContentValues?, transactionCode: Int): OnlineTransactionResponse {
         val onlineTransactionResponse = OnlineTransactionResponse()
         onlineTransactionResponse.mResponseCode = ResponseCode.SUCCESS
-        onlineTransactionResponse.mTextPrintCode1 = "Test Print 1"
-        onlineTransactionResponse.mTextPrintCode2 = "Test Print 2"
+        onlineTransactionResponse.mTextPrintCode = "Test Print"
         onlineTransactionResponse.mAuthCode = (0..99999).random().toString() //TODO 6 haneli olacak
         onlineTransactionResponse.mHostLogKey = (0..99999999).random().toString() //TODO 10 haneli olacak refNo
         onlineTransactionResponse.mDisplayData = "Display Data"
@@ -139,13 +138,12 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         Log.d("InstallmentCount","${onlineTransactionResponse.insCount}")
         content.put(TransactionCols.Col_InstAmount, onlineTransactionResponse.instAmount)
         content.put(TransactionCols.Col_TranDate, "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}")
-        content.put(TransactionCols.Col_HostLogKey, onlineTransactionResponse.mHostLogKey)
+        content.put(TransactionCols.Col_RefNo, onlineTransactionResponse.mHostLogKey)
         content.put(TransactionCols.Col_VoidDateTime, "")
         content.put(TransactionCols.Col_AuthCode, onlineTransactionResponse.mAuthCode)
         content.put(TransactionCols.Col_Aid, card.AID2)
         content.put(TransactionCols.Col_AidLabel, card.AIDLabel)
-        content.put(TransactionCols.Col_TextPrintCode1, onlineTransactionResponse.mTextPrintCode1)
-        content.put(TransactionCols.Col_TextPrintCode2, onlineTransactionResponse.mTextPrintCode2)
+        content.put(TransactionCols.Col_TextPrintCode, onlineTransactionResponse.mTextPrintCode)
         content.put(TransactionCols.Col_DisplayData, onlineTransactionResponse.mDisplayData)
         content.put(TransactionCols.Col_KeySequenceNumber, onlineTransactionResponse.mKeySequenceNumber)
         content.put(TransactionCols.Col_AC, card.AC)
@@ -208,7 +206,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
                     bundle.putString("RefundInfo", getRefundInfo(transactionResponse,batchNo,groupSN,amount,merchantID,terminalID,card))
                     if(transactionResponse.contentVal != null) {
                         bundle.putString("RefNo", transactionResponse.contentVal!!.getAsString(
-                            TransactionCols.Col_HostLogKey))
+                            TransactionCols.Col_RefNo))
                         bundle.putString("AuthNo", transactionResponse.contentVal!!.getAsString(
                             TransactionCols.Col_AuthCode))
                     }
@@ -230,7 +228,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             json.put("BatchNo", batchNo)
             json.put("TxnNo", groupSN)
             json.put("Amount", amount)
-            json.put("RefNo", transaction!!.getAsString(TransactionCols.Col_HostLogKey))
+            json.put("RefNo", transaction!!.getAsString(TransactionCols.Col_RefNo))
             json.put("AuthCode", transaction.getAsString(TransactionCols.Col_AuthCode))
             json.put("TranDate", transaction.getAsString(TransactionCols.Col_TranDate))
             json.put("MID",MID)

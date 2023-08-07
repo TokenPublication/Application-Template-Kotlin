@@ -57,7 +57,7 @@ class BatchClosePrintHelper(): BasePrintHelper() {
                 addTextToNewLine(styledText, stringHelper.maskTheCardNo("5209305830592013"), PrinterDefinitions.Alignment.Left);
                 addText(styledText, "290925", PrinterDefinitions.Alignment.Right);
             }
-            addTextToNewLine(styledText,it.Col_HostLogKey,PrinterDefinitions.Alignment.Left)
+            addTextToNewLine(styledText,it.Col_RefNo,PrinterDefinitions.Alignment.Left)
             val amount = it.Col_Amount
             totalAmount += amount
             addText(styledText,stringHelper.getAmount(amount),PrinterDefinitions.Alignment.Right)

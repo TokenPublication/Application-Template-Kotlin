@@ -4,7 +4,6 @@ import com.tokeninc.sardis.application_template.data.database.transaction.Transa
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
 import com.tokeninc.sardis.application_template.utils.StringHelper
-import kotlin.properties.Delegates
 
 /**
  * This class is for holding some values in a more structured way.
@@ -23,7 +22,7 @@ class SampleReceipt(
     var cardNo = StringHelper().maskCardNumber(transaction.Col_PAN)
     var amount = StringHelper().getAmount(transaction.Col_Amount)
     var authCode = transaction.Col_AuthCode
-    var refNo = transaction.Col_HostLogKey
+    var refNo = transaction.Col_RefNo
     var batchNo = batchRepository.getBatchNo().toString()
     var transactionCode = transaction.Col_TransCode
     var cardReadType = transaction.Col_CardReadType

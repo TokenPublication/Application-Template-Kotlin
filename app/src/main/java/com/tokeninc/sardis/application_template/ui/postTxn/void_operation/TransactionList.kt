@@ -12,7 +12,7 @@ import com.tokeninc.sardis.application_template.ui.postTxn.PostTxnFragment
 
 /**
  * This is the Fragment that holds all the Void transactions in recyclerView, transactions one by one are set in TransactionAdapter
- */
+ */ //TODO VoidFragment ve methodları taşı buraya
 class TransactionList(private var cardNumber: String?, private val viewModel: TransactionViewModel,
                       private val postTxnFragment: PostTxnFragment) : Fragment() {
 
