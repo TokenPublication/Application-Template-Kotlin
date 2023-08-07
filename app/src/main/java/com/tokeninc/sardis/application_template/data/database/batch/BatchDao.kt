@@ -32,8 +32,7 @@ interface BatchDao {
     @Query("SELECT ${BatchCols.col_previous_batch_slip} FROM ${DatabaseInfo.BATCH_TABLE} LIMIT 1")
     fun getBatchPreviousSlip(): LiveData<String?>
 
-    //TODO doğru çalışıyor mu kontrolle rowID tanımlıyor mu
-    @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulSTN} = ${BatchCols.col_ulSTN} + 1 WHERE ROWID = (SELECT rowID FROM ${DatabaseInfo.BATCH_TABLE} LIMIT 1)")
+    @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulSTN} = CASE WHEN ${BatchCols.col_ulSTN} >= 999 THEN 0 ELSE ${BatchCols.col_ulSTN} + 1 END WHERE ROWID = (SELECT rowID FROM ${DatabaseInfo.BATCH_TABLE} LIMIT 1)")
     fun updateSTN()
 
 }

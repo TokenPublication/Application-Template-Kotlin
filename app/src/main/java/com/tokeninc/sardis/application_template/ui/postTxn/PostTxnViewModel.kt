@@ -18,7 +18,7 @@ class PostTxnViewModel: ViewModel() {
     var list = mutableListOf<IListMenuItem>()
     fun replaceFragment(mainActivity: MainActivity){
         val menuFragment = ListMenuFragment.newInstance(list,"PostTxn",
-            true, R.drawable.token_logo)
+            true, R.drawable.token_logo_png)
         viewModelScope.launch(Dispatchers.Main) {
             mainActivity.replaceFragment(menuFragment as Fragment)
         }

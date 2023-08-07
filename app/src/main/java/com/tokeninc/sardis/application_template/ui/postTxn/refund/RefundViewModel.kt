@@ -17,7 +17,7 @@ class RefundViewModel: ViewModel() {
 
     fun replaceFragment(mainActivity: MainActivity){
         val menuFragment = ListMenuFragment.newInstance(list,"Refund",
-            true, R.drawable.token_logo)
+            true, R.drawable.token_logo_png)
         mainActivity.replaceFragment(menuFragment as Fragment)
     }
 }

@@ -157,7 +157,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
             menuItems,
             getStrings(R.string.installment_refund),
             true,
-            R.drawable.token_logo
+            R.drawable.token_logo_png
         )
        mainActivity.addFragment(instFragment as Fragment)
     }

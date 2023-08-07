@@ -106,7 +106,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         if (isLoyalty) menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { })) //TODO transactionRoutine gitsin
         if (isCampaign) menuItemList.add(MenuItem(getStrings(R.string.campaign_sale), { })) //TODO transactionRoutine gitsin
         val listMenuFragment = ListMenuFragment.newInstance(menuItemList,
-            getStrings(R.string.sale_type), false, R.drawable.token_logo)
+            getStrings(R.string.sale_type), false, R.drawable.token_logo_png)
         mainActivity.replaceFragment(listMenuFragment as Fragment)
     }
 
@@ -148,7 +148,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             menuItems,
             getStrings(R.string.installment_sale),
             true,
-            R.drawable.token_logo
+            R.drawable.token_logo_png
         )
         mainActivity.replaceFragment(instFragment as Fragment)
     }

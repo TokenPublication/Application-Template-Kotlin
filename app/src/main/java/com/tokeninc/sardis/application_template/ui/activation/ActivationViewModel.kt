@@ -36,7 +36,7 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
 
     fun replaceFragment(mainActivity: MainActivity){
         val menuFragment = ListMenuFragment.newInstance(menuItemList,"Settings",
-            true, R.drawable.token_logo)
+            true, R.drawable.token_logo_png)
         viewModelScope.launch(Dispatchers.Main) {
             mainActivity.replaceFragment(menuFragment as Fragment)
         }
