@@ -181,7 +181,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 uiState.postValue(UIState.Success("Transaction is Successful"))
             }
         }
-        val kmsService = mainActivity.initializeKMSService() //to use it later
+        val kmsService = mainActivity.tokenKMS //to use it later
         if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
             val transaction = ContentValHelper().getTransaction(transactionResponse.contentVal!!)
             val receipt = SampleReceipt(transaction,activationRepository,batchViewModel.batchRepository)
