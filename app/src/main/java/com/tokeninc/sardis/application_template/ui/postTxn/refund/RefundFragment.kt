@@ -169,7 +169,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         val fragment = InputListFragment.newInstance(
             inputList, getStrings(R.string.refund)
         ){ list: List<String?>? ->
-            mainActivity.connectCardService()
+            mainActivity.readCard()
             enterRefund = false
             startRefundAfterConnected(list)
         }

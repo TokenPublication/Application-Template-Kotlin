@@ -62,10 +62,9 @@ class CardRepository @Inject constructor() :
     //for UI updating they don't have to be a LiveData
     var gibSale = false
     var timeOut = false
-    var mainActivity: MainActivity? = null
     private var isApprove = false //this is a flag for checking whether it is ICC sale (for implementing continue emv)
 
-    private lateinit var cardServiceBinding: CardServiceBinding
+    private var cardServiceBinding: CardServiceBinding? = null
 
     fun cardServiceBinder(mainActivity: MainActivity) {
         cardServiceBinding = CardServiceBinding(mainActivity, this)
@@ -83,7 +82,6 @@ class CardRepository @Inject constructor() :
         isCardServiceConnected = MutableLiveData(false)
         gibSale = false
         timeOut = false
-        mainActivity = null
         isApprove = false
     }
 
@@ -129,7 +127,7 @@ class CardRepository @Inject constructor() :
             obj.put("fallback", if (isFallbackAllowed) 1 else 0)
             obj.put("qrPay", if (isQrPayAllowed) 1 else 0)
             obj.put("reqEMVData", "575A5F245F204F84959F12")
-            cardServiceBinding.getCard(amount, 30, obj.toString())
+            cardServiceBinding?.getCard(amount, 30, obj.toString())
         } catch (e: Exception) {
             setCallBackMessage(ResponseCode.ERROR)
             e.printStackTrace()
@@ -178,7 +176,7 @@ class CardRepository @Inject constructor() :
                 isApprove = true //make this flag true for the second reading for asking password with continue emv.
             }
             mutableCardData.postValue(card)
-            cardServiceBinding.unBind() //unbinding the cardService
+            cardServiceBinding?.unBind() //unbinding the cardService
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
@@ -190,10 +188,9 @@ class CardRepository @Inject constructor() :
      */
     override fun onCardServiceConnected() {
         isCardServiceConnected.value = true
-        mainActivity!!.setEMVConfiguration(true)
     }
 
-    fun getCardServiceBinding(): CardServiceBinding {
+    fun getCardServiceBinding(): CardServiceBinding? {
         return cardServiceBinding
     }
 

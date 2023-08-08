@@ -69,7 +69,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
             cardViewModel.setTransactionCode(TransactionCode.VOID.type)
-            mainActivity.connectCardService()
+            mainActivity.readCard()
             startVoidAfterConnected()
         }))
         menuItems.add(MenuItem(getStrings(R.string.refund), {
@@ -163,7 +163,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             card = mCard
             val cardNumber = card!!.mCardNumber
             val transactionList = TransactionList(cardNumber,transactionViewModel,this)
-            mainActivity.addFragment(transactionList)
+            mainActivity.replaceFragment(transactionList) //if onBackPressed mainActivity should finished else it causes some errors for next operations
         }
     }
 
