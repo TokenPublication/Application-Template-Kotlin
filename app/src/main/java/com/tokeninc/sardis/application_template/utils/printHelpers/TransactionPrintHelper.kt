@@ -58,17 +58,21 @@ class TransactionPrintHelper:BasePrintHelper() {
             }
             styledText.addTextToLine(transactionType, PrinterDefinitions.Alignment.Center)
         }
-        if (transactionCode == TransactionCode.SALE.type)
-            styledText.addTextToLine("SATIŞ", PrinterDefinitions.Alignment.Center)
-        if (transactionCode == TransactionCode.MATCHED_REFUND.type)
-            styledText.addTextToLine("E. İADE", PrinterDefinitions.Alignment.Center)
-        if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type){
-            styledText.addTextToLine("T. SATIŞ İADE", PrinterDefinitions.Alignment.Center)
-            styledText.newLine()
-            styledText.addTextToLine("${contentValues.getAsString(TransactionCols.Col_InstCnt)} TAKSİT", PrinterDefinitions.Alignment.Center)
+        when (transactionCode) {
+            TransactionCode.SALE.type -> styledText.addTextToLine("SATIŞ", PrinterDefinitions.Alignment.Center)
+            TransactionCode.MATCHED_REFUND.type -> styledText.addTextToLine("E. İADE", PrinterDefinitions.Alignment.Center)
+            TransactionCode.INSTALLMENT_REFUND.type -> {
+                styledText.addTextToLine("T. SATIŞ İADE", PrinterDefinitions.Alignment.Center)
+                styledText.newLine()
+                styledText.addTextToLine("${contentValues.getAsString(TransactionCols.Col_InstCnt)} TAKSİT", PrinterDefinitions.Alignment.Center)
+            }
+            TransactionCode.INSTALLMENT_SALE.type -> {
+                styledText.addTextToLine("T. SATIŞ", PrinterDefinitions.Alignment.Center)
+                styledText.newLine()
+                styledText.addTextToLine("${contentValues.getAsString(TransactionCols.Col_InstCnt)} TAKSİT", PrinterDefinitions.Alignment.Center)
+            }
+            TransactionCode.CASH_REFUND.type -> styledText.addTextToLine("NAKİT İADE", PrinterDefinitions.Alignment.Center)
         }
-        if (transactionCode == TransactionCode.CASH_REFUND.type)
-            styledText.addTextToLine("NAKİT İADE", PrinterDefinitions.Alignment.Center)
         val sdf = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
         val dateTime = sdf.format(Calendar.getInstance().time)
         var lineTime = ""
@@ -207,7 +211,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         addTextToNewLine(styledText,"BU BELGEYİ SAKLAYINIZ", PrinterDefinitions.Alignment.Center, 8)
         styledText.newLine()
         styledText.printLogo(context)
-        styledText.addSpace(50)
+        styledText.addSpace(70)
         return styledText.toString()
     }
 }
