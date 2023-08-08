@@ -126,11 +126,26 @@ class MainActivity : TimeOutActivity() {
         postTxnFragment = PostTxnFragment(this, transactionViewModel, refundFragment, batchViewModel, cardViewModel, activationViewModel)
         observeTIDMID()
         connectCardService()
-        initializeKMSService()
 
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-        actionChanged(intent.action)
+
+        tokenKMS = TokenKMS() //connecting KMS Service with this flow
+        tokenKMS.init(applicationContext, object : InitCallbacks {
+            override fun onInitSuccess() {
+                Log.i("Token KMS onInitSuccess", "KMS Init OK")
+                actionChanged(intent.action)
+            }
+
+            override fun onInitFailed() {
+                Log.i("Token KMS onInitFailed", "KMS Init Failed")
+                infoDialog = showInfoDialog(InfoDialog.InfoType.Error, "KMS Servis Hatası", false)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    infoDialog?.dismiss()
+                    finish()
+                }, 2000)
+            }
+        })
     }
 
     /** This function checks activation by checking MID and TID parameters
@@ -229,52 +244,6 @@ class MainActivity : TimeOutActivity() {
         } else { // when user select application template as a banking application
             replaceFragment(saleFragment)
         }
-    }
-
-    /**
-     * This method for bind KMSService object. It has initCallbacks method, so if connect failure,
-     * show a infoDialog and finish the activity. Else, log initSuccess and continue.
-     */
-    private fun initializeKMSService() {
-        tokenKMS = TokenKMS()
-        var isKMSSuccess = false
-        val timer: CountDownTimer = object : CountDownTimer(20000, 1) {
-            override fun onTick(millisUntilFinished: Long) {}
-            override fun onFinish() {
-                if (!isKMSSuccess) {
-                    infoDialog = showInfoDialog(
-                        InfoDialog.InfoType.Error,
-                        "KMS Servis Hatası",
-                        false
-                    )
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        infoDialog!!.dismiss()
-                        finish()
-                    }, 2000)
-                }
-            }
-        }
-        timer.start()
-        tokenKMS.setInitCallbacks(object : InitCallbacks {
-            override fun onInitSuccess() {
-                Log.i("Token KMS onInitSuccess", "KMS Init OK")
-                isKMSSuccess = true
-                infoDialog?.dismiss()
-            }
-
-            override fun onInitFailed() {
-                Log.i("Token KMS onInitFailed", "KMS Init Failed")
-                infoDialog!!.update(
-                    InfoDialog.InfoType.Declined,
-                    "KMS Servis Hatası"
-                )
-                Handler(Looper.getMainLooper()).postDelayed({
-                    infoDialog!!.dismiss()
-                    finish()
-                }, 2000)
-            }
-        })
-        tokenKMS.init(applicationContext)
     }
 
     /**
