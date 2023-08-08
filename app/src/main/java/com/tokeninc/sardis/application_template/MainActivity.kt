@@ -136,24 +136,26 @@ class MainActivity : TimeOutActivity() {
      *  if they are empty, warns the customer to activate application then finishes the mainActivity
      *  TODO in first installation it enters here although it has default MID and TID ?
      */
-    private fun checkActivation(){
+    private fun checkActivation(finish: Boolean){
         activationViewModel.merchantID.observe(this){
-            activationWarning(it == null)
+            activationWarning(it == null,finish)
         }
         activationViewModel.terminalID.observe(this){
-            activationWarning(it == null)
+            activationWarning(it == null,finish)
         }
     }
 
     /**
      * It shows a warning if isNull is true then finishes the activity
      */
-    private fun activationWarning(isNull: Boolean){
+    private fun activationWarning(isNull: Boolean, finish: Boolean){
         if (isNull){
-            showInfoDialog(InfoDialog.InfoType.Warning,"You must activate the application template!", false)
+            val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning,"You must activate the application template!", false)
             Handler(Looper.getMainLooper()).postDelayed({
-                finish()
-            }, 2000)
+                infoDialog!!.dismiss()
+                if (finish)
+                    finish()
+            }, 3000)
         }
     }
 
@@ -161,16 +163,15 @@ class MainActivity : TimeOutActivity() {
      * This function calls corresponding functions whenever an action of intent is changed
      */
     private fun actionChanged(action: String?){
-        if (action != getString(R.string.Settings_Action)){ // if the action is not settings action it checks for the activation
-            checkActivation()
+        if (action.equals(getString(R.string.PosTxn_Action)) || action.equals(getString(R.string.Sale_Action)) || action.equals(getString(R.string.BatchClose_Action))
+            || action.equals(getString(R.string.Parameter_Action)) || action.equals(getString(R.string.Refund_Action)) )   {
+            checkActivation(true)
+        } else {
+            checkActivation(false)
         }
         when (action){
-            getString(R.string.PosTxn_Action) ->  {
-                replaceFragment(postTxnFragment)
-            }
-            getString(R.string.Sale_Action) ->  {
-                saleActionReceived()
-            }
+            getString(R.string.PosTxn_Action) ->  replaceFragment(postTxnFragment)
+            getString(R.string.Sale_Action) ->  saleActionReceived()
             getString(R.string.Settings_Action) ->  replaceFragment(settingsFragment)
             getString(R.string.BatchClose_Action) ->  {
                 if (transactionViewModel.allTransactions().isNullOrEmpty()){ //if it is empty just show no transaction dialog
@@ -179,11 +180,9 @@ class MainActivity : TimeOutActivity() {
                     postTxnFragment.startBatchClose()
                 }
             }
-            getString(R.string.Parameter_Action) ->  replaceFragment(triggerFragment)
-            getString(R.string.Refund_Action) ->  {
-                refundActionReceived()
-            }
-            else ->  replaceFragment(settingsFragment)
+            getString(R.string.Parameter_Action) -> replaceFragment(triggerFragment)
+            getString(R.string.Refund_Action) -> refundActionReceived()
+            else -> replaceFragment(settingsFragment)
         }
     }
 
