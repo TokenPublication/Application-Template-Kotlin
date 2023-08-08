@@ -101,6 +101,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         val isLoyalty = true
         val isCampaign = true
         if (isInstallment) menuItemList.add(MenuItem(getStrings(R.string.installment_sale), {
+            cardViewModel.setTransactionCode(TransactionCode.INSTALLMENT_SALE.type)
             showInstallments()
         })) //TODO installment göster sale'a gitsin, TransCode installment sale TransactionCode Installment_Sale, extraContent
         if (isLoyalty) menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { })) //TODO transactionRoutine gitsin
@@ -178,8 +179,8 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
      */
     private fun clickButtons(){
         binding.btnSale.setOnClickListener {
-            mainActivity.connectCardService()
-            startSaleAfterConnected() //after it connects to the cardService
+            mainActivity.readCard()
+            saleAfterReadCard() //after read card
         }
         binding.btnSuccess.setOnClickListener {
             prepareDummyResponse(ResponseCode.SUCCESS)
@@ -213,7 +214,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         }
     }
 
-    private fun startSaleAfterConnected(){
+    private fun saleAfterReadCard(){
         cardViewModel.setTransactionCode(TransactionCode.SALE.type)  //make its transactionCode Sale
         cardViewModel.setAmount(amount) // set its sale amount
         cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
@@ -236,7 +237,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     private fun qrSale() {
         val dialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Progress, "Please Wait", true)
         Handler(Looper.getMainLooper()).postDelayed({
-            cardViewModel.getCardServiceBinding().showQR(
+            cardViewModel.getCardServiceBinding()?.showQR(
                 "PLEASE READ THE QR CODE",
                 StringHelper().getAmount(amount),
                 "QR Code Test"
