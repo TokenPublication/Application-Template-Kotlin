@@ -70,7 +70,7 @@ class MainActivity : TimeOutActivity() {
 
     //initializing other variables
     var infoDialog: InfoDialog? = null
-
+    lateinit var tokenKMS: TokenKMS
     /**
      * This function is overwritten to continue the activity where it was left when
      * the configuration is changed (i.e screen rotation)
@@ -225,26 +225,48 @@ class MainActivity : TimeOutActivity() {
     }
 
     /**
-     * This function binds Token KMS lib. If it fails, it warns the user and finishes the activity.
+     * This method for bind KMSService object. It has initCallbacks method, so if connect failure,
+     * show a infoDialog and finish the activity. Else, log initSuccess and continue.
      */
-    fun initializeKMSService(): TokenKMS{
-        val kms = TokenKMS()
-        kms.setInitCallbacks(object : InitCallbacks {
-            override fun onInitSuccess() {
-                Log.i("KMS","Success")
-                Log.i("Token KMS onInitSuccess", "KMS Init OK")
+    private fun initializeKMSService() {
+        tokenKMS = TokenKMS()
+        var isKMSSuccess = false
+        val timer: CountDownTimer = object : CountDownTimer(20000, 1) {
+            override fun onTick(millisUntilFinished: Long) {}
+            override fun onFinish() {
+                if (!isKMSSuccess) {
+                    infoDialog = showInfoDialog(
+                        InfoDialog.InfoType.Error,
+                        "KMS Servis Hatası",
+                        false
+                    )
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        infoDialog!!.dismiss()
+                        finish()
+                    }, 2000)
+                }
             }
-
+        }
+        timer.start()
+        tokenKMS.setInitCallbacks(object : InitCallbacks {
+            override fun onInitSuccess() {
+                Log.i("Token KMS onInitSuccess", "KMS Init OK")
+                isKMSSuccess = true
+                infoDialog?.dismiss()
+            }
             override fun onInitFailed() {
-                Log.v("Token KMS onInitSuccess", "KMS Init Failed")
-                showInfoDialog(InfoDialog.InfoType.Declined,"KMS Initilization Failed",false)
+                Log.i("Token KMS onInitFailed", "KMS Init Failed")
+                infoDialog!!.update(
+                    InfoDialog.InfoType.Declined,
+                    "KMS Servis Hatası"
+                )
                 Handler(Looper.getMainLooper()).postDelayed({
+                    infoDialog!!.dismiss()
                     finish()
                 }, 2000)
             }
         })
-        kms.init(applicationContext)
-        return kms
+        tokenKMS.init(applicationContext)
     }
 
     /**
