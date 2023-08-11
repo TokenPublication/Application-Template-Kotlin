@@ -275,7 +275,9 @@ class MainActivity : TimeOutActivity() {
             }
         } else{
             connectCardService()
-            readCard()
+            Handler(Looper.getMainLooper()).postDelayed({
+                readCard() // wait for connecting cardService, if it doesn't wait it enters recursive loop
+            }, 400)
         }
     }
 

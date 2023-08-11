@@ -32,9 +32,7 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     fun onDestroyed(){ cardRepository.onDestroyed()}
 
     fun initializeCardServiceBinding(main: MainActivity) {
-        Handler(Looper.getMainLooper()).postDelayed({
-            cardRepository.cardServiceBinder(main)
-        }, 5)
+        cardRepository.cardServiceBinder(main)
     }
 
     fun readCard() { cardRepository.readCard() }
