@@ -185,7 +185,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         } else {
             ContentValHelper().getTransaction(transactionResponse.contentVal!!)
         }
-        val receipt = SampleReceipt(transaction,activationRepository,batchViewModel.batchRepository)
+        val receipt = SampleReceipt(transaction,activationRepository)
         val intent: Intent =
         if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
             transactionRepository.prepareSaleIntent(transactionResponse, card, mainActivity, receipt)

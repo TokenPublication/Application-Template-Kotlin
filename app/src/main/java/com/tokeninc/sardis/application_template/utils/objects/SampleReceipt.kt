@@ -12,7 +12,6 @@ import com.tokeninc.sardis.application_template.utils.StringHelper
 class SampleReceipt(
     var transaction: Transaction,
     activationRepository: ActivationRepository,
-    batchRepository: BatchRepository
 ) {
     var merchantName = "Token Financial Technologies"
     var merchantID = activationRepository.merchantID()
@@ -23,9 +22,9 @@ class SampleReceipt(
     var amount = StringHelper().getAmount(transaction.Col_Amount)
     var authCode = transaction.Col_AuthCode
     var refNo = transaction.Col_RefNo
-    var batchNo = batchRepository.getBatchNo().toString()
+    var batchNo = transaction.Col_BatchNo.toString()
     var transactionCode = transaction.Col_TransCode
     var cardReadType = transaction.Col_CardReadType
-    var groupSerialNo =  batchRepository.getGroupSN().toString()
-    var approvalCode = StringHelper().generateApprovalCode(batchNo, groupSerialNo, (groupSerialNo.toInt() - 1).toString())!!
+    var groupSerialNo =  transaction.Col_GUP_SN.toString()
+    var approvalCode = StringHelper().generateApprovalCode(batchNo, groupSerialNo.toString(), (groupSerialNo.toInt() - 1).toString())!!
 }
