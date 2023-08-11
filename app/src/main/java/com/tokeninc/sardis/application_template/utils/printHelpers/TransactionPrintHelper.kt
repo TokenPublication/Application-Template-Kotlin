@@ -2,6 +2,7 @@ package com.tokeninc.sardis.application_template.utils.printHelpers
 
 import android.content.ContentValues
 import android.content.Context
+import android.os.Bundle
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
@@ -22,7 +23,7 @@ import java.util.Locale
  * Sale, Void and all types of refund.
  */
 class TransactionPrintHelper:BasePrintHelper() {
-    fun getFormattedText(receipt: SampleReceipt, slipType: SlipType, contentValues: ContentValues, extraContentValues: ContentValues?,
+    fun getFormattedText(receipt: SampleReceipt, slipType: SlipType, contentValues: ContentValues, bundle: Bundle,
                          transactionCode: Int, context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
@@ -101,7 +102,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         //TODO voidde owner name'in altına ilk işlem tarihini sağa ve sola koyman lazım
         styledText.addTextToLine("TUTAR:")
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type)
-            styledText.addTextToLine(stringHelper.getAmount(extraContentValues!!.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt()), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine(stringHelper.getAmount(bundle.getInt(ExtraKeys.REFUND_AMOUNT.name)), PrinterDefinitions.Alignment.Right)
         else if(transactionCode == TransactionCode.CASH_REFUND.type)
             styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(
                 TransactionCols.Col_Amount2).toInt()), PrinterDefinitions.Alignment.Right)
@@ -129,7 +130,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type){
             styledText.addTextToLine("MAL/HİZM İADE EDİLMİŞTİR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
-            styledText.addTextToLine("ORJ. İŞLEM TARİHİ: ${extraContentValues!!.getAsString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
+            styledText.addTextToLine("ORJ. İŞLEM TARİHİ: ${bundle.getString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
             styledText.addTextToLine("ORJ. İŞ YERİ NO: ${receipt.merchantID }",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
@@ -167,7 +168,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         styledText.setFontSize(12)
         styledText.newLine()
         if (transactionCode == TransactionCode.VOID.type)
-            styledText.addTextToLine("SN: " + extraContentValues!!.getAsString(TransactionCols.Col_GUP_SN))
+            styledText.addTextToLine("SN: " + bundle.getString(TransactionCols.Col_GUP_SN))
         else
             styledText.addTextToLine("SN: " + receipt.groupSerialNo)
         styledText.addTextToLine("ONAY KODU: " + receipt.authCode, PrinterDefinitions.Alignment.Right)

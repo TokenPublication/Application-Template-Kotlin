@@ -48,6 +48,10 @@ class ContentValHelper {
         contentVal.put(TransactionCols.Col_Ext_Ref,transaction.Col_Ext_Ref)
         contentVal.put(TransactionCols.Col_Ext_RefundDateTime,transaction.Col_Ext_RefundDateTime)
         contentVal.put(TransactionCols.col_ulSTN,transaction.col_ulSTN)
+        contentVal.put(TransactionCols.col_ZNO,transaction.ZNO)
+        contentVal.put(TransactionCols.Col_is_onlinePIN,transaction.isOnlinePIN)
+        contentVal.put(TransactionCols.col_stChipData,transaction.Col_ChipData)
+        contentVal.put(TransactionCols.col_isSignature,transaction.Col_IsSignature)
         return contentVal
     }
 
@@ -56,7 +60,8 @@ class ContentValHelper {
         val colulSTN = contentVal.getAsString(TransactionCols.col_ulSTN).toInt()
         val colGUPSN = contentVal.getAsString(TransactionCols.Col_GUP_SN).toInt()
         val colBatchNo = contentVal.getAsString(TransactionCols.Col_BatchNo).toInt()
-        val colReceiptNo = contentVal.getAsString(TransactionCols.Col_ReceiptNo).toInt()
+        val colReceiptNo = contentVal.getAsString(TransactionCols.Col_ReceiptNo)?.toInt()
+        val colZNo = contentVal.getAsString(TransactionCols.col_ZNO)
         val colCardReadType = contentVal.getAsString(TransactionCols.Col_CardReadType).toInt()
         val colPAN = contentVal.getAsString(TransactionCols.Col_PAN)
         val colCardSequenceNumber = contentVal.getAsString(TransactionCols.Col_CardSequenceNumber)
@@ -67,18 +72,21 @@ class ContentValHelper {
         val colTrack2 = contentVal.getAsString(TransactionCols.Col_Track2)
         val colCustName =  contentVal.getAsString(TransactionCols.Col_CustomerName)
         val colIsVoid = contentVal.getAsString(TransactionCols.Col_IsVoid).toInt()
-        val colInstCnt = contentVal.getAsString(TransactionCols.Col_InstCnt).toInt()
+        val colInstCnt = contentVal.getAsString(TransactionCols.Col_InstCnt)?.toInt()
         val colTranDate = contentVal.getAsString(TransactionCols.Col_TranDate)
         val colHostLogKey = contentVal.getAsString(TransactionCols.Col_RefNo)
         val colVoidDateTime = contentVal.getAsString(TransactionCols.Col_VoidDateTime)
+        val colChipData = contentVal.getAsString(TransactionCols.col_stChipData)
+        val colIsSignature = contentVal.getAsString(TransactionCols.col_isSignature).toInt()
         val colAuthCode = contentVal.getAsString(TransactionCols.Col_AuthCode)
         val colAid = contentVal.getAsString(TransactionCols.Col_Aid)
         val colAidLabel = contentVal.getAsString(TransactionCols.Col_AidLabel)
         val colTextPrintCode1 = contentVal.getAsString(TransactionCols.Col_TextPrintCode)
         val colDisplayData = contentVal.getAsString(TransactionCols.Col_DisplayData)
         val colKeySequenceNumber = contentVal.getAsString(TransactionCols.Col_KeySequenceNumber)
-        val colisPinByPass = contentVal.getAsString(TransactionCols.Col_isPinByPass).toInt()
-        val colisOffline = contentVal.getAsString(TransactionCols.Col_isOffline).toInt()
+        val colIsPinByPass = contentVal.getAsString(TransactionCols.Col_isPinByPass).toInt()
+        val colIsOffline = contentVal.getAsString(TransactionCols.Col_isOffline).toInt()
+        val colIsOnlinePIN = contentVal.getAsString(TransactionCols.Col_is_onlinePIN).toInt()
         val colAC = contentVal.getAsString(TransactionCols.Col_AC)
         val colCID = contentVal.getAsString(TransactionCols.Col_CID)
         val colATC = contentVal.getAsString(TransactionCols.Col_ATC)
@@ -90,14 +98,14 @@ class ContentValHelper {
         val colUN = contentVal.getAsString(TransactionCols.Col_UN)
         val colIAD = contentVal.getAsString(TransactionCols.Col_IAD)
         val colSID = contentVal.getAsString(TransactionCols.Col_SID)
-        val colExtConf = contentVal.getAsString(TransactionCols.Col_Ext_Conf).toInt()
-        val colExtRef = contentVal.getAsString(TransactionCols.Col_Ext_Ref).toInt()
+        val colExtConf = contentVal.getAsString(TransactionCols.Col_Ext_Conf)?.toInt()
+        val colExtRef = contentVal.getAsString(TransactionCols.Col_Ext_Ref)?.toInt()
         val colExtRefundDateTime = contentVal.getAsString(TransactionCols.Col_Ext_RefundDateTime)
-        return Transaction(colUUID,colulSTN,colGUPSN,colBatchNo,colReceiptNo,colCardReadType,colPAN,
+        return Transaction(colUUID,colulSTN,colGUPSN,colBatchNo,colReceiptNo,colZNo,colCardReadType,colPAN,
             colCardSequenceNumber, colTransCode, colAmount, colAmount2, colExpDate, colTrack2,
-            colCustName, colIsVoid, colInstCnt, colTranDate, colHostLogKey, colVoidDateTime,
+            colCustName, colIsVoid, colInstCnt, colTranDate, colHostLogKey, colVoidDateTime, colChipData, colIsSignature,
             colAuthCode, colAid, colAidLabel, colTextPrintCode1, colDisplayData,
-            colKeySequenceNumber, colisPinByPass, colisOffline, colAC, colCID, colATC, colTVR, colTSI,
+            colKeySequenceNumber, colIsPinByPass, colIsOffline, colIsOnlinePIN, colAC, colCID, colATC, colTVR, colTSI,
             colAIP, colCVM, colAID2, colUN, colIAD, colSID, colExtConf, colExtRef, colExtRefundDateTime)
     }
 }

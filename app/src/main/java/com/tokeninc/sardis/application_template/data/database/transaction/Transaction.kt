@@ -19,7 +19,9 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_BatchNo)
     var Col_BatchNo: Int,
     @ColumnInfo(name = TransactionCols.Col_ReceiptNo)
-    var Col_ReceiptNo: Int,
+    var Col_ReceiptNo: Int?,
+    @ColumnInfo(name = TransactionCols.col_ZNO)
+    var ZNO: String?,
     @ColumnInfo(name = TransactionCols.Col_CardReadType)
     var Col_CardReadType: Int,
     @ColumnInfo(name = TransactionCols.Col_PAN)
@@ -31,7 +33,7 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_Amount)
     var Col_Amount: Int,
     @ColumnInfo(name = TransactionCols.Col_Amount2)
-    var Col_Amount2: Int,
+    var Col_Amount2: Int? = 0,
     @ColumnInfo(name = TransactionCols.Col_ExpDate)
     var Col_ExpDate: String?,
     @ColumnInfo(name = TransactionCols.Col_Track2)
@@ -41,13 +43,17 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_IsVoid)
     var Col_IsVoid: Int,
     @ColumnInfo(name = TransactionCols.Col_InstCnt)
-    var Col_InstCnt: Int = 0,
+    var Col_InstCnt: Int? = 0,
     @ColumnInfo(name = TransactionCols.Col_TranDate)
     var Col_TranDate: String,
     @ColumnInfo(name = TransactionCols.Col_RefNo)
     var Col_RefNo: String,
     @ColumnInfo(name = TransactionCols.Col_VoidDateTime)
     var Col_VoidDateTime: String?,
+    @ColumnInfo(name = TransactionCols.col_stChipData)
+    var Col_ChipData: String?,
+    @ColumnInfo(name = TransactionCols.col_isSignature)
+    var Col_IsSignature: Int?,
     @ColumnInfo(name = TransactionCols.Col_AuthCode)
     var Col_AuthCode: String,
     @ColumnInfo(name = TransactionCols.Col_Aid)
@@ -64,6 +70,8 @@ data class Transaction(
     var Col_isPinByPass: Int,
     @ColumnInfo(name = TransactionCols.Col_isOffline)
     var Col_isOffline: Int,
+    @ColumnInfo(name = TransactionCols.Col_is_onlinePIN)
+    var isOnlinePIN: Int,
     @ColumnInfo(name = TransactionCols.Col_AC)
     var Col_AC: String?,
     @ColumnInfo(name = TransactionCols.Col_CID)
@@ -87,9 +95,9 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_SID)
     var Col_SID: String?,
     @ColumnInfo(name = TransactionCols.Col_Ext_Conf)
-    var Col_Ext_Conf: Int = 0,
+    var Col_Ext_Conf: Int? = 0,
     @ColumnInfo(name = TransactionCols.Col_Ext_Ref)
-    var Col_Ext_Ref: Int = 0,
+    var Col_Ext_Ref: Int? = 0,
     @ColumnInfo(name = TransactionCols.Col_Ext_RefundDateTime)
-    var Col_Ext_RefundDateTime: String
+    var Col_Ext_RefundDateTime: String?
 )

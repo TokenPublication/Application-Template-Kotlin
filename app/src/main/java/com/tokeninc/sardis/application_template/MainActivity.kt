@@ -1,7 +1,6 @@
 package com.tokeninc.sardis.application_template
 
 import android.annotation.SuppressLint
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -222,8 +221,7 @@ class MainActivity : TimeOutActivity() {
             val cardReadType = intent.extras!!.getInt("CardReadType")
             if (cardReadType == CardReadType.ICC.type) {
                 cardViewModel.setGibSale(true)
-                readCard()
-                saleFragment.gibSale()
+                saleFragment.cardReader(true)
             } else {
                 replaceFragment(saleFragment)
             }
@@ -313,20 +311,21 @@ class MainActivity : TimeOutActivity() {
             if (transactionBatchNo == currentBatchNo) { // GIB Void Operation
                 cardViewModel.setTransactionCode(TransactionCode.VOID.type)
                 readCard()
-                postTxnFragment.gibVoid()
+                postTxnFragment.voidAfterReadCard(true)
             } else{ // GIB Refund Operation (because refund request is received after closing batch
                 val authCode = json.getString("AuthCode")
                 val tranDate = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
                 val cardNo = json.getString("CardNo")
-                val extraContents = ContentValues()
-                extraContents.put(ExtraKeys.ORG_AMOUNT.name, refAmount.toString())
-                extraContents.put(ExtraKeys.REFUND_AMOUNT.name, refAmount.toString())
-                extraContents.put(ExtraKeys.TRAN_DATE.name, tranDate.toString())
-                extraContents.put(ExtraKeys.REF_NO.name, refNo)
-                extraContents.put(ExtraKeys.AUTH_CODE.name, authCode)
-                extraContents.put(ExtraKeys.CARD_NO.name, cardNo)
+                val refundBundle = Bundle()
+                refundBundle.putString(ExtraKeys.ORG_AMOUNT.name, refAmount.toString())
+                refundBundle.putString(ExtraKeys.REFUND_AMOUNT.name, refAmount.toString())
+                refundBundle.putString(ExtraKeys.TRAN_DATE.name, tranDate.toString())
+                refundBundle.putString(ExtraKeys.REF_NO.name, refNo)
+                refundBundle.putString(ExtraKeys.AUTH_CODE.name, authCode)
+                refundBundle.putString(ExtraKeys.CARD_NO.name, cardNo)
+                cardViewModel.setTransactionCode(TransactionCode.MATCHED_REFUND.type)
                 readCard()
-                refundFragment.gibRefund(extraContents)
+                refundFragment.refundAfterReadCard(null,refundBundle)
             }
         }
     }

@@ -176,7 +176,6 @@ class CardRepository @Inject constructor() :
                 isApprove = true //make this flag true for the second reading for asking password with continue emv.
             }
             mutableCardData.postValue(card)
-            cardServiceBinding?.unBind() //unbinding the cardService
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
@@ -187,7 +186,7 @@ class CardRepository @Inject constructor() :
      * After that call setEMVConfiguration method, it checks whether the Setup is Done before, if it is do nothing, else set EMV
      */
     override fun onCardServiceConnected() {
-        isCardServiceConnected.value = true
+        isCardServiceConnected.postValue(true)
     }
 
     fun getCardServiceBinding(): CardServiceBinding? {
