@@ -111,7 +111,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             content.put(TransactionCols.Col_Amount2,bundle.getInt(ExtraKeys.REFUND_AMOUNT.name))
             content.put(TransactionCols.Col_Amount,bundle.getInt(ExtraKeys.ORG_AMOUNT.name))
             content.put(TransactionCols.Col_Ext_Conf,bundle.getString(ExtraKeys.AUTH_CODE.name))
-            content.put(TransactionCols.Col_Ext_Ref,bundle.getString(ExtraKeys.REF_NO.name))
+            content.put(TransactionCols.Col_RefNo,bundle.getString(ExtraKeys.REF_NO.name))
             content.put(TransactionCols.Col_Ext_RefundDateTime,bundle.getString(ExtraKeys.TRAN_DATE.name))
         } else if (transactionCode == TransactionCode.CASH_REFUND.type){
             content.put(TransactionCols.Col_Amount2, bundle.getInt(ExtraKeys.REFUND_AMOUNT.name))
@@ -150,7 +150,9 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
 
         // transaction parameters comes from online Transaction Response
         content.put(TransactionCols.Col_TranDate, onlineTransactionResponse.dateTime)
-        content.put(TransactionCols.Col_RefNo, onlineTransactionResponse.mRefNo)
+        if (! (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type) ) {
+            content.put(TransactionCols.Col_RefNo, onlineTransactionResponse.mRefNo)
+        }
         content.put(TransactionCols.Col_AuthCode, onlineTransactionResponse.mAuthCode)
         content.put(TransactionCols.Col_TextPrintCode, onlineTransactionResponse.mTextPrintCode)
         content.put(TransactionCols.Col_DisplayData, onlineTransactionResponse.mDisplayData)

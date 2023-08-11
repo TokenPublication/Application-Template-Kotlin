@@ -70,7 +70,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
 
     /**
      * It prepares list menu item and shows it to the screen.
-     */
+     */ //TODO menüden çıkıp diğerine girince 2 kez yapıyor aynı işlemi
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.matched_refund), {

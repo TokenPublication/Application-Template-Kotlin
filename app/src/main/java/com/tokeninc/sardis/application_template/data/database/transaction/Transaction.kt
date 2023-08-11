@@ -27,7 +27,7 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_PAN)
     var Col_PAN: String,
     @ColumnInfo(name = TransactionCols.Col_CardSequenceNumber)
-    var Col_CardSequenceNumber: String?,
+    var Col_CardSequenceNumber: String?, //
     @ColumnInfo(name = TransactionCols.Col_TransCode)
     var Col_TransCode: Int = 0,
     @ColumnInfo(name = TransactionCols.Col_Amount)
@@ -96,8 +96,6 @@ data class Transaction(
     var Col_SID: String?,
     @ColumnInfo(name = TransactionCols.Col_Ext_Conf)
     var Col_Ext_Conf: Int? = 0,
-    @ColumnInfo(name = TransactionCols.Col_Ext_Ref)
-    var Col_Ext_Ref: Int? = 0,
     @ColumnInfo(name = TransactionCols.Col_Ext_RefundDateTime)
-    var Col_Ext_RefundDateTime: String?
+    var Col_Ext_RefundDateTime: String? //TranDate2 in Java
 )

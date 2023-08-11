@@ -18,7 +18,7 @@ interface BatchDao {
     @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulGUP_SN} = ${BatchCols.col_ulGUP_SN} + 1")
     suspend fun updateGUPSN()
 
-    @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulGUP_SN} = 0, ${BatchCols.col_batchNo} = ${BatchCols.col_batchNo} + 1")
+    @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulGUP_SN} = 1, ${BatchCols.col_batchNo} = ${BatchCols.col_batchNo} + 1")
     suspend fun updateBatchNo()
 
     @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_previous_batch_slip} = :batchSlip")

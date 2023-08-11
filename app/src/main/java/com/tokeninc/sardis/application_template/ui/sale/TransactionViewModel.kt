@@ -152,7 +152,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         var transactionResponse: TransactionResponse? = null
         val batchNo = batchViewModel.getBatchNo()
         val groupSn = batchViewModel.getGroupSN()
-        val stn = batchViewModel.getSTN() //TODO //since it's not fast as get the updated version simultaneous it's increased by 1 to equalize updated number.
+        val stn = batchViewModel.getSTN()
         var responseCode = ResponseCode.ERROR
         if (transactionCode == TransactionCode.VOID.type){ // if it is a void operation
             val gupSn = extraContent!!.getAsString(TransactionCols.Col_GUP_SN).toInt()
