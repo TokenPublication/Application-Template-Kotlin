@@ -5,7 +5,7 @@ import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.enums.CardReadType
+import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
 

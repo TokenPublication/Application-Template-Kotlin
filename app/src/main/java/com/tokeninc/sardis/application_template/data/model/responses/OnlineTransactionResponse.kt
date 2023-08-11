@@ -1,6 +1,6 @@
-package com.tokeninc.sardis.application_template.data.entities.responses
+package com.tokeninc.sardis.application_template.data.model.responses
 
-import com.tokeninc.sardis.application_template.enums.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
 
 /**
  * This is a class for holding some data in a regular way.

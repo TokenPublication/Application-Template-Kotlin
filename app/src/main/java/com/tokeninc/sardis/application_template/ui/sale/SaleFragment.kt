@@ -21,15 +21,15 @@ import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
-import com.tokeninc.sardis.application_template.enums.CardReadType
-import com.tokeninc.sardis.application_template.enums.CardServiceResult
-import com.tokeninc.sardis.application_template.enums.ExtraKeys
-import com.tokeninc.sardis.application_template.enums.PaymentTypes
-import com.tokeninc.sardis.application_template.enums.ResponseCode
-import com.tokeninc.sardis.application_template.enums.SlipType
-import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.type.CardReadType
+import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
+import com.tokeninc.sardis.application_template.data.model.key.ExtraKeys
+import com.tokeninc.sardis.application_template.data.model.type.PaymentType
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.type.SlipType
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
@@ -142,12 +142,12 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     private fun prepareSpinner(){
         val spinner = binding.spinner
         val items = mutableListOf<String>(
-            valueOf(PaymentTypes.CREDITCARD),
-            valueOf(PaymentTypes.TRQRCREDITCARD),
-            valueOf(PaymentTypes.TRQRFAST),
-            valueOf(PaymentTypes.TRQRMOBILE),
-            valueOf(PaymentTypes.TRQROTHER),
-            valueOf(PaymentTypes.OTHER)
+            valueOf(PaymentType.CREDITCARD),
+            valueOf(PaymentType.TRQRCREDITCARD),
+            valueOf(PaymentType.TRQRFAST),
+            valueOf(PaymentType.TRQRMOBILE),
+            valueOf(PaymentType.TRQROTHER),
+            valueOf(PaymentType.OTHER)
         )
         val adapter: ArrayAdapter<String> =
             ArrayAdapter<String>(mainActivity, R.layout.spinner_item, items)
@@ -313,7 +313,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
      */
     private fun prepareDummyResponse (code: ResponseCode){
 
-        var paymentType = PaymentTypes.CREDITCARD.type
+        var paymentType = PaymentType.CREDITCARD.type
         val cbMerchant = binding.cbMerchant
         val cbCustomer = binding.cbCustomer
         var slipType = SlipType.NO_SLIP
@@ -329,16 +329,16 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         val spinner = binding.spinner
         if (code == ResponseCode.SUCCESS) {
             val text: String = spinner.selectedItem.toString()
-            if (text == valueOf(PaymentTypes.TRQRCREDITCARD))
-                paymentType = PaymentTypes.TRQRCREDITCARD.type
-            else if (text == valueOf(PaymentTypes.TRQRFAST))
-                paymentType = PaymentTypes.TRQRFAST.type
-            else if (text == valueOf(PaymentTypes.TRQRMOBILE))
-                paymentType = PaymentTypes.TRQRMOBILE.type
-            else if (text == valueOf(PaymentTypes.TRQROTHER))
-                paymentType = PaymentTypes.TRQROTHER.type
-            else if (text == valueOf(PaymentTypes.OTHER))
-                paymentType = PaymentTypes.OTHER.type
+            if (text == valueOf(PaymentType.TRQRCREDITCARD))
+                paymentType = PaymentType.TRQRCREDITCARD.type
+            else if (text == valueOf(PaymentType.TRQRFAST))
+                paymentType = PaymentType.TRQRFAST.type
+            else if (text == valueOf(PaymentType.TRQRMOBILE))
+                paymentType = PaymentType.TRQRMOBILE.type
+            else if (text == valueOf(PaymentType.TRQROTHER))
+                paymentType = PaymentType.TRQROTHER.type
+            else if (text == valueOf(PaymentType.OTHER))
+                paymentType = PaymentType.OTHER.type
         }
         //onSaleResponseRetrieved(amount, code, true, slipType, "1234 **** **** 7890", "OWNER NAME", paymentType)
     }

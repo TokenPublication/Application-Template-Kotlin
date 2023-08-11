@@ -16,11 +16,11 @@ import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
-import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
-import com.tokeninc.sardis.application_template.enums.CardServiceResult
-import com.tokeninc.sardis.application_template.enums.ResponseCode
-import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
@@ -170,7 +170,8 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
     fun doVoid(transaction: Transaction){
         val contentValHelper = ContentValHelper()
         CoroutineScope(Dispatchers.Default).launch {
-            transactionViewModel.transactionRoutine(card!!,TransactionCode.VOID.type,  Bundle(),
+            transactionViewModel.transactionRoutine(card!!,
+                TransactionCode.VOID.type,  Bundle(),
                 contentValHelper.getContentVal(transaction),batchViewModel, mainActivity, activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)

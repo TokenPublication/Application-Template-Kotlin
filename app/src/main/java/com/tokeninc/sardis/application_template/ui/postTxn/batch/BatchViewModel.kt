@@ -6,9 +6,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
+import com.tokeninc.sardis.application_template.data.model.responses.BatchCloseResponse
+import com.tokeninc.sardis.application_template.data.model.resultCode.BatchResult
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
-import com.tokeninc.sardis.application_template.enums.BatchResult
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
 import com.tokeninc.sardis.application_template.utils.printHelpers.BatchClosePrintHelper

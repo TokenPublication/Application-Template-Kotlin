@@ -1,6 +1,6 @@
-package com.tokeninc.sardis.application_template.data.entities.responses
+package com.tokeninc.sardis.application_template.data.model.responses
 
-import com.tokeninc.sardis.application_template.enums.BatchResult
+import com.tokeninc.sardis.application_template.data.model.resultCode.BatchResult
 import java.text.SimpleDateFormat
 
 /**

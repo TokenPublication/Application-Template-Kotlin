@@ -10,15 +10,15 @@ import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.transaction.TransactionDao
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
-import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
-import com.tokeninc.sardis.application_template.data.entities.responses.OnlineTransactionResponse
-import com.tokeninc.sardis.application_template.data.entities.responses.TransactionResponse
-import com.tokeninc.sardis.application_template.enums.CardReadType
-import com.tokeninc.sardis.application_template.enums.ExtraKeys
-import com.tokeninc.sardis.application_template.enums.PaymentTypes
-import com.tokeninc.sardis.application_template.enums.ResponseCode
-import com.tokeninc.sardis.application_template.enums.SlipType
-import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.card.ICCCard
+import com.tokeninc.sardis.application_template.data.model.responses.OnlineTransactionResponse
+import com.tokeninc.sardis.application_template.data.model.responses.TransactionResponse
+import com.tokeninc.sardis.application_template.data.model.type.CardReadType
+import com.tokeninc.sardis.application_template.data.model.key.ExtraKeys
+import com.tokeninc.sardis.application_template.data.model.type.PaymentType
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.type.SlipType
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.objects.SampleReceipt
 import com.tokeninc.sardis.application_template.utils.printHelpers.DateUtil
@@ -190,7 +190,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             bundle.putString("MID", merchantID.toString())
             bundle.putString("TID", terminalID.toString())
             bundle.putInt("TxnNo",groupSN)
-            bundle.putInt("PaymentType", PaymentTypes.CREDITCARD.type)
+            bundle.putInt("PaymentType", PaymentType.CREDITCARD.type)
 
             var slipType: SlipType = SlipType.NO_SLIP
             if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) {
@@ -199,8 +199,10 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             else{
                 if (transactionResponse.responseCode == ResponseCode.SUCCESS){
                     val printHelper = TransactionPrintHelper()
-                    bundle.putString("customerSlipData", printHelper.getFormattedText( receipt,SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, Bundle(), transactionResponse.transactionCode, mainActivity,1, 1,false))
-                    bundle.putString("merchantSlipData", printHelper.getFormattedText( receipt,SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, Bundle(), transactionResponse.transactionCode, mainActivity,1, 1,false))
+                    bundle.putString("customerSlipData", printHelper.getFormattedText( receipt,
+                        SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, Bundle(), transactionResponse.transactionCode, mainActivity,1, 1,false))
+                    bundle.putString("merchantSlipData", printHelper.getFormattedText( receipt,
+                        SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, Bundle(), transactionResponse.transactionCode, mainActivity,1, 1,false))
                     bundle.putString("RefundInfo", getRefundInfo(transactionResponse,batchNo,groupSN,amount,merchantID,terminalID,card))
                     if(transactionResponse.contentVal != null) {
                         bundle.putString("RefNo", transactionResponse.contentVal!!.getAsString(

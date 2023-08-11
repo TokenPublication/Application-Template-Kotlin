@@ -9,7 +9,7 @@ import com.tokeninc.sardis.application_template.ui.postTxn.PostTxnFragment
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding
-import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.utils.StringHelper
 
 /**

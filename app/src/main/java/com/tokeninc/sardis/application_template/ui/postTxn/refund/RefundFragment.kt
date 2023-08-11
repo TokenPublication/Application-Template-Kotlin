@@ -19,12 +19,12 @@ import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentRefundBinding
-import com.tokeninc.sardis.application_template.enums.CardServiceResult
-import com.tokeninc.sardis.application_template.enums.ExtraKeys
-import com.tokeninc.sardis.application_template.enums.ResponseCode
-import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
+import com.tokeninc.sardis.application_template.data.model.key.ExtraKeys
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
@@ -173,7 +173,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
                 Log.d("Refund Card Number", cardData.mCardNumber.toString())
                 if (isGib){
                     if (refundBundle.getString(ExtraKeys.CARD_NO.name).equals(cardData.mCardNumber)){ // if cardNumbers are matching
-                        doRefund(cardData,TransactionCode.MATCHED_REFUND.type)
+                        doRefund(cardData, TransactionCode.MATCHED_REFUND.type)
                     }
                     else{
                         mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)

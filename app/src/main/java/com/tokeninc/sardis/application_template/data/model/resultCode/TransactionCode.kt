@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.enums
+package com.tokeninc.sardis.application_template.data.model.resultCode
 
 /**
  * This is enum class for holding types of Transaction.

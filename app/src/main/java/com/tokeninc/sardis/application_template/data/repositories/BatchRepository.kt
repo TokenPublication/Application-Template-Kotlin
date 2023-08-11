@@ -8,7 +8,7 @@ import com.token.printerlib.PrinterService
 import com.token.printerlib.StyledString
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.batch.BatchDao
-import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
+import com.tokeninc.sardis.application_template.data.model.responses.BatchCloseResponse
 import javax.inject.Inject
 
 /**

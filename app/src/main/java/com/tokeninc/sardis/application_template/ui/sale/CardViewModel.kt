@@ -1,14 +1,12 @@
 package com.tokeninc.sardis.application_template.ui.sale
 
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.data.repositories.CardRepository
-import com.tokeninc.sardis.application_template.enums.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

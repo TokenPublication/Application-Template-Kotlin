@@ -25,8 +25,11 @@ import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.libtokenkms.KMSWrapperInterface.InitCallbacks
 import com.tokeninc.libtokenkms.TokenKMS
 import com.tokeninc.sardis.application_template.*
+import com.tokeninc.sardis.application_template.data.model.key.ExtraKeys
+import com.tokeninc.sardis.application_template.data.model.type.CardReadType
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
-import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.ui.*
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.activation.SettingsFragment

@@ -8,10 +8,10 @@ import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.AppTemp
 import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
-import com.tokeninc.sardis.application_template.enums.CardReadType
-import com.tokeninc.sardis.application_template.enums.ExtraKeys
-import com.tokeninc.sardis.application_template.enums.SlipType
-import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.type.CardReadType
+import com.tokeninc.sardis.application_template.data.model.key.ExtraKeys
+import com.tokeninc.sardis.application_template.data.model.type.SlipType
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.objects.SampleReceipt
 import java.text.SimpleDateFormat
