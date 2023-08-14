@@ -153,47 +153,49 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         val batchNo = batchViewModel.getBatchNo()
         val groupSn = batchViewModel.getGroupSN()
         val stn = batchViewModel.getSTN()
-        var responseCode = ResponseCode.ERROR
-        if (transactionCode == TransactionCode.VOID.type){ // if it is a void operation
-            val gupSn = extraContent!!.getAsString(TransactionCols.Col_GUP_SN).toInt()
-            setVoid(gupSn,"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card.SID)
-            responseCode = ResponseCode.SUCCESS
-            val voidBundle = Bundle()
-            voidBundle.putString(TransactionCols.Col_GUP_SN,gupSn.toString())
-            transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent, voidBundle,transactionCode) //it comes from parameters
-        } else{
-            batchViewModel.updateGUPSN()
-            transactionResponse = transactionRepository.getTransactionResponse(card, transactionCode,onlineTransactionResponse,batchNo,groupSn, stn, bundle)
-            val responseTransactionCode = transactionResponse.transactionCode
-            if (responseTransactionCode != 0){
-                val content = transactionResponse.contentVal!!
-                val transaction = ContentValHelper().getTransaction(content)
-                insertTransaction(transaction)
-                responseCode = ResponseCode.SUCCESS
-                Log.d("Service","Success: ")
-            }
-        }
-        if (responseCode == ResponseCode.SUCCESS){
-            coroutineScope.launch(Dispatchers.Main) {
-                uiState.postValue(UIState.Success("Transaction is Successful"))
-            }
-        }
-        val kmsService = mainActivity.tokenKMS //to use it later
-        val transaction: Transaction =
-        if (transactionCode == TransactionCode.VOID.type){
-            ContentValHelper().getTransaction(extraContent!!)
-        } else {
-            ContentValHelper().getTransaction(transactionResponse.contentVal!!)
-        }
-        val receipt = SampleReceipt(transaction,activationRepository)
-        val intent: Intent =
-        if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
-            transactionRepository.prepareSaleIntent(transactionResponse, card, mainActivity, receipt)
-        }
-        else{
-            transactionRepository.prepareRefundVoidIntent(transactionResponse,mainActivity,receipt)
-        }
-        liveIntent.postValue(intent)
+        if (onlineTransactionResponse.mResponseCode == ResponseCode.SUCCESS){ // if it connects host successfully
 
+            var responseCode = ResponseCode.ERROR
+            if (transactionCode == TransactionCode.VOID.type){ // if it is a void operation
+                val gupSn = extraContent!!.getAsString(TransactionCols.Col_GUP_SN).toInt()
+                setVoid(gupSn,"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card.SID)
+                responseCode = ResponseCode.SUCCESS
+                val voidBundle = Bundle()
+                voidBundle.putString(TransactionCols.Col_GUP_SN,gupSn.toString())
+                transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent, voidBundle,transactionCode) //it comes from parameters
+            } else{
+                batchViewModel.updateGUPSN()
+                transactionResponse = transactionRepository.getTransactionResponse(card, transactionCode,onlineTransactionResponse,batchNo,groupSn, stn, bundle)
+                val responseTransactionCode = transactionResponse.transactionCode
+                if (responseTransactionCode != 0){
+                    val content = transactionResponse.contentVal!!
+                    val transaction = ContentValHelper().getTransaction(content)
+                    insertTransaction(transaction)
+                    responseCode = ResponseCode.SUCCESS
+                    Log.d("Service","Success: ")
+                }
+            }
+            if (responseCode == ResponseCode.SUCCESS){
+                coroutineScope.launch(Dispatchers.Main) {
+                    uiState.postValue(UIState.Success("Transaction is Successful"))
+                }
+            }
+            val kmsService = mainActivity.tokenKMS //to use it later
+            val transaction: Transaction =
+                if (transactionCode == TransactionCode.VOID.type){
+                    ContentValHelper().getTransaction(extraContent!!)
+                } else {
+                    ContentValHelper().getTransaction(transactionResponse.contentVal!!)
+                }
+            val receipt = SampleReceipt(transaction,activationRepository)
+            val intent: Intent =
+                if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
+                    transactionRepository.prepareSaleIntent(transactionResponse, card, mainActivity, receipt, transaction.ZNO, transaction.Col_ReceiptNo)
+                }
+                else{
+                    transactionRepository.prepareRefundVoidIntent(transactionResponse,mainActivity,receipt,transaction.ZNO, transaction.Col_ReceiptNo)
+                }
+            liveIntent.postValue(intent)
+        }
     }
 }

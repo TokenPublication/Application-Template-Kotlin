@@ -25,7 +25,7 @@ import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
 import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
-import com.tokeninc.sardis.application_template.data.model.key.ExtraKeys
+import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import com.tokeninc.sardis.application_template.data.model.type.PaymentType
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
 import com.tokeninc.sardis.application_template.data.model.type.SlipType
@@ -295,7 +295,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         bundle.putInt("IsOffline", if (isOffline) 1 else 0)
         bundle.putInt("PinByPass", if (pinByPass) 1 else 0)
         bundle.putString("UUID", uuid)
-        if (zNO != null && receiptNo != null) {
+        if (zNO != null && receiptNo != null) { // zNo and receiptNo comes sales in 1000TR
             bundle.putString("ZNO", zNO)
             bundle.putString("ReceiptNo", receiptNo)
         }

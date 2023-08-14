@@ -9,7 +9,7 @@ import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.AppTemp
 import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
 import com.tokeninc.sardis.application_template.data.model.type.CardReadType
-import com.tokeninc.sardis.application_template.data.model.key.ExtraKeys
+import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import com.tokeninc.sardis.application_template.data.model.type.SlipType
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.utils.StringHelper
@@ -24,7 +24,7 @@ import java.util.Locale
  */
 class TransactionPrintHelper:BasePrintHelper() {
     fun getFormattedText(receipt: SampleReceipt, slipType: SlipType, contentValues: ContentValues, bundle: Bundle,
-                         transactionCode: Int, context: Context, ZNO: Int, ReceiptNo: Int, isCopy: Boolean): String {
+                         transactionCode: Int, context: Context, ZNO: String?, ReceiptNo: Int?, isCopy: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
         if (transactionCode == TransactionCode.SALE.type){ //TODO kaldır
@@ -197,8 +197,8 @@ class TransactionPrintHelper:BasePrintHelper() {
                 if ((context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.ECR.name)
                 ) {
                     styledText.newLine()
-                    styledText.addTextToLine("Z NO: $ZNO", PrinterDefinitions.Alignment.Right)
-                    styledText.addTextToLine("FİŞ NO: $ReceiptNo", PrinterDefinitions.Alignment.Left)
+                    styledText.addTextToLine("Z NO: ${ZNO ?: 1}", PrinterDefinitions.Alignment.Right) //if null return 1 else return itself
+                    styledText.addTextToLine("FİŞ NO: ${ReceiptNo ?: 1}", PrinterDefinitions.Alignment.Left)
                 }
             }
             if (slipType === SlipType.MERCHANT_SLIP) {

@@ -12,6 +12,7 @@ class ICCCard: ICard {
     var mTranAmount1 = 0
     var ownerName: String? = null
     var CardSeqNum: String? = null
+    var dateTime: String? = null
     var AC: String? = null
     var CID: String? = null
     var ATC: String? = null
