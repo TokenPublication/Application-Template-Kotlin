@@ -43,7 +43,7 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_InstCnt)
     var Col_InstCnt: Int = 0,
     @ColumnInfo(name = TransactionCols.Col_TranDate)
-    var Col_TranDate: String,
+    var Col_TranDate: String?,
     @ColumnInfo(name = TransactionCols.Col_RefNo)
     var Col_RefNo: String,
     @ColumnInfo(name = TransactionCols.Col_VoidDateTime)
