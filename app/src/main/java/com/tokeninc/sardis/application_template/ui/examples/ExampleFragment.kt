@@ -1,6 +1,5 @@
 package com.tokeninc.sardis.application_template.ui.examples
 
-import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -22,6 +21,7 @@ import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentExampleBinding
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
+import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
 
 /**
@@ -151,6 +151,15 @@ class ExampleFragment(val mainActivity: MainActivity, private val cardViewModel:
         }))
         subListPrint.add(MenuItem(getStrings(R.string.print_error), {
             print(PrintHelper().printError()) // Message print: Load Error
+        }))
+        subListPrint.add(MenuItem("Print Contactless 32", {
+            print(PrintHelper().printContactless(true,mainActivity.applicationContext))
+        }))
+        subListPrint.add(MenuItem("Print Contactless 64", {
+            print(PrintHelper().printContactless(false,mainActivity.applicationContext))
+        }))
+        subListPrint.add(MenuItem("Print Visa", {
+            print(PrintHelper().printVisa(mainActivity.applicationContext))
         }))
         menuItems.add(MenuItem(getStrings(R.string.print_functions), subListPrint, null))
     }

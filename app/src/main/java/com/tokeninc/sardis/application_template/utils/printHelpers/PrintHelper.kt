@@ -1,6 +1,8 @@
 package com.tokeninc.sardis.application_template.utils.printHelpers
 
+import android.content.Context
 import com.token.printerlib.PrinterDefinitions
+import com.token.printerlib.PrinterService
 import com.token.printerlib.StyledString
 import com.tokeninc.sardis.application_template.utils.StringHelper
 
@@ -99,4 +101,22 @@ class PrintHelper: BasePrintHelper() {
         styledText.newLine()
         return styledText.toString()
     }
+
+    fun printContactless(is32: Boolean, context: Context?) {
+        val styledText = StyledString()
+        styledText.printBitmap(if (is32) "contactless32" else "contactless64", 0)
+        styledText.newLine()
+        styledText.addSpace(100)
+        styledText.print(PrinterService.getService(context))
+    }
+
+    fun printVisa(context: Context?) {
+        val styledText = StyledString()
+        styledText.printBitmap("visa-contactless", 0)
+        styledText.newLine()
+        styledText.addSpace(100)
+        styledText.print(PrinterService.getService(context))
+    }
+
+
 }
