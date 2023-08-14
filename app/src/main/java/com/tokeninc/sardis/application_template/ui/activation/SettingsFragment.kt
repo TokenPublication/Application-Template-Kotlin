@@ -7,14 +7,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.viewModelScope
 import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.MainActivity
+import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
@@ -27,8 +30,7 @@ import org.apache.commons.lang3.StringUtils
  * This fragment is for Setting Configuration, it depends on Activation Database
  */
 class SettingsFragment(private val mainActivity: MainActivity,
-                       private val activationViewModel: ActivationViewModel,
-                       private val intent: Intent) : Fragment() {
+                       private val activationViewModel: ActivationViewModel) : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
@@ -49,10 +51,10 @@ class SettingsFragment(private val mainActivity: MainActivity,
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        isBankActivateAction = intent.action != null && intent.action.equals("Activate_Bank")
+        isBankActivateAction = mainActivity.intent.action != null && mainActivity.intent.action.equals("Activate_Bank")
         if (isBankActivateAction) {
-            terminalId = intent.getStringExtra("terminalID")
-            merchantId = intent.getStringExtra("merchantID")
+            terminalId = mainActivity.intent.getStringExtra("terminalID")
+            merchantId = mainActivity.intent.getStringExtra("merchantID")
         } else {
             showMenu()
         }
@@ -70,8 +72,8 @@ class SettingsFragment(private val mainActivity: MainActivity,
         menuItems.add(MenuItem("Host Settings", {
             addIPFragment()
         }))
-        activationViewModel.menuItemList = menuItems
-        activationViewModel.replaceFragment(mainActivity)
+        val menuFragment = ListMenuFragment.newInstance(menuItems,"Settings", true, R.drawable.token_logo_png)
+        mainActivity.replaceFragment(menuFragment as Fragment)
     }
 
     /**

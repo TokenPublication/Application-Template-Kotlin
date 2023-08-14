@@ -5,19 +5,16 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import com.token.uicomponents.ListMenuFragment.IAuthenticator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialog.InfoType
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.ui.examples.viewModels.InfoDialogViewModel
 
 /** It can be deleted
  * This fragment includes Info Dialog methods for example activity
  */
-class InfoDialogFragment : Fragment(R.layout.fragment_info_dialog) {
-
-    var exampleActivity: ExampleActivity? = null
-    private var viewModel = InfoDialogViewModel()
+class InfoDialogFragment(private val exampleActivity: ExampleActivity) : Fragment(R.layout.fragment_info_dialog) {
 
     class InfoDialogItem: IListMenuItem {
 
@@ -51,8 +48,8 @@ class InfoDialogFragment : Fragment(R.layout.fragment_info_dialog) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prepareData()
-        viewModel.list = menuItems
-        viewModel.replaceFragment(exampleActivity!!)
+        val fragment = ListMenuFragment.newInstance(menuItems, "Info Dialog", false, R.drawable.token_logo_png)
+        exampleActivity.replaceFragment(fragment as Fragment)
     }
 
     private fun prepareData() {

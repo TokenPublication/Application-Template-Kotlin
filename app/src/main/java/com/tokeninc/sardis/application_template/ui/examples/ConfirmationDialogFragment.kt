@@ -5,25 +5,23 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.ui.examples.viewModels.ConfirmationDialogViewModel
 
 /** It can be deleted
  * This fragment includes Confirmation Dialog methods for example activity
  */
-class ConfirmationDialogFragment : Fragment(R.layout.fragment_confirmation_dialog), InfoDialogListener {
+class ConfirmationDialogFragment(private val exampleActivity: ExampleActivity) : Fragment(R.layout.fragment_confirmation_dialog), InfoDialogListener {
 
     private var menuItems = mutableListOf<IListMenuItem>()
-    var exampleActivity: ExampleActivity? = null
-    private var viewModel = ConfirmationDialogViewModel()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prepareData()
-        viewModel.list = menuItems
-        viewModel.replaceFragment(exampleActivity!!)
+        val fragment = ListMenuFragment.newInstance(menuItems, "Confirmation", false, R.drawable.token_logo_png)
+        exampleActivity.replaceFragment(fragment as Fragment)
     }
 
     private fun prepareData() {

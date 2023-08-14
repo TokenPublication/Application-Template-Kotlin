@@ -32,16 +32,6 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     fun hostIP() = activationRepository.hostIP()
     fun hostPort() = activationRepository.hostPort()
 
-    var menuItemList = mutableListOf<IListMenuItem>()
-
-    fun replaceFragment(mainActivity: MainActivity){
-        val menuFragment = ListMenuFragment.newInstance(menuItemList,"Settings",
-            true, R.drawable.token_logo_png)
-        viewModelScope.launch(Dispatchers.Main) {
-            mainActivity.replaceFragment(menuFragment as Fragment)
-        }
-    }
-
     fun updateActivation(terminalId: String?, merchantId: String?){
         viewModelScope.launch(Dispatchers.IO){
             activationRepository.updateActivation(terminalId,merchantId)
@@ -88,7 +78,6 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
         coroutineScope.launch {
             updateUIState(UIState.Starting)
             withContext(Dispatchers.IO){
-                Log.d("WithContextThread: ",Thread.currentThread().name)
                 mainActivity.setEMVConfiguration(false)
             }
             updateUIState(UIState.ParameterUploading)

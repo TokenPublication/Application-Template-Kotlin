@@ -122,7 +122,7 @@ class MainActivity : TimeOutActivity() {
         cardViewModel = getCardViewModel
 
         saleFragment = SaleFragment(transactionViewModel, this, batchViewModel, cardViewModel, activationViewModel)
-        settingsFragment = SettingsFragment(this, activationViewModel, intent)
+        settingsFragment = SettingsFragment(this, activationViewModel)
         triggerFragment = TriggerFragment(this)
         refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel, activationViewModel)
         postTxnFragment = PostTxnFragment(this, transactionViewModel, refundFragment, batchViewModel, cardViewModel, activationViewModel)

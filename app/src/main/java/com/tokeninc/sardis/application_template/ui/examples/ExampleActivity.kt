@@ -9,6 +9,7 @@ import androidx.fragment.app.FragmentTransaction
 import com.token.printerlib.PrinterService
 import com.token.printerlib.StyledString
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.numpad.NumPadDialog
@@ -18,7 +19,6 @@ import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.ui.examples.viewModels.ExampleViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
 
@@ -32,7 +32,6 @@ class ExampleActivity: TimeOutActivity(), InfoDialogListener,CardServiceListener
     private var qrAmount = 100
     private var qrString = "QR Code Test"
     private var menuItems = mutableListOf<IListMenuItem>()
-    private val viewModel = ExampleViewModel()
     private lateinit var cardServiceBinding: CardServiceBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,8 +39,8 @@ class ExampleActivity: TimeOutActivity(), InfoDialogListener,CardServiceListener
         setContentView(R.layout.activity_example)
         prepareData()
         cardServiceBinding = CardServiceBinding(this, this)
-        viewModel.list = menuItems
-        viewModel.replaceFragment(this)
+        val fragment = ListMenuFragment.newInstance(menuItems, getString(R.string.examples), false, R.drawable.token_logo_png)
+        replaceFragment(fragment as Fragment)
     }
 
     fun print(printText: String?) {
@@ -98,18 +97,15 @@ class ExampleActivity: TimeOutActivity(), InfoDialogListener,CardServiceListener
         menuItems.add(MenuItem("Sub Menu", subList1, null) )
 
         menuItems.add(MenuItem("Custom Input List", {
-            val customInputListFragment = CustomInputListFragment()
-            customInputListFragment.exampleActivity = this
+            val customInputListFragment = CustomInputListFragment(this)
             addFragment(customInputListFragment)
         }))
         menuItems.add(MenuItem("Info Dialog", {
-            val infoDialogFragment = InfoDialogFragment()
-            infoDialogFragment.exampleActivity = this
+            val infoDialogFragment = InfoDialogFragment(this)
             addFragment(infoDialogFragment)
         }))
         menuItems.add(MenuItem("Confirmation Dialog", {
-            val confirmationDialogFragment = ConfirmationDialogFragment()
-            confirmationDialogFragment.exampleActivity = this
+            val confirmationDialogFragment = ConfirmationDialogFragment(this)
             addFragment(confirmationDialogFragment)
         }))
         menuItems.add(MenuItem("Device Info",{

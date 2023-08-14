@@ -5,26 +5,24 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
+import com.token.uicomponents.CustomInput.InputListFragment
 import com.token.uicomponents.CustomInput.InputValidator
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.ui.examples.viewModels.CustomInputViewModel
 
 /** It can be deleted
  * This fragment includes Custom Input List methods for example activity
  */
-class CustomInputListFragment : Fragment(R.layout.fragment_custom_input_list) {
+class CustomInputListFragment(private val exampleActivity: ExampleActivity) : Fragment(R.layout.fragment_custom_input_list) {
 
-    var exampleActivity: ExampleActivity? = null
     var validator = InputValidator { input -> input.text.length == 19 }
     var validator2 = InputValidator { input -> input.text.length == 10 }
     var inputList = mutableListOf<CustomInputFormat>()
-    private var viewModel = CustomInputViewModel()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prepareData()
-        viewModel.list = inputList
-        viewModel.replaceFragment(exampleActivity!!)
+        val fragment = InputListFragment.newInstance(inputList)
+        exampleActivity.replaceFragment(fragment as Fragment)
     }
 
     private fun prepareData(){
