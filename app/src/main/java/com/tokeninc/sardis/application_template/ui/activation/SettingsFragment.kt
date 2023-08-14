@@ -1,13 +1,11 @@
 package com.tokeninc.sardis.application_template.ui.activation
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.viewModelScope
 import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputListFragment
@@ -66,10 +64,10 @@ class SettingsFragment(private val mainActivity: MainActivity,
      */
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
-        menuItems.add(MenuItem("Setup", {
+        menuItems.add(MenuItem(mainActivity.getString(R.string.setup), {
             addTidMidFragment()
         }))
-        menuItems.add(MenuItem("Host Settings", {
+        menuItems.add(MenuItem(mainActivity.getString(R.string.host_settings), {
             addIPFragment()
         }))
         val menuFragment = ListMenuFragment.newInstance(menuItems,"Settings", true, R.drawable.token_logo_png)
@@ -83,19 +81,19 @@ class SettingsFragment(private val mainActivity: MainActivity,
     private fun addIPFragment(){
 
         val inputList = mutableListOf<CustomInputFormat>()
-        inputList.add(CustomInputFormat("IP",EditTextInputType.IpAddress,
-        null, "Invalid IP!", InputValidator {
+        inputList.add(CustomInputFormat(mainActivity.getString(R.string.ip),EditTextInputType.IpAddress,
+        null, mainActivity.getString(R.string.invalid_ip), InputValidator {
                 validate(it)
             }))
 
         inputList.add(CustomInputFormat(
-            "Port", EditTextInputType.Number, 4, "Invalid Port!"
+            mainActivity.getString(R.string.port), EditTextInputType.Number, 4, mainActivity.getString(R.string.invalid_port)
         ) { customInputFormat -> customInputFormat.text.length >= 2 && customInputFormat.text.toInt() > 0 })
 
         inputList[0].text = activationViewModel.hostIP()
         inputList[1].text = activationViewModel.hostPort()
 
-        val hostFragment = InputListFragment.newInstance(inputList, "Save",
+        val hostFragment = InputListFragment.newInstance(inputList, mainActivity.getString(R.string.save),
             InputListFragment.ButtonListener{
                 val ipNo = inputList[0].text
                 val portNo = inputList[1].text
@@ -109,16 +107,16 @@ class SettingsFragment(private val mainActivity: MainActivity,
         CoroutineScope(Dispatchers.Default).launch {
             activationViewModel.setupRoutine(mainActivity)
         }
-        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Processing, "Aktivasyon Başlatılıyor…", false)
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Processing, mainActivity.getString(R.string.starting_activation), false)
         activationViewModel.getUiState().observe(mainActivity) { state ->
             when (state) {
                 is ActivationViewModel.UIState.Starting -> mainActivity.showDialog(dialog)
-                is ActivationViewModel.UIState.ParameterUploading -> dialog.update(InfoDialog.InfoType.Progress,"Parametre Yükleniyor")
-                is ActivationViewModel.UIState.MemberActCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,"Üye İşyeri Aktivasyonu: Başarılı")
-                is ActivationViewModel.UIState.RKLLoading -> dialog.update(InfoDialog.InfoType.Progress,"RKL Yükleniyor")
-                is ActivationViewModel.UIState.RKLLoaded -> dialog.update(InfoDialog.InfoType.Confirmed,"RKL Yüklendi")
-                is ActivationViewModel.UIState.KeyBlockLoading -> dialog.update(InfoDialog.InfoType.Progress,"Key Blok Yükleniyor")
-                is ActivationViewModel.UIState.ActivationCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,"Aktivasyon Tamamlandı")
+                is ActivationViewModel.UIState.ParameterUploading -> dialog.update(InfoDialog.InfoType.Progress,mainActivity.getString(R.string.parameter_loading))
+                is ActivationViewModel.UIState.MemberActCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,mainActivity.getString(R.string.member_act_completed))
+                is ActivationViewModel.UIState.RKLLoading -> dialog.update(InfoDialog.InfoType.Progress,mainActivity.getString(R.string.rkl_loading))
+                is ActivationViewModel.UIState.RKLLoaded -> dialog.update(InfoDialog.InfoType.Confirmed,mainActivity.getString(R.string.rkl_loaded))
+                is ActivationViewModel.UIState.KeyBlockLoading -> dialog.update(InfoDialog.InfoType.Progress,mainActivity.getString(R.string.key_block_loading))
+                is ActivationViewModel.UIState.ActivationCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,mainActivity.getString(R.string.activation_completed))
                 is ActivationViewModel.UIState.Finished -> {
                     //TODO Developer: If you don't implement this your application couldn't be activated and couldn't seen in atms
                     val deviceInfo = DeviceInfo(mainActivity)
@@ -161,31 +159,31 @@ class SettingsFragment(private val mainActivity: MainActivity,
     private fun addTidMidFragment() {
         val inputList = mutableListOf<CustomInputFormat>()
         inputList.add(CustomInputFormat(
-            "Merchant No",
+            mainActivity.getString(R.string.merchant_no),
             EditTextInputType.Number,
             10,
-            "Invalid Merchant No!"
+            mainActivity.getString(R.string.invalid_merchant_no)
         ) { input -> input.text.length == 10 })
 
         inputList.add(CustomInputFormat(
-            "Terminal No",
+            mainActivity.getString(R.string.terminal_no),
             EditTextInputType.Text,
             8,
-            "Invalid Terminal No!"
+            mainActivity.getString(R.string.invalid_terminal_no)
         ) { input -> input.text.length == 8 })
 
         inputList[0].text = activationViewModel.merchantID()
         inputList[1].text = activationViewModel.terminalID()
-        val tidMidFragment = InputListFragment.newInstance(inputList, "Save",
-            InputListFragment.ButtonListener{
-                merchantId = inputList[0].text
-                Log.d("Merchant ID",merchantId.toString())
-                terminalId = inputList[1].text
-                Log.d("Terminal ID",terminalId.toString())
-                activationViewModel.updateActivation(terminalId, merchantId)
-                startActivation()
-                mainActivity.popFragment()
-            })
+        val tidMidFragment = InputListFragment.newInstance(inputList, mainActivity.getString(R.string.save),
+            ){
+            merchantId = inputList[0].text
+            Log.d(mainActivity.getString(R.string.merchant_no),merchantId.toString())
+            terminalId = inputList[1].text
+            Log.d(mainActivity.getString(R.string.terminal_no),terminalId.toString())
+            activationViewModel.updateActivation(terminalId, merchantId)
+            startActivation()
+            mainActivity.popFragment()
+        }
         mainActivity.addFragment(tidMidFragment as Fragment)
     }
 }

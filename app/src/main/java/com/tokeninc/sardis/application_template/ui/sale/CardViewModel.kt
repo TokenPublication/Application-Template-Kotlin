@@ -1,5 +1,6 @@
 package com.tokeninc.sardis.application_template.ui.sale
 
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.tokeninc.cardservicebinding.CardServiceBinding
@@ -29,8 +30,8 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
 
     fun onDestroyed(){ cardRepository.onDestroyed()}
 
-    fun initializeCardServiceBinding(main: MainActivity) {
-        cardRepository.cardServiceBinder(main)
+    fun initializeCardServiceBinding(activity: AppCompatActivity) {
+        cardRepository.cardServiceBinder(activity)
     }
 
     fun readCard() { cardRepository.readCard() }

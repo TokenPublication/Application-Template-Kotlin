@@ -23,7 +23,7 @@ import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCo
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
-import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
+import com.tokeninc.sardis.application_template.ui.examples.ExampleFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.refund.RefundFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.void_operation.TransactionList
@@ -78,14 +78,14 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         menuItems.add(MenuItem(getStrings(R.string.batch_close), {
             if (transactionViewModel.allTransactions().isNullOrEmpty()){
                 val infoDialog = mainActivity.showInfoDialog(
-                    InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
+                    InfoDialog.InfoType.Warning,getStrings(R.string.batch_close_not_found),false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     infoDialog!!.dismiss()
                 }, 2000)
             }
             else{
                 mainActivity.showConfirmationDialog(InfoDialog.InfoType.Info,getStrings(R.string.batch_close),getStrings(
-                    R.string.batch_close_implementing
+                    R.string.batch_close_will_be_done
                 ),InfoDialog.InfoDialogButtons.Both,1,
                     object : InfoDialogListener {
                         override fun confirmed(i: Int) {
@@ -96,8 +96,8 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             }
         }))
         menuItems.add(MenuItem(getStrings(R.string.examples), {
-            mainActivity.startActivity(Intent(mainActivity, ExampleActivity()::class.java))
-
+            val exampleFragment = ExampleFragment(mainActivity,cardViewModel)
+            mainActivity.replaceFragment(exampleFragment)
         }))
         menuItems.add(MenuItem("Slip Tekrarı",{
             batchViewModel.getPreviousBatchSlip().observe(mainActivity){
@@ -151,7 +151,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
      */ //TODO simplify it (from baris)
     private fun listTransactions(mCard: ICCCard){
         if (transactionViewModel.getTransactionsByCardNo(mCard.mCardNumber.toString()) == null){
-            val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
+            val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_close_not_found),false)
             Handler(Looper.getMainLooper()).postDelayed({
                 infoDialog!!.dismiss()
             }, 2000)

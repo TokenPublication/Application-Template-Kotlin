@@ -13,125 +13,125 @@ import com.tokeninc.sardis.application_template.R
 /** It can be deleted
  * This fragment includes Confirmation Dialog methods for example activity
  */
-class ConfirmationDialogFragment(private val exampleActivity: ExampleActivity) : Fragment(R.layout.fragment_confirmation_dialog), InfoDialogListener {
+class ConfirmationDialogFragment(private val exampleFragment: ExampleFragment) : Fragment(R.layout.fragment_confirmation_dialog), InfoDialogListener {
 
     private var menuItems = mutableListOf<IListMenuItem>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prepareData()
-        val fragment = ListMenuFragment.newInstance(menuItems, "Confirmation", false, R.drawable.token_logo_png)
-        exampleActivity.replaceFragment(fragment as Fragment)
+        val fragment = ListMenuFragment.newInstance(menuItems, exampleFragment.getStrings(R.string.confirmation), false, R.drawable.token_logo_png)
+        exampleFragment.mainActivity.replaceFragment(fragment as Fragment)
     }
 
     private fun prepareData() {
-        menuItems.add(MenuItem("Confirmed", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.confirmed), {
             showConfirmationDialog(
                 InfoDialog.InfoType.Confirmed,
-                "Confirmed",
-                "Confirmation: Confirmed",
+                exampleFragment.getStrings(R.string.confirmed),
+                exampleFragment.getStrings(R.string.confirmation)+": "+exampleFragment.getStrings(R.string.confirmed),
                 InfoDialog.InfoDialogButtons.Both,
                 99,
-                exampleActivity!!
+                exampleFragment
             )
         }) )
-        menuItems.add(MenuItem("Warning", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.warning), {
             showConfirmationDialog(
                 InfoDialog.InfoType.Warning,
-                "Warning",
-                "Confirmation: Warning",
+                exampleFragment.getStrings(R.string.warning),
+                exampleFragment.getStrings(R.string.confirmation)+": "+exampleFragment.getStrings(R.string.warning),
                 InfoDialog.InfoDialogButtons.Both,
                 98,
-                exampleActivity!!
+                exampleFragment
             )
         }))
-        menuItems.add(MenuItem("Error", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.error), {
             showConfirmationDialog(
                 InfoDialog.InfoType.Error,
-                "Error",
-                "Confirmation: Error",
+                exampleFragment.getStrings(R.string.error),
+                exampleFragment.getStrings(R.string.confirmation)+": "+exampleFragment.getStrings(R.string.error),
                 InfoDialog.InfoDialogButtons.Both,
                 97,
-                exampleActivity!!
+                exampleFragment
             )
         }))
-        menuItems.add(MenuItem("Info", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.info), {
             showConfirmationDialog(
                 InfoDialog.InfoType.Info,
-                "Info",
-                "Confirmation: Info",
+                exampleFragment.getStrings(R.string.info),
+                exampleFragment.getStrings(R.string.confirmation)+": " +exampleFragment.getStrings(R.string.info),
                 InfoDialog.InfoDialogButtons.Both,
                 96,
-                exampleActivity!!
+                exampleFragment
                 ) }))
-        menuItems.add(MenuItem("Declined", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.declined), {
             showConfirmationDialog(
                 InfoDialog.InfoType.Declined,
-                "Declined",
-                "Confirmation: Declined",
+                exampleFragment.getStrings(R.string.declined),
+                exampleFragment.getStrings(R.string.confirmation)+": " +exampleFragment.getStrings(R.string.declined),
                 InfoDialog.InfoDialogButtons.Both,
                 95,
-                exampleActivity!!
+                exampleFragment
             )
         }))
-        menuItems.add(MenuItem("Connecting", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.connecting), {
             showConfirmationDialog(
                 InfoDialog.InfoType.Connecting,
-                "Connecting",
-                "Confirmation: Connecting",
+                exampleFragment.getStrings(R.string.connecting),
+                exampleFragment.getStrings(R.string.confirmation)+": " +exampleFragment.getStrings(R.string.connecting),
                 InfoDialog.InfoDialogButtons.Both,
                 94,
-                exampleActivity!!
+                exampleFragment
             )
         }))
-        menuItems.add(MenuItem("Downloading", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.downloading), {
             showConfirmationDialog(
                 InfoDialog.InfoType.Downloading,
-                "Downloading",
-                "Confirmation: Downloading",
+                exampleFragment.getStrings(R.string.downloading),
+                exampleFragment.getStrings(R.string.confirmation)+": " +exampleFragment.getStrings(R.string.downloading),
                 InfoDialog.InfoDialogButtons.Both,
                 93,
-                exampleActivity!!
+                exampleFragment
             )
         }))
-        menuItems.add(MenuItem("Uploading", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.uploading), {
             showConfirmationDialog(
                 InfoDialog.InfoType.Uploading,
-                "Uploading",
-                "Confirmation: Uploading",
+                exampleFragment.getStrings(R.string.uploading),
+                exampleFragment.getStrings(R.string.confirmation)+": " +exampleFragment.getStrings(R.string.uploading),
                 InfoDialog.InfoDialogButtons.Both,
                 92,
-                exampleActivity!!
+                exampleFragment
             )
         }))
-        menuItems.add(MenuItem("Processing", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.processing), {
             showConfirmationDialog(
                 InfoDialog.InfoType.Processing,
-                "Processing",
-                "Confirmation: Processing",
+                exampleFragment.getStrings(R.string.processing),
+                exampleFragment.getStrings(R.string.confirmation)+": " +exampleFragment.getStrings(R.string.processing),
                 InfoDialog.InfoDialogButtons.Both,
                 91,
-                exampleActivity!!
+                exampleFragment
             )
         }))
-        menuItems.add(MenuItem("Progress", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.progress), {
             showConfirmationDialog(
                 InfoDialog.InfoType.Progress,
-                "Progress",
-                "Confirmation: Progress",
+                exampleFragment.getStrings(R.string.progress),
+                exampleFragment.getStrings(R.string.confirmation)+": " +exampleFragment.getStrings(R.string.progress),
                 InfoDialog.InfoDialogButtons.Both,
                 90,
-                exampleActivity!!
+                exampleFragment
             )
         }))
-        menuItems.add(MenuItem("None", {
+        menuItems.add(MenuItem(exampleFragment.getStrings(R.string.none), {
             showConfirmationDialog(
                 InfoDialog.InfoType.None,
-                "None",
-                "Confirmation: None",
+                exampleFragment.getStrings(R.string.none),
+                exampleFragment.getStrings(R.string.confirmation)+": " + exampleFragment.getStrings(R.string.none),
                 InfoDialog.InfoDialogButtons.Both,
                 89,
-                exampleActivity!!
+                exampleFragment
             ) }))
     }
 
@@ -166,45 +166,45 @@ class ConfirmationDialogFragment(private val exampleActivity: ExampleActivity) :
 
     override fun confirmed(arg: Int) {
         if (arg == 99) {
-            showInfoDialog(InfoDialog.InfoType.Confirmed, "Confirmed!", true)
+            showInfoDialog(InfoDialog.InfoType.Confirmed, exampleFragment.getStrings(R.string.confirmed)+"!", true)
         }
         //else if (arg == ***) { Do something else... }
         //else if (arg == ***) { Do something else... }
         if (arg == 98) {
-            showInfoDialog(InfoDialog.InfoType.Warning, "Warning!", true)
+            showInfoDialog(InfoDialog.InfoType.Warning, exampleFragment.getStrings(R.string.warning)+"!", true)
         }
         if (arg == 97) {
-            showInfoDialog(InfoDialog.InfoType.Error, "Error!", true)
+            showInfoDialog(InfoDialog.InfoType.Error, exampleFragment.getStrings(R.string.error)+"!", true)
         }
         if (arg == 96) {
-            showInfoDialog(InfoDialog.InfoType.Info, "Info!", true)
+            showInfoDialog(InfoDialog.InfoType.Info, exampleFragment.getStrings(R.string.info)+"!", true)
         }
         if (arg == 95) {
-            showInfoDialog(InfoDialog.InfoType.Declined, "Declined!", true)
+            showInfoDialog(InfoDialog.InfoType.Declined, exampleFragment.getStrings(R.string.declined)+"!", true)
         }
         if (arg == 94) {
-            showInfoDialog(InfoDialog.InfoType.Connecting, "Connecting!", true)
+            showInfoDialog(InfoDialog.InfoType.Connecting, exampleFragment.getStrings(R.string.connecting)+"!", true)
         }
         if (arg == 93) {
-            showInfoDialog(InfoDialog.InfoType.Downloading, "Downloading!", true)
+            showInfoDialog(InfoDialog.InfoType.Downloading, exampleFragment.getStrings(R.string.downloading)+"!", true)
         }
         if (arg == 92) {
-            showInfoDialog(InfoDialog.InfoType.Uploading, "Uploading!", true)
+            showInfoDialog(InfoDialog.InfoType.Uploading, exampleFragment.getStrings(R.string.uploading)+"!", true)
         }
         if (arg == 91) {
-            showInfoDialog(InfoDialog.InfoType.Processing, "Processing!", true)
+            showInfoDialog(InfoDialog.InfoType.Processing, exampleFragment.getStrings(R.string.processing)+"!", true)
         }
         if (arg == 90) {
-            showInfoDialog(InfoDialog.InfoType.Progress, "Progress!", true)
+            showInfoDialog(InfoDialog.InfoType.Progress, exampleFragment.getStrings(R.string.progress)+"!", true)
         }
         if (arg == 89) {
-            showInfoDialog(InfoDialog.InfoType.None, "None!", true)
+            showInfoDialog(InfoDialog.InfoType.None, exampleFragment.getStrings(R.string.none)+"!", true)
         }
     }
 
     override fun canceled(arg: Int) {
         if (arg <= 99 || arg >= 89) {
-            showInfoDialog(InfoDialog.InfoType.Error, "Canceled", true)
+            showInfoDialog(InfoDialog.InfoType.Error, exampleFragment.getStrings(R.string.cancelled), true)
         }
     }
 }

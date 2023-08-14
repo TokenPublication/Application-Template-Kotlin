@@ -1,5 +1,7 @@
 package com.tokeninc.sardis.application_template.data.repositories
+import android.app.Activity
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
@@ -12,6 +14,7 @@ import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCo
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.data.model.type.EmvProcessType
+import com.tokeninc.sardis.application_template.databinding.ActivityExampleBinding
 import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
@@ -66,8 +69,8 @@ class CardRepository @Inject constructor() :
 
     private var cardServiceBinding: CardServiceBinding? = null
 
-    fun cardServiceBinder(mainActivity: MainActivity) {
-        cardServiceBinding = CardServiceBinding(mainActivity, this)
+    fun cardServiceBinder(activity: AppCompatActivity) {
+        cardServiceBinding = CardServiceBinding(activity, this)
     }
 
     /** It is called when the main activity is finished (destroyed), because this repository doesn't end with the main Activity.
