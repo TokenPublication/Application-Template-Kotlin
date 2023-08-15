@@ -1,6 +1,5 @@
 package com.tokeninc.sardis.application_template.ui.postTxn.refund
 
-import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.os.Bundle
@@ -20,16 +19,17 @@ import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentRefundBinding
-import com.tokeninc.sardis.application_template.enums.CardServiceResult
-import com.tokeninc.sardis.application_template.enums.ExtraKeys
-import com.tokeninc.sardis.application_template.enums.ResponseCode
-import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
+import com.tokeninc.sardis.application_template.utils.ExtraKeys
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
+import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,15 +42,13 @@ import java.util.*
 class RefundFragment(private val mainActivity: MainActivity, private val cardViewModel: CardViewModel,
                      private val transactionViewModel: TransactionViewModel, private val batchViewModel: BatchViewModel,
 private val activationViewModel: ActivationViewModel) : Fragment() {
+
     private var _binding: FragmentRefundBinding? = null
     private val binding get() = _binding!!
-
-    private lateinit var card: ICCCard
-    private var extraContent = ContentValues()  //at the end of every Refund we finish mainActivity so no need to delete it at everytime
-    private var stringExtraContent = ContentValues() //this is for switching customInput format type to string
+    private var transactionCode = 0
+    private var refundBundle = Bundle()
 
     companion object{
-        lateinit var inputOrgAmount: CustomInputFormat
         private var installmentCount = 0
         private lateinit var viewModel: RefundViewModel
     }
@@ -71,15 +69,8 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
     }
 
     /**
-     * this function needs for getting string from activity otherwise it causes an error because we update UI in mainActivity
-     */
-    private fun getStrings(resID: Int): String{
-        return mainActivity.getString(resID)
-    }
-
-    /**
      * It prepares list menu item and shows it to the screen.
-     */
+     */ //TODO menüden çıkıp diğerine girince 2 kez yapıyor aynı işlemi
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.matched_refund), {
@@ -91,26 +82,9 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         menuItems.add(MenuItem(getStrings(R.string.installment_refund), {
             showInstallments()
         }))
-        menuItems.add(MenuItem(getStrings(R.string.loyalty_refund), {
-            //showLoyaltyRefundFragment()
-        }))
+        menuItems.add(MenuItem(getStrings(R.string.loyalty_refund), {}))
         viewModel.list = menuItems
         viewModel.replaceFragment(mainActivity)
-    }
-
-    /**
-     * It shows Installment Refund with preparing corresponding inputs and puts those inputs ->
-     * Original Amount && Return Amount && Transaction Date and also installment count
-     * to extraContent which will be sent to Transaction Service
-     */
-    private fun showInstallmentRefundFragment(){ //TODO you can do it as match refund
-        val inputList = mutableListOf<CustomInputFormat>()
-        cardViewModel.setTransactionCode(TransactionCode.INSTALLMENT_REFUND.type)
-        addInputAmount(inputList,extraContent)
-        addInputRetAmount(inputList,extraContent)
-        addInputTranDate(inputList)
-        stringExtraContent.put(ExtraKeys.INST_COUNT.name, installmentCount)
-        addFragment(inputList)
     }
 
     /**
@@ -118,24 +92,27 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
      * The only difference is it contains Reference Number and Authorization Code.
      */
     private fun showMatchedReturnFragment() {
-        cardViewModel.setTransactionCode(TransactionCode.MATCHED_REFUND.type)
+        transactionCode = TransactionCode.MATCHED_REFUND.type
+        if (installmentCount != 0) {
+            transactionCode = TransactionCode.INSTALLMENT_REFUND.type
+        }
         val inputList = mutableListOf<CustomInputFormat>()
-        addInputAmount(inputList,extraContent)
-        addInputRetAmount(inputList,extraContent)
-        addInputRefNo(inputList,extraContent)
-        addInputAuthCode(inputList,extraContent)
+        addInputAmount(inputList)
+        addInputRetAmount(inputList)
+        addInputRefNo(inputList)
+        addInputAuthCode(inputList)
         addInputTranDate(inputList)
-        addFragment(inputList)
+        showRefundFragment(inputList)
     }
 
     /**
      * It is similar to other fragment, it only contains original amount.
      */
     private fun showReturnFragment(){
-        cardViewModel.setTransactionCode(TransactionCode.CASH_REFUND.type)
+        transactionCode = TransactionCode.CASH_REFUND.type
         val inputList: MutableList<CustomInputFormat> = mutableListOf()
-        addInputAmount(inputList,extraContent)
-        addFragment(inputList)
+        addInputAmount(inputList)
+        showRefundFragment(inputList)
     }
 
     /**
@@ -145,7 +122,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         val listener = MenuItemClickListener { menuItem: MenuItem? ->
             val itemName = menuItem!!.name.split(" ")
             installmentCount = itemName[0].toInt()
-            showInstallmentRefundFragment()
+            showMatchedReturnFragment()
         }
         val maxInst = 12
         val menuItems = mutableListOf<IListMenuItem>()
@@ -153,27 +130,26 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
             val menuItem = MenuItem(i.toString() + " " + getStrings(R.string.installment), listener)
             menuItems.add(menuItem)
         }
-        val instFragment = ListMenuFragment.newInstance(
-            menuItems,
-            getStrings(R.string.installment_refund),
-            true,
-            R.drawable.token_logo_png
-        )
+        val instFragment = ListMenuFragment.newInstance(menuItems, getStrings(R.string.installment_refund), true, R.drawable.token_logo_png)
        mainActivity.addFragment(instFragment as Fragment)
     }
 
     /**
      * It adds values to stringExtraContent to use it later. Then calls readCard operation.
      */
-    private fun addFragment(inputList: MutableList<CustomInputFormat>){
-        val fragment = InputListFragment.newInstance(
-            inputList, getStrings(R.string.refund)
-        ){ list: List<String?>? ->
+    private fun showRefundFragment(inputList: MutableList<CustomInputFormat>){
+        val fragment = InputListFragment.newInstance(inputList, getStrings(R.string.refund)){
+            cardViewModel.setTransactionCode(transactionCode) // arrange transaction code in cardRepository to read card correctly
+            // arrange amount to read card with given amount
+            if (transactionCode == TransactionCode.CASH_REFUND.type){
+                cardViewModel.setAmount(inputList[0].text.toInt())
+            } else if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.MATCHED_REFUND.type){
+                cardViewModel.setAmount(inputList[1].text.toInt())
+            }
             mainActivity.readCard()
             enterRefund = false
-            startRefundAfterConnected(list)
+            refundAfterReadCard(inputList, null)
         }
-
         mainActivity.addFragment(fragment)
     }
 
@@ -183,71 +159,40 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
      * This function is called after card Service is connected.
      * It arranges stringExtraContent with respect to refund type. After read card, it calls to refundRoutine
      */
-    private fun startRefundAfterConnected(input_list: List<String?>?){
-        if (!enterRefund){
-            enterRefund = true
-            cardViewModel.getTransactionCode().observe(mainActivity) { transactionCode ->
-                when (transactionCode) {
-                    // set extra contents with respect to input list
-                    TransactionCode.MATCHED_REFUND.type -> {
-                        stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name,input_list!![0])
-                        stringExtraContent.put(ExtraKeys.REFUND_AMOUNT.name,input_list[1])
-                        stringExtraContent.put(ExtraKeys.REF_NO.name,input_list[2])
-                        stringExtraContent.put(ExtraKeys.AUTH_CODE.name,input_list[3])
-                        stringExtraContent.put(ExtraKeys.TRAN_DATE.name,input_list[4])
+    fun refundAfterReadCard(input_list: List<CustomInputFormat>?, bundle: Bundle?){
+        var isGib = false
+        if (bundle != null){ //if bundle is not null, that means it comes from gib
+            isGib = true
+            refundBundle = bundle
+            transactionCode = TransactionCode.MATCHED_REFUND.type
+        } else {
+            refundBundle = generateRefundBundle(transactionCode,input_list!!)
+        }
+        cardViewModel.getCardLiveData().observe(mainActivity){cardData ->
+            if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
+                Log.d("Refund Card Number", cardData.mCardNumber.toString())
+                if (isGib){
+                    if (refundBundle.getString(ExtraKeys.CARD_NO.name).equals(cardData.mCardNumber)){ // if cardNumbers are matching
+                        doRefund(cardData, TransactionCode.MATCHED_REFUND.type)
                     }
-                    TransactionCode.INSTALLMENT_REFUND.type -> {
-                        stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name,input_list!![0])
-                        stringExtraContent.put(ExtraKeys.REFUND_AMOUNT.name,input_list[1])
-                        stringExtraContent.put(ExtraKeys.TRAN_DATE.name,input_list[2])
+                    else{
+                        mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
                     }
-                    else -> {
-                        stringExtraContent.put(ExtraKeys.ORG_AMOUNT.name, input_list!![0])
-                    }
-                }
-                if (transactionCode == TransactionCode.CASH_REFUND.type){
-                    cardViewModel.setAmount(stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt())
-                } else if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type ||transactionCode == TransactionCode.MATCHED_REFUND.type){
-                    cardViewModel.setAmount(stringExtraContent.getAsString(ExtraKeys.REFUND_AMOUNT.name).toInt())
-                }
-                cardViewModel.getCardLiveData().observe(mainActivity){cardData ->
-                    if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
-                        Log.d("CardResult", cardData.mCardNumber.toString())
-                        doRefund(cardData,transactionCode) // start this operation with the card data
-                    }
+                } else{
+                    doRefund(cardData,transactionCode) // start this operation with the card data
                 }
             }
         }
-    }
 
-    /**
-     * It is called when refund action received by gib. It checks if the card data are matching, if it is then call refundRoutine
-     */
-    fun gibRefund(extraContents: ContentValues){ //TODO bundle alırsan, oradan çekersin. Ortaklarsın
-        cardViewModel.setTransactionCode(TransactionCode.MATCHED_REFUND.type)
-        transactionViewModel.extraContents = extraContents
-        cardViewModel.getCardLiveData().observe(mainActivity){ cardData ->
-            if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) {
-                Log.d("Card Read", cardData.mCardNumber.toString())
-                if (extraContents.getAsString(ExtraKeys.CARD_NO.name).equals(cardData.mCardNumber)){
-                    stringExtraContent = extraContents //initializing stringExtraContents to use it later.
-                    doRefund(cardData,TransactionCode.MATCHED_REFUND.type)
-                }
-                else
-                    mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
-            }
-        }
     }
 
     /**
      * After reading card, refund will be added to Transaction table with this function in parallel.
      */
-    private fun doRefund(mCard: ICCCard?, transactionCode: Int){
-        card = mCard!!
+    private fun doRefund(card: ICCCard, transactionCode: Int){
         CoroutineScope(Dispatchers.Default).launch {
-            transactionViewModel.transactionRoutine(stringExtraContent.getAsString(ExtraKeys.ORG_AMOUNT.name).toInt()
-                ,card, transactionCode, stringExtraContent,null,false,null,false, batchViewModel, activationViewModel.merchantID()
-                ,activationViewModel.terminalID(), mainActivity,activationViewModel.activationRepository)
+            transactionViewModel.transactionRoutine(card, transactionCode,refundBundle, ContentValues(),
+                 batchViewModel, mainActivity, activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->
@@ -264,12 +209,36 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         }
     }
 
+    private fun generateRefundBundle(transactionCode: Int, inputList: List<CustomInputFormat>): Bundle {
+        val bundle = Bundle()
+        if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type) {
+            bundle.putInt(ExtraKeys.ORG_AMOUNT.name, inputList[0].text.toInt())
+            bundle.putInt(ExtraKeys.REFUND_AMOUNT.name, inputList[1].text.toInt())
+            bundle.putString(ExtraKeys.REF_NO.name, inputList[2].text)
+            bundle.putString(ExtraKeys.AUTH_CODE.name, inputList[3].text)
+            bundle.putString(ExtraKeys.TRAN_DATE.name, inputList[4].text)
+            if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type){
+                bundle.putInt(ExtraKeys.INST_COUNT.name, installmentCount)
+            }
+        } else if (transactionCode == TransactionCode.CASH_REFUND.type) {
+            bundle.putInt(ExtraKeys.REFUND_AMOUNT.name, inputList[0].text.toInt())
+        }
+        //TODO Developer, check this variables from PGW.
+        val isOnlinePin = false
+        val isOffline = false
+        val pinByPass = false
+        bundle.putInt("IsOnlinePin", if (isOnlinePin) 1 else 0)
+        bundle.putInt("IsOffline", if (isOffline) 1 else 0)
+        bundle.putInt("PinByPass", if (pinByPass) 1 else 0)
+        return bundle
+    }
+
     /**
      * This method is for creating input amount with respect to validator.
      * It adds input to inputList, and puts input value extraContentValues to use it later
      */
-    private fun addInputAmount(inputList: MutableList<CustomInputFormat>,extraContentValues: ContentValues){
-        inputOrgAmount = CustomInputFormat(
+    private fun addInputAmount(inputList: MutableList<CustomInputFormat>){
+        val inputOrgAmount = CustomInputFormat(
             getStrings(R.string.original_amount),
             EditTextInputType.Amount,
             null,
@@ -278,7 +247,6 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
                 val amount = if (input.text.isEmpty()) 0 else input.text.toInt()
                 amount > 0
             } )
-        extraContentValues.put(ExtraKeys.ORG_AMOUNT.name, inputOrgAmount.toString())
         inputList.add(inputOrgAmount)
     }
 
@@ -286,7 +254,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
      * This creates return amount with respect to validator which checks whether that amount smaller than original amount
      * It adds input to inputList, and puts input value extraContentValues to use it later
      */
-    private fun addInputRetAmount(inputList: MutableList<CustomInputFormat>,extraContentValues: ContentValues){
+    private fun addInputRetAmount(inputList: MutableList<CustomInputFormat>){
         val inputRetAmount = CustomInputFormat(
             getStrings(R.string.refund_amount),
             EditTextInputType.Amount,
@@ -294,10 +262,9 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
             getStrings(R.string.invalid_amount),
             InputValidator {
                 val amount = if (it.text.isEmpty()) 0 else it.text.toInt()
-                val original = if (inputOrgAmount.text.isEmpty()) 0 else inputOrgAmount.text.toInt()
+                val original = if (inputList[0].text.isEmpty()) 0 else inputList[0].text.toInt()
                 amount in 1..original
             } )
-        extraContentValues.put(ExtraKeys.REFUND_AMOUNT.name, inputRetAmount.toString())
         inputList.add(inputRetAmount)
     }
 
@@ -306,7 +273,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
      * (Refund from Gib) it compares whether reference numbers are matching else -> checks for 9 digits.
      * It adds input to inputList, and puts input value extraContentValues to use it later
      */
-    private fun addInputRefNo(inputList: MutableList<CustomInputFormat>,extraContentValues: ContentValues){
+    private fun addInputRefNo(inputList: MutableList<CustomInputFormat>){
         val inputRefNo = CustomInputFormat(
             getStrings(R.string.ref_no),
             EditTextInputType.Number,
@@ -315,7 +282,6 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         ) { customInputFormat: CustomInputFormat ->
             customInputFormat.text.length == 9
         }
-        extraContentValues.put(ExtraKeys.REF_NO.name, inputRefNo.toString())
         inputList.add(inputRefNo)
     }
 
@@ -323,14 +289,13 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
      * This method is for creating input authorization code respect to validator which checks whether there is 6 digits or not.
      * It adds input to inputList, and puts input value extraContentValues to use it later
      */
-    private fun addInputAuthCode(inputList: MutableList<CustomInputFormat>,extraContentValues: ContentValues){
+    private fun addInputAuthCode(inputList: MutableList<CustomInputFormat>){
         val inputAuthCode = CustomInputFormat(
             getStrings(R.string.confirmation_code),
             EditTextInputType.Number,
             6,
             getStrings(R.string.confirmation_code_invalid_six_digits)
         ) { customInputFormat: CustomInputFormat -> customInputFormat.text.length == 6 }
-        extraContentValues.put(ExtraKeys.AUTH_CODE.name, inputAuthCode.toString())
         inputList.add(inputAuthCode)
     }
 
@@ -357,5 +322,12 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
             }
         )
         inputList.add(inputTranDate)
+    }
+
+    /**
+     * this function needs for getting string from activity otherwise it causes an error because we update UI in mainActivity
+     */
+    private fun getStrings(resID: Int): String{
+        return mainActivity.getString(resID)
     }
 }

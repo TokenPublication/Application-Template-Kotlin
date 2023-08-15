@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:node="remove" tools:ignore="QueryAllPackagesPermission" />
     <application
         android:name=".AppTemp"
         android:usesCleartextTraffic="true"
@@ -14,7 +15,7 @@
         android:logo="@drawable/token_logo"
         android:theme="@style/AppTheme.NoActionBar"
         tools:targetApi="s"> <!-- Token theme without Actionbar -->
-        <activity android:name=".ui.examples.ExampleActivity"/>
+        <activity android:name=".ui.examples.ExampleFragment"/>
 
         <activity
             android:name=".MainActivity"
@@ -63,6 +64,13 @@
             </intent-filter>
 
         </activity>
+        <receiver android:name=".receivers.CheckSaleReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="check_sale" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
         <meta-data
             android:name="app_version"
             android:value="1" />

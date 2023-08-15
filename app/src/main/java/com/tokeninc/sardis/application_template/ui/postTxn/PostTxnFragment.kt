@@ -16,14 +16,14 @@ import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
-import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
+import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
-import com.tokeninc.sardis.application_template.enums.CardServiceResult
-import com.tokeninc.sardis.application_template.enums.ResponseCode
-import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
-import com.tokeninc.sardis.application_template.ui.examples.ExampleActivity
+import com.tokeninc.sardis.application_template.ui.examples.ExampleFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.refund.RefundFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.void_operation.TransactionList
@@ -70,7 +70,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
             cardViewModel.setTransactionCode(TransactionCode.VOID.type)
             mainActivity.readCard()
-            startVoidAfterConnected()
+            voidAfterReadCard(false)
         }))
         menuItems.add(MenuItem(getStrings(R.string.refund), {
             mainActivity.addFragment(refundFragment)
@@ -78,14 +78,14 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         menuItems.add(MenuItem(getStrings(R.string.batch_close), {
             if (transactionViewModel.allTransactions().isNullOrEmpty()){
                 val infoDialog = mainActivity.showInfoDialog(
-                    InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
+                    InfoDialog.InfoType.Warning,getStrings(R.string.batch_close_not_found),false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     infoDialog!!.dismiss()
                 }, 2000)
             }
             else{
                 mainActivity.showConfirmationDialog(InfoDialog.InfoType.Info,getStrings(R.string.batch_close),getStrings(
-                    R.string.batch_close_implementing
+                    R.string.batch_close_will_be_done
                 ),InfoDialog.InfoDialogButtons.Both,1,
                     object : InfoDialogListener {
                         override fun confirmed(i: Int) {
@@ -96,8 +96,8 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             }
         }))
         menuItems.add(MenuItem(getStrings(R.string.examples), {
-            mainActivity.startActivity(Intent(mainActivity, ExampleActivity()::class.java))
-
+            val exampleFragment = ExampleFragment(mainActivity,cardViewModel)
+            mainActivity.replaceFragment(exampleFragment)
         }))
         menuItems.add(MenuItem("Slip Tekrarı",{
             batchViewModel.getPreviousBatchSlip().observe(mainActivity){
@@ -112,38 +112,35 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
      * This function is called after card reading, it finds the corresponding transaction by reference number and void it
      * if the reading card and transaction's card numbers are matching.
      */
-    fun gibVoid() {
-        cardViewModel.setTransactionCode(TransactionCode.VOID.type)
-        cardViewModel.getCardLiveData().observe(mainActivity) { cardData ->
-            if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) {
-                Log.d("Card Read", cardData.mCardNumber.toString())
-                val refNo = transactionViewModel.refNo
-                val transactionList = transactionViewModel.getTransactionsByRefNo(refNo)
-                val transaction = if (transactionList != null) transactionList[0] else null
-                Log.d("Refund Info", "Satış İptali: $transaction")
-                if (transaction != null) {
-                    if (cardData.mCardNumber == transaction.Col_PAN) {
-                        this.card = cardData
-                        doVoid(transaction)
-                    } else {
-                        mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
-                    }
-                }else{
-                    mainActivity.callbackMessage(ResponseCode.ERROR)
-                }
+    private fun gibVoid(mCard: ICCCard) {
+        val refNo = transactionViewModel.refNo
+        val transactionList = transactionViewModel.getTransactionsByRefNo(refNo)
+        val transaction = if (transactionList != null) transactionList[0] else null
+        Log.d("Refund Info", "Satış İptali: $transaction")
+        if (transaction != null) {
+            if (mCard.mCardNumber == transaction.Col_PAN) {
+                this.card = mCard
+                doVoid(transaction)
+            } else {
+                mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
             }
+        }else{
+            mainActivity.callbackMessage(ResponseCode.ERROR)
         }
     }
 
     /**
      * After connected to cardService, this method isc called. When card data is received it calls voidAfterCardRead to prepare a recycler view list.
      */
-    private fun startVoidAfterConnected(){ //TODO background screen should be changed
+    fun voidAfterReadCard(isGib: Boolean){ //TODO background screen should be changed
         cardViewModel.setTransactionCode(TransactionCode.VOID.type)
         cardViewModel.getCardLiveData().observe(mainActivity) { cardData ->
             if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) {
                 Log.d("Card Read", cardData.mCardNumber.toString())
-                voidAfterCardRead(cardData) // start this operation with the card data
+                if (isGib){
+                    gibVoid(cardData)
+                }
+                listTransactions(cardData) // start this operation with the card data
             }
         }
     }
@@ -152,9 +149,9 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
      * If there was no operation with that card, it warns the user. Else ->
      * It shows transactions that has been operated with that card with recyclerview.
      */ //TODO simplify it (from baris)
-    private fun voidAfterCardRead(mCard: ICCCard?){
-        if (transactionViewModel.getTransactionsByCardNo(mCard!!.mCardNumber.toString()) == null){
-            val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_empty),false)
+    private fun listTransactions(mCard: ICCCard){
+        if (transactionViewModel.getTransactionsByCardNo(mCard.mCardNumber.toString()) == null){
+            val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_close_not_found),false)
             Handler(Looper.getMainLooper()).postDelayed({
                 infoDialog!!.dismiss()
             }, 2000)
@@ -173,10 +170,9 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
     fun doVoid(transaction: Transaction){
         val contentValHelper = ContentValHelper()
         CoroutineScope(Dispatchers.Default).launch {
-            transactionViewModel.transactionRoutine(transaction.Col_Amount,
-                card!!,TransactionCode.VOID.type,
-                contentValHelper.getContentVal(transaction),null,false,null,false,batchViewModel,
-                activationViewModel.merchantID(), activationViewModel.terminalID(),mainActivity,activationViewModel.activationRepository)
+            transactionViewModel.transactionRoutine(card!!,
+                TransactionCode.VOID.type,  Bundle(),
+                contentValHelper.getContentVal(transaction),batchViewModel, mainActivity, activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->

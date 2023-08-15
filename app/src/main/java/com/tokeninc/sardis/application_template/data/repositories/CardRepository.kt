@@ -1,17 +1,20 @@
 package com.tokeninc.sardis.application_template.data.repositories
+import android.app.Activity
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.data.entities.card_entities.ICCCard
-import com.tokeninc.sardis.application_template.enums.CardReadType
-import com.tokeninc.sardis.application_template.enums.CardServiceResult
-import com.tokeninc.sardis.application_template.enums.EmvProcessType
-import com.tokeninc.sardis.application_template.enums.ResponseCode
-import com.tokeninc.sardis.application_template.enums.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
+import com.tokeninc.sardis.application_template.data.model.card.ICCCard
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.type.CardReadType
+import com.tokeninc.sardis.application_template.data.model.type.EmvProcessType
+import com.tokeninc.sardis.application_template.databinding.ActivityExampleBinding
 import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
@@ -66,8 +69,8 @@ class CardRepository @Inject constructor() :
 
     private var cardServiceBinding: CardServiceBinding? = null
 
-    fun cardServiceBinder(mainActivity: MainActivity) {
-        cardServiceBinding = CardServiceBinding(mainActivity, this)
+    fun cardServiceBinder(activity: AppCompatActivity) {
+        cardServiceBinding = CardServiceBinding(activity, this)
     }
 
     /** It is called when the main activity is finished (destroyed), because this repository doesn't end with the main Activity.
@@ -158,25 +161,25 @@ class CardRepository @Inject constructor() :
      */
     override fun onCardDataReceived(cardData: String?) {
         try {
+            Log.i("Card Data", cardData.toString())
             val card: ICCCard = Gson().fromJson(cardData, ICCCard::class.java) //get the ICC cardModel from cardData
             if (card.resultCode == CardServiceResult.USER_CANCELLED.resultCode()) { //if user pressed back button
-                Log.d("CardDataReceived","Card Result Code: User Cancelled")
+                Log.i("CardDataReceived","Card Result Code: User Cancelled")
                 setCallBackMessage(ResponseCode.CANCELED)
             }
             if (card.resultCode == CardServiceResult.ERROR_TIMEOUT.resultCode()) { //if there timeout is occurred
-                Log.d("CardDataReceived","Card Result Code: TIMEOUT")
+                Log.i("CardDataReceived","Card Result Code: TIMEOUT")
                 timeOut = true
                 setCallBackMessage(ResponseCode.CANCELED)
             }
             if (card.resultCode == CardServiceResult.ERROR.resultCode()) {
                 setCallBackMessage(ResponseCode.ERROR)
-                Log.d("CardDataReceived","Card Result Code: ERROR")
+                Log.i("CardDataReceived","Card Result Code: ERROR")
             }
             if (card.mCardReadType == CardReadType.ICC.type && getTransactionCode().value == TransactionCode.SALE.type){
                 isApprove = true //make this flag true for the second reading for asking password with continue emv.
             }
             mutableCardData.postValue(card)
-            cardServiceBinding?.unBind() //unbinding the cardService
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
@@ -187,7 +190,7 @@ class CardRepository @Inject constructor() :
      * After that call setEMVConfiguration method, it checks whether the Setup is Done before, if it is do nothing, else set EMV
      */
     override fun onCardServiceConnected() {
-        isCardServiceConnected.value = true
+        isCardServiceConnected.postValue(true)
     }
 
     fun getCardServiceBinding(): CardServiceBinding? {

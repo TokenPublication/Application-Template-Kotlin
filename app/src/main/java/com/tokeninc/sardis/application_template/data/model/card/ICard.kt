@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.data.entities.card_entities
+package com.tokeninc.sardis.application_template.data.model.card
 
 /**
  * This interface to connect MSR and ICC cards onCardDataReceived method after reading Card

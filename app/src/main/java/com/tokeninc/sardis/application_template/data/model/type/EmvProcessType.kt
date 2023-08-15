@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.enums
+package com.tokeninc.sardis.application_template.data.model.type
 
 enum class EmvProcessType(ordinal: Int) {
     PARTIAL_EMV(0),  //After reading card data with requested Tags, requesting AAC at the 1st Generate AC to complete transaction and return requested Tag data

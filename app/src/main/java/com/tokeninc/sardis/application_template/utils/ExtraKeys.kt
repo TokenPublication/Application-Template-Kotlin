@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.enums
+package com.tokeninc.sardis.application_template.utils
 
 /**
  * This is enum class for holding extra keys for refunds.

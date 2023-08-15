@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.dependency_injection
+package com.tokeninc.sardis.application_template.dependencyInjection
 
 import android.app.Application
 import com.tokeninc.sardis.application_template.data.database.AppTempDB

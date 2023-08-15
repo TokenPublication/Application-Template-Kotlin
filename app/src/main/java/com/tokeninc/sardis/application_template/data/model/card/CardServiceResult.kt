@@ -1,4 +1,4 @@
-package com.tokeninc.sardis.application_template.enums
+package com.tokeninc.sardis.application_template.data.model.card
 
 /**
  * This is enum class for holding results of card services.
