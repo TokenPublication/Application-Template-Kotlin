@@ -157,12 +157,6 @@ class TransactionPrintHelper:BasePrintHelper() {
                 styledText.newLine()
                 styledText.addTextToLine("İMZAYA GEREK YOKTUR", PrinterDefinitions.Alignment.Center)
             }
-            if (receipt.cardReadType == CardReadType.QrPay.type) {
-                styledText.newLine()
-                styledText.addTextToLine("Bu işlem TR Karekod", PrinterDefinitions.Alignment.Center)
-                styledText.newLine()
-                styledText.addTextToLine("ile yapılmıştır", PrinterDefinitions.Alignment.Center)
-            }
         }
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)
         styledText.setFontSize(12)
@@ -177,11 +171,6 @@ class TransactionPrintHelper:BasePrintHelper() {
         styledText.newLine()
         styledText.addTextToLine("GRUP NO: " + receipt.batchNo)
         styledText.addTextToLine("REF NO: " + receipt.refNo, PrinterDefinitions.Alignment.Right)
-        if (receipt.cardReadType == CardReadType.QrPay.type)  {
-            styledText.newLine()
-            styledText.addTextToLine("AID: " + receipt.aid)
-            styledText.addTextToLine(receipt.aidLabel, PrinterDefinitions.Alignment.Right)
-        }
         styledText.newLine()
         styledText.addTextToLine("Ver: 92.12.05")
         if (transactionCode == TransactionCode.SALE.type){

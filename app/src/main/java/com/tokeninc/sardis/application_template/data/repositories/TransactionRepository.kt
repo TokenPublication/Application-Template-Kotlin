@@ -126,11 +126,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
 
         // transaction parameters comes from card
         content.put(TransactionCols.Col_CardReadType, card.mCardReadType)
-        if (card.mCardReadType == CardReadType.QrPay.type) {
-            content.put(TransactionCols.Col_PAN, "5209305830592013")
-        } else {
-            content.put(TransactionCols.Col_PAN, card.mCardNumber)
-        }
+        content.put(TransactionCols.Col_PAN, card.mCardNumber)
         content.put(TransactionCols.Col_CardSequenceNumber, card.CardSeqNum)
         content.put(TransactionCols.Col_ExpDate, card.mExpireDate)
         content.put(TransactionCols.Col_Track2, card.mTrack2Data)
@@ -185,11 +181,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             bundle.putInt("Amount", amount ) // #3 Amount
             bundle.putBoolean("IsSlip", true)
             bundle.putInt("BatchNo", batchNo)
-            if (card.mCardReadType != CardReadType.QrPay.type) {
-                bundle.putString("CardNo", if (card.mCardNumber != null) StringHelper().maskCardForBundle(card.mCardNumber!!) else null) // Optional, Card No can be masked
-            } else {
-                card.mCardNumber = "5209305830592013"  //Dummy for QR sale
-            }
+            bundle.putString("CardNo", if (card.mCardNumber != null) StringHelper().maskCardForBundle(card.mCardNumber!!) else null) // Optional, Card No can be masked
             bundle.putString("MID", merchantID.toString())
             bundle.putString("TID", terminalID.toString())
             bundle.putInt("TxnNo",groupSN)

@@ -50,13 +50,8 @@ class BatchClosePrintHelper(): BasePrintHelper() {
                 transactionType = "İPTAL "
             }
             addText(styledText,transactionType+it.Col_GUP_SN, PrinterDefinitions.Alignment.Right)
-            if (it.Col_CardReadType != CardReadType.QrPay.type) {
-                addTextToNewLine(styledText,stringHelper.maskTheCardNo(it.Col_PAN),PrinterDefinitions.Alignment.Left)
-                addText(styledText,it.Col_ExpDate,PrinterDefinitions.Alignment.Right)
-            } else {
-                addTextToNewLine(styledText, stringHelper.maskTheCardNo("5209305830592013"), PrinterDefinitions.Alignment.Left);
-                addText(styledText, "290925", PrinterDefinitions.Alignment.Right);
-            }
+            addTextToNewLine(styledText,stringHelper.maskTheCardNo(it.Col_PAN),PrinterDefinitions.Alignment.Left)
+            addText(styledText,it.Col_ExpDate,PrinterDefinitions.Alignment.Right)
             addTextToNewLine(styledText,it.Col_RefNo,PrinterDefinitions.Alignment.Left)
             val amount = it.Col_Amount
             totalAmount += amount

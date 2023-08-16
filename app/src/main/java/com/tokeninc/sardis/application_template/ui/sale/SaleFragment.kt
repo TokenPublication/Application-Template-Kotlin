@@ -55,6 +55,8 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     var installmentCount = 0 // this is for tracking instalment count if it will be an instalment sale
     var transactionCode = TransactionCode.SALE.type // this is for tracking transaction code, it can be also installment sale
     private var isICC = false
+    private var isCancelable = true
+    private var qrSuccess = true
     companion object{
         //listener for spinner
         private val listener: AdapterView.OnItemSelectedListener =
@@ -104,8 +106,8 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             cardViewModel.setTransactionCode(TransactionCode.INSTALLMENT_SALE.type)
             showInstallments()
         }))
-        if (isLoyalty) menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { })) //TODO transactionRoutine gitsin
-        if (isCampaign) menuItemList.add(MenuItem(getStrings(R.string.campaign_sale), { })) //TODO transactionRoutine gitsin
+        if (isLoyalty) menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))
+        if (isCampaign) menuItemList.add(MenuItem(getStrings(R.string.campaign_sale), { }))
         val listMenuFragment = ListMenuFragment.newInstance(menuItemList,
             getStrings(R.string.sale_type), false, R.drawable.token_logo_png)
         mainActivity.replaceFragment(listMenuFragment as Fragment)
@@ -214,20 +216,17 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         }
     }
 
-    private var isCancelable = true
-    private var qrSuccess = true
+    /**
+     * This method for shows the QR and perform dummy QR sale.
+     * It only updates the UI, not performing any sale operation.
+     */
     private fun qrSale() {
         val dialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Progress, "Please Wait", true)
         Handler(Looper.getMainLooper()).postDelayed({
-            cardViewModel.getCardServiceBinding()?.showQR(
-                "PLEASE READ THE QR CODE",
-                StringHelper().getAmount(amount),
+            cardViewModel.getCardServiceBinding()?.showQR(getStrings(R.string.waiting_qr_read), StringHelper().getAmount(amount),
                 "QR Code Test"
             ) // Shows QR on the back screen
-            dialog!!.setQr(
-                "QR Code Test",
-                "Waiting For the QR Code to Read"
-            ) // Shows the same QR on Info Dialog
+            dialog!!.setQr("QR Code Test", getStrings(R.string.waiting_qr_read)) // Shows the same QR on Info Dialog
             Handler(Looper.getMainLooper()).postDelayed({
                 if (qrSuccess) {
                     mainActivity.showInfoDialog(
@@ -237,7 +236,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
                     )
                     isCancelable = false
                     Handler(Looper.getMainLooper()).postDelayed({
-                        doSale(null)
+                        mainActivity.finish()
                     }, 3000)
                 }
             }, 5000)
