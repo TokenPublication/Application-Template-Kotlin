@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.token.uicomponents.CustomInput.CustomInputFormat
 import com.token.uicomponents.CustomInput.EditTextInputType
 import com.token.uicomponents.CustomInput.InputListFragment
@@ -50,7 +49,6 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
 
     companion object{
         private var installmentCount = 0
-        private lateinit var viewModel: RefundViewModel
     }
 
     override fun onCreateView(
@@ -59,7 +57,6 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentRefundBinding.inflate(inflater,container,false)
-        viewModel = ViewModelProvider(this)[RefundViewModel::class.java]
         return binding.root
     }
 
@@ -83,8 +80,9 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
             showInstallments()
         }))
         menuItems.add(MenuItem(getStrings(R.string.loyalty_refund), {}))
-        viewModel.list = menuItems
-        viewModel.replaceFragment(mainActivity)
+        val menuFragment = ListMenuFragment.newInstance(menuItems,"Refund",
+            true, R.drawable.token_logo_png)
+        mainActivity.replaceFragment(menuFragment as Fragment)
     }
 
     /**
@@ -131,11 +129,12 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
             menuItems.add(menuItem)
         }
         val instFragment = ListMenuFragment.newInstance(menuItems, getStrings(R.string.installment_refund), true, R.drawable.token_logo_png)
-       mainActivity.addFragment(instFragment as Fragment)
+        mainActivity.addFragment(instFragment as Fragment)
     }
 
     /**
-     * It adds values to stringExtraContent to use it later. Then calls readCard operation.
+     * It shows prepared fragment, when user clicked refund option it arranges transaction code and amount
+     * then reads the card, after read card it enters refundAfterReadCard method.
      */
     private fun showRefundFragment(inputList: MutableList<CustomInputFormat>){
         val fragment = InputListFragment.newInstance(inputList, getStrings(R.string.refund)){
@@ -147,13 +146,10 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
                 cardViewModel.setAmount(inputList[1].text.toInt())
             }
             mainActivity.readCard()
-            enterRefund = false
             refundAfterReadCard(inputList, null)
         }
         mainActivity.addFragment(fragment)
     }
-
-    private var enterRefund = false //TODO bak buna
 
     /**
      * This function is called after card Service is connected.
@@ -179,7 +175,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
                         mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
                     }
                 } else{
-                    doRefund(cardData,transactionCode) // start this operation with the card data
+                    doRefund(cardData,transactionCode)
                 }
             }
         }
@@ -187,21 +183,22 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
     }
 
     /**
-     * After reading card, refund will be added to Transaction table with this function in parallel.
+     * This method goes into transactionRoutine which insert the refund database on background, and update UI on foreground
+     * After insert the refund, it prepares refund intent and prints the refund slip. After all it finishes the mainActivity
      */
     private fun doRefund(card: ICCCard, transactionCode: Int){
         CoroutineScope(Dispatchers.Default).launch {
             transactionViewModel.transactionRoutine(card, transactionCode,refundBundle, ContentValues(),
                  batchViewModel, mainActivity, activationViewModel.activationRepository)
         }
-        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,getStrings(R.string.connecting),false)
         transactionViewModel.getUiState().observe(mainActivity) { state ->
             when (state) {
                 is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
                 is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting % ${state.data}")
                 is TransactionViewModel.UIState.Success -> mainActivity.showDialog(
                     InfoDialog.newInstance(
-                        InfoDialog.InfoType.Progress,"Printing Slip",true))
+                        InfoDialog.InfoType.Progress,getStrings(R.string.printing_the_receipt),true))
             }
         }
         transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
@@ -209,6 +206,9 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         }
     }
 
+    /**
+     * It generates refund bundle from inputs
+     */
     private fun generateRefundBundle(transactionCode: Int, inputList: List<CustomInputFormat>): Bundle {
         val bundle = Bundle()
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type) {

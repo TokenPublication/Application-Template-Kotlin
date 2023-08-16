@@ -40,6 +40,9 @@
     <string name="connect_failed">Kart Servis Hatası</string>
     <string name="trans_successful">İşlem Başarılı</string>
     <string name="printing_the_receipt">Slip Basılıyor</string>
+    <string name="preparing_the_receipt">Slip Hazırlanıyor</string>
+    <string name="batch_close_success">Grup Kapama Başarılı</string>
+
 
     <string name="no_trans_found">İşlem Bulunamadı</string>
     <string name="trans_not_found">İşlem Bulunamadı</string>
@@ -122,4 +125,5 @@
     <string name="rkl_loading">RKL Yükleniyor…</string>
     <string name="rkl_loaded">RKL Yüklendi</string>
     <string name="key_block_loading">Key Blok Yükleniyor…</string>
+
 </resources>

@@ -53,7 +53,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
      * It is for getting transactions with card number from database for recycler view on Void Operations.
      */
     fun createLiveData(cardNumber: String?): MutableList<Transaction?> { //TODO rename
-        list.value = getTransactionsByCardNo(cardNumber!!)!!
+        list.value = getTransactionsByCardNo(cardNumber!!)
         return list.value!!.toMutableList()
     }
 
@@ -61,7 +61,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         return transactionRepository.getTransactionsByRefNo(refNo)
     }
 
-    fun getTransactionsByCardNo(cardNo: String): List<Transaction?>?{
+    fun getTransactionsByCardNo(cardNo: String): List<Transaction?>{
         return transactionRepository.getTransactionsByCardNo(cardNo)
     }
     private fun insertTransaction(transaction: Transaction){

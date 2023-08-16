@@ -6,23 +6,19 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.data.model.responses.BatchCloseResponse
 import com.tokeninc.sardis.application_template.data.model.resultCode.BatchResult
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
-import com.tokeninc.sardis.application_template.utils.printHelpers.BatchClosePrintHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): ViewModel() {
+class BatchViewModel @Inject constructor(private val batchRepository: BatchRepository): ViewModel() {
 
     fun getGroupSN()  = batchRepository.getGroupSN()
     fun getBatchNo() = batchRepository.getBatchNo()
@@ -90,7 +86,7 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
     /** It runs functions in parallel while ui updating dynamically in main thread with UI States
      * It also calls finishBatchClose functions in parallel in IO coroutine thread.
      */
-    suspend fun batchRoutine(mainActivity: MainActivity, transactionViewModel: TransactionViewModel, activationViewModel: ActivationViewModel){
+    suspend fun batchCloseRoutine(mainActivity: MainActivity, transactionViewModel: TransactionViewModel, activationViewModel: ActivationViewModel){
         var downloadNumber = 0
         coroutineScope.launch(Dispatchers.Main){//firstly updating the UI as loading
             uiState.postValue(UIState.Loading)

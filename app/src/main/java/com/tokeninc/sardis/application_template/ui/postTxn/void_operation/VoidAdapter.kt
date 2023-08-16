@@ -19,7 +19,7 @@ class VoidAdapter(private val transactionList: MutableList<Transaction?>): Recyc
 
     inner class TransactionViewHolder(val binding: TransactionItemsBinding): RecyclerView.ViewHolder(binding.root)
 
-    var postTxnFragment: PostTxnFragment? = null
+    lateinit var voidFragment: VoidFragment
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -42,7 +42,7 @@ class VoidAdapter(private val transactionList: MutableList<Transaction?>): Recyc
         hb.textApprovalCode.text = transaction.Col_AuthCode
         hb.tvSN.text = transaction.Col_GUP_SN.toString()
         holder.itemView.setOnClickListener {
-            postTxnFragment!!.doVoid(transaction)
+            voidFragment.doVoid(transaction)
             Log.d("RecyclerView/onClick","ContentVal: $transaction ")
         }
     }

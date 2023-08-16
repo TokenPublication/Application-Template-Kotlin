@@ -36,6 +36,7 @@ import com.tokeninc.sardis.application_template.ui.activation.SettingsFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.PostTxnFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.refund.RefundFragment
+import com.tokeninc.sardis.application_template.ui.postTxn.void_operation.VoidFragment
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.SaleFragment
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
@@ -316,7 +317,8 @@ class MainActivity : TimeOutActivity() {
             if (transactionBatchNo == currentBatchNo) { // GIB Void Operation
                 cardViewModel.setTransactionCode(TransactionCode.VOID.type)
                 readCard()
-                postTxnFragment.voidAfterReadCard(true)
+                val voidFragment = VoidFragment(this,transactionViewModel,batchViewModel,cardViewModel,activationViewModel,true)
+                replaceFragment(voidFragment)
             } else{ // GIB Refund Operation (because refund request is received after closing batch
                 val authCode = json.getString("AuthCode")
                 val tranDate = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())

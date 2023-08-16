@@ -36,7 +36,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         return transactionDao.getTransactionsByRefNo(refNo)
     }
 
-    fun getTransactionsByCardNo(cardNo: String): List<Transaction?>?{
+    fun getTransactionsByCardNo(cardNo: String): List<Transaction?>{
         return transactionDao.getTransactionsByCardNo(cardNo)
     }
 
@@ -150,8 +150,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         content.put(TransactionCols.Col_AidLabel, card.AIDLabel)
 
         // transaction parameters comes from online Transaction Response
-        content.put(TransactionCols.Col_TranDate,
-        if (card.mCardReadType == CardReadType.ICC.type) card.dateTime else onlineTransactionResponse.dateTime )
+        content.put(TransactionCols.Col_TranDate, onlineTransactionResponse.dateTime )
         if (! (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type) ) {
             content.put(TransactionCols.Col_RefNo, onlineTransactionResponse.mRefNo)
         }
