@@ -31,9 +31,7 @@ class PrintHelper: BasePrintHelper() {
         addTextToNewLine(styledText, "Beko YazarkasaPos", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "Çözüm Merkezi", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "0850 250 0 767", PrinterDefinitions.Alignment.Center)
-        addTextToNewLine(styledText, dateUtil.getDate("dd-MM-yy"),
-            PrinterDefinitions.Alignment.Left
-        )
+        addTextToNewLine(styledText, dateUtil.getDate("dd-MM-yy"), PrinterDefinitions.Alignment.Left)
         addText(styledText, dateUtil.getTime("HH:mm"), PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.addSpace(100)
@@ -42,24 +40,12 @@ class PrintHelper: BasePrintHelper() {
 
     fun printError(): String {   // Print the error message if necessary
         val styledText = StyledString()
-        addTextToNewLine(
-            styledText,
-            "Uygulama kurulumunda hata",
-            PrinterDefinitions.Alignment.Center
-        )
+        addTextToNewLine(styledText, "Uygulama kurulumunda hata", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "ile karşılaşılmıştır", PrinterDefinitions.Alignment.Center)
-        addTextToNewLine(
-            styledText,
-            "Lütfen Beko YazarkasaPos",
-            PrinterDefinitions.Alignment.Center
-        )
+        addTextToNewLine(styledText, "Lütfen Beko YazarkasaPos", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "Çözüm Merkezi'ni arayın", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "0850 250 0 767", PrinterDefinitions.Alignment.Center)
-        addTextToNewLine(
-            styledText,
-            dateUtil.getDate("dd-MM-yy"),
-            PrinterDefinitions.Alignment.Left
-        )
+        addTextToNewLine(styledText, dateUtil.getDate("dd-MM-yy"), PrinterDefinitions.Alignment.Left)
         addText(styledText, dateUtil.getTime("HH:mm"), PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.addSpace(100)
@@ -75,19 +61,17 @@ class PrintHelper: BasePrintHelper() {
         addTextToNewLine(styledText, "TERMİNAL NO: ", PrinterDefinitions.Alignment.Left)
         addText(styledText, TID, PrinterDefinitions.Alignment.Right)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
+
         if (batch_no == "") {
             addTextToNewLine(styledText, "Grup Yok", PrinterDefinitions.Alignment.Center)
         } else {
-            addTextToNewLine(styledText, "GRUP NO: ", PrinterDefinitions.Alignment.Center)
-            addText(styledText, batch_no, PrinterDefinitions.Alignment.Right)
+            addTextToNewLine(styledText, "GRUP $batch_no", PrinterDefinitions.Alignment.Center)
         }
-        addTextToNewLine(
-            styledText,
-            dateUtil.getDate("dd/MM/yy"),
-            PrinterDefinitions.Alignment.Left
-        )
+
+        addTextToNewLine(styledText, dateUtil.getDate("dd/MM/yy"), PrinterDefinitions.Alignment.Left)
         addText(styledText, dateUtil.getTime("HH:mm"), PrinterDefinitions.Alignment.Right)
-        if (tx_no == "" || tx_no == "null" || tx_no == "0") {
+
+        if (tx_no == "0") {
             addTextToNewLine(styledText, "İşlem Yok", PrinterDefinitions.Alignment.Center)
         } else {
             addTextToNewLine(styledText, "İşlem Sayısı: ", PrinterDefinitions.Alignment.Left)
@@ -97,7 +81,6 @@ class PrintHelper: BasePrintHelper() {
         addText(styledText,StringHelper().getAmount(totalAmount),PrinterDefinitions.Alignment.Right)
         addTextToNewLine(styledText, " ", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "Grup Kapama Başarılı", PrinterDefinitions.Alignment.Center)
-        addTextToNewLine(styledText, " ", PrinterDefinitions.Alignment.Center)
         styledText.newLine()
         return styledText.toString()
     }
@@ -117,6 +100,4 @@ class PrintHelper: BasePrintHelper() {
         styledText.addSpace(100)
         styledText.print(PrinterService.getService(context))
     }
-
-
 }

@@ -15,7 +15,6 @@ import com.tokeninc.sardis.application_template.data.model.responses.OnlineTrans
 import com.tokeninc.sardis.application_template.data.model.responses.TransactionResponse
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
-import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.data.model.type.PaymentType
 import com.tokeninc.sardis.application_template.data.model.type.SlipType
 import com.tokeninc.sardis.application_template.utils.ContentValHelper
@@ -52,27 +51,18 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         transactionDao.deleteAll()
     }
 
-    /**
-     * This method ensures length of random generated numbers is requested length.
-     */
-    private fun addZeros(number: String, length: Int): String{
-        val iterator = length - number.length
-        var numb = number
-        for (i in 1..iterator) {
-            numb = "0$numb"
-        }
-        return numb
-    }
+
 
     /**
      * It parses the response in a dummy way. It represents communication between host and app in a real application
      */
     fun parseResponse (): OnlineTransactionResponse {
+        val stringHelper = StringHelper()
         val onlineTransactionResponse = OnlineTransactionResponse()
         onlineTransactionResponse.mResponseCode = ResponseCode.SUCCESS //TODO Developer change it in cases it can connect host
         onlineTransactionResponse.mTextPrintCode = "Test Print"
-        onlineTransactionResponse.mAuthCode = addZeros((0..99999).random().toString(),6)
-        onlineTransactionResponse.mRefNo = addZeros((0..999999999).random().toString(),10)
+        onlineTransactionResponse.mAuthCode = stringHelper.addZeros((0..99999).random().toString(),6)
+        onlineTransactionResponse.mRefNo = stringHelper.addZeros((0..999999999).random().toString(),10)
         onlineTransactionResponse.mDisplayData = "Display Data"
         onlineTransactionResponse.mKeySequenceNumber = "3"
         onlineTransactionResponse.dateTime = "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}"
@@ -108,11 +98,13 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         content.put(TransactionCols.col_isSignature,0)
         // if it is different later it will change in if blocks
         content.put(TransactionCols.Col_Amount, card.mTranAmount1)
+        content.put(TransactionCols.Col_AuthCode, onlineTransactionResponse.mAuthCode)
+
         // transaction parameters with respect to transaction type
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type){
             content.put(TransactionCols.Col_Amount2,bundle.getInt(ExtraKeys.REFUND_AMOUNT.name))
             content.put(TransactionCols.Col_Amount,bundle.getInt(ExtraKeys.ORG_AMOUNT.name))
-            content.put(TransactionCols.Col_Ext_Conf,bundle.getString(ExtraKeys.AUTH_CODE.name))
+            content.put(TransactionCols.Col_AuthCode,bundle.getString(ExtraKeys.AUTH_CODE.name))
             content.put(TransactionCols.Col_RefNo,bundle.getString(ExtraKeys.REF_NO.name))
             content.put(TransactionCols.Col_Ext_RefundDateTime,bundle.getString(ExtraKeys.TRAN_DATE.name))
         } else if (transactionCode == TransactionCode.CASH_REFUND.type){
@@ -150,7 +142,6 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         if (! (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type) ) {
             content.put(TransactionCols.Col_RefNo, onlineTransactionResponse.mRefNo)
         }
-        content.put(TransactionCols.Col_AuthCode, onlineTransactionResponse.mAuthCode)
         content.put(TransactionCols.Col_TextPrintCode, onlineTransactionResponse.mTextPrintCode)
         content.put(TransactionCols.Col_DisplayData, onlineTransactionResponse.mDisplayData)
         content.put(TransactionCols.Col_KeySequenceNumber, onlineTransactionResponse.mKeySequenceNumber)

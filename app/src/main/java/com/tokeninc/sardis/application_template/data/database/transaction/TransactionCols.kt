@@ -44,8 +44,6 @@ class TransactionCols {
         const val Col_UN = "Col_UN"
         const val Col_IAD = "Col_IAD"
         const val Col_SID = "Col_SID"
-        const val Col_Ext_Conf = "Col_Ext_Conf"
-        const val Col_Ext_Ref = "Col_Ext_Ref"
         const val Col_Ext_RefundDateTime = "Col_Ext_RefundDateTime"
     }
 }

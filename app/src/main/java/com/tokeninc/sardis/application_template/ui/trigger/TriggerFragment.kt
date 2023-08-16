@@ -31,7 +31,7 @@ class TriggerFragment(val mainActivity: MainActivity) : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        startDummyParameterUploading() //TODO do it in model, just update UI
+        startDummyParameterUploading()
     }
 
     /**

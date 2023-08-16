@@ -2,7 +2,6 @@ package com.tokeninc.sardis.application_template.utils.objects
 
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
-import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
 import com.tokeninc.sardis.application_template.utils.StringHelper
 
 /**
@@ -24,6 +23,7 @@ class SampleReceipt(
     var refNo = transaction.Col_RefNo
     var batchNo = transaction.Col_BatchNo.toString()
     var transactionCode = transaction.Col_TransCode
-    var cardReadType = transaction.Col_CardReadType
     var groupSerialNo =  transaction.Col_GUP_SN.toString()
+    var fullName = transaction.Col_CustomerName
+    var tranDate = transaction.Col_TranDate
 }

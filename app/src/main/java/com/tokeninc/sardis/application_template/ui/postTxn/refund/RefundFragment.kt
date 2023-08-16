@@ -277,10 +277,10 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         val inputRefNo = CustomInputFormat(
             getStrings(R.string.ref_no),
             EditTextInputType.Number,
-            9,
+            10,
             getStrings(R.string.ref_no_invalid_ten_digits)
         ) { customInputFormat: CustomInputFormat ->
-            customInputFormat.text.length == 9
+            customInputFormat.text.length == 10
         }
         inputList.add(inputRefNo)
     }

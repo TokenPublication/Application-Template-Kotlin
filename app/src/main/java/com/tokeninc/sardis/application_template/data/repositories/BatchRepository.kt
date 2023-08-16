@@ -42,8 +42,8 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
         batchDao.updateSTN()
     }
 
-    fun prepareSlip(mainActivity: MainActivity, activationViewModel: ActivationViewModel, transactionList: List<Transaction?>?, isCopy: Boolean): String {
-        return BatchClosePrintHelper().batchText(getBatchNo().toString(),transactionList!!, mainActivity, activationViewModel, isCopy)
+    fun prepareSlip(mainActivity: MainActivity, activationViewModel: ActivationViewModel, transactionList: List<Transaction?>?, isCopy: Boolean, isBatch: Boolean = true): String {
+        return BatchClosePrintHelper().batchText(getBatchNo().toString(),transactionList!!, mainActivity, activationViewModel, isCopy, isBatch)
     }
 
     fun prepareResponse(batchResult: BatchResult): BatchCloseResponse{

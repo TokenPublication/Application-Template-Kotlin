@@ -85,8 +85,6 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     //these variables should only for storing the operation's result and intents' responses.
     // they don't have to be a LiveData because they won't be used for UI updating
     lateinit var refNo: String
-    var extraContents : ContentValues? = null
-
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     private val uiState = MutableLiveData<UIState>()
@@ -109,7 +107,6 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
      * Additionally, in IO coroutine thread it parses the response and make it OnlineTransactionResponse
      * then call Finish Transaction operation with that parameter.
      * @param extraContent is null if it is sale, refund inputs if it is refund, the whole transaction if it is void type transaction.
-     * @param uuid comes from Payment Gateway in Sale Transaction. It can be null
      */
     suspend fun transactionRoutine( card: ICCCard, transactionCode: Int, bundle: Bundle, extraContent: ContentValues,
                                     batchViewModel: BatchViewModel, mainActivity:MainActivity, activationRepository: ActivationRepository) {
@@ -149,7 +146,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     private fun finishTransaction (card: ICCCard, transactionCode: Int, bundle:Bundle, extraContent: ContentValues?, onlineTransactionResponse: OnlineTransactionResponse
                                    , batchViewModel: BatchViewModel, mainActivity: MainActivity, activationRepository: ActivationRepository
     ) {
-        var transactionResponse: TransactionResponse? = null
+        val transactionResponse: TransactionResponse?
         val batchNo = batchViewModel.getBatchNo()
         val groupSn = batchViewModel.getGroupSN()
         val stn = batchViewModel.getSTN()
@@ -162,7 +159,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 responseCode = ResponseCode.SUCCESS
                 val voidBundle = Bundle()
                 voidBundle.putString(TransactionCols.Col_GUP_SN,gupSn.toString())
-                transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent, voidBundle,transactionCode) //it comes from parameters
+                transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent, voidBundle,transactionCode)
             } else{
                 batchViewModel.updateGUPSN()
                 transactionResponse = transactionRepository.getTransactionResponse(card, transactionCode,onlineTransactionResponse,batchNo,groupSn, stn, bundle)

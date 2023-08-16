@@ -8,10 +8,9 @@ import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.AppTemp
 import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
-import com.tokeninc.sardis.application_template.data.model.type.CardReadType
-import com.tokeninc.sardis.application_template.utils.ExtraKeys
-import com.tokeninc.sardis.application_template.data.model.type.SlipType
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.type.SlipType
+import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.objects.SampleReceipt
 import java.text.SimpleDateFormat
@@ -27,18 +26,19 @@ class TransactionPrintHelper:BasePrintHelper() {
                          transactionCode: Int, context: Context, ZNO: String?, ReceiptNo: Int?, isCopy: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
-        if (transactionCode == TransactionCode.SALE.type){ //TODO kaldır
-            if (slipType === SlipType.CARDHOLDER_SLIP) { //TODO gib de
-                if (!(context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.ECR.name) &&
-                    !(context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.VUK507.name))  {
-                    printSlipHeader(styledText, receipt)
-                }
-            } else {
+
+        if (slipType === SlipType.CARDHOLDER_SLIP) {
+            if ((context.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.GIB.name)  {
                 printSlipHeader(styledText, receipt)
             }
-        }
-        else
+        } else {
             printSlipHeader(styledText, receipt)
+        }
+
+        if (isCopy) {
+            addTextToNewLine(styledText, "İKİNCİ KOPYA", PrinterDefinitions.Alignment.Center)
+        }
+
         styledText.newLine()
         if (slipType === SlipType.CARDHOLDER_SLIP) {
             styledText.addTextToLine("MÜŞTERİ NÜSHASI", PrinterDefinitions.Alignment.Center)
@@ -47,6 +47,7 @@ class TransactionPrintHelper:BasePrintHelper() {
             styledText.addTextToLine("İŞYERİ NÜSHASI", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
         }
+
         if (transactionCode == TransactionCode.VOID.type){
             var transactionType = ""
             when(receipt.transactionCode){
@@ -74,43 +75,63 @@ class TransactionPrintHelper:BasePrintHelper() {
             }
             TransactionCode.CASH_REFUND.type -> styledText.addTextToLine("NAKİT İADE", PrinterDefinitions.Alignment.Center)
         }
-        val sdf = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
+
+        val sdf: SimpleDateFormat
+        = if (slipType === SlipType.CARDHOLDER_SLIP && (context.applicationContext as AppTemp).getCurrentDeviceMode() == (DeviceInfo.PosModeEnum.GIB.name)
+            || slipType === SlipType.MERCHANT_SLIP) {
+            SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
+        } else{
+            SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        }
         val dateTime = sdf.format(Calendar.getInstance().time)
-        var lineTime = ""
+        var lineTime = dateTime
         if (transactionCode == TransactionCode.VOID.type)
-            lineTime = "$dateTime M OFFLINE"
+            lineTime += " M OFFLINE"
         if (transactionCode == TransactionCode.SALE.type)
-            lineTime = "$dateTime C ONLINE"
+            lineTime += " C ONLINE"
         if (transactionCode == TransactionCode.MATCHED_REFUND.type)
-            lineTime = "$dateTime M ONLINE"
+            lineTime += " M ONLINE"
         styledText.newLine()
         styledText.addTextToLine(lineTime, PrinterDefinitions.Alignment.Center )
         styledText.newLine()
         styledText.addTextToLine(receipt.cardNo, PrinterDefinitions.Alignment.Center)
         styledText.newLine()
-        // TODO tarih saatte barışa bak ya da developerdan
-        val ddMMyy = SimpleDateFormat("dd-MM-yy", Locale.getDefault())
-        val date = ddMMyy.format(Calendar.getInstance().time)
-        val hhmmss = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-        val time = hhmmss.format(Calendar.getInstance().time)
-        styledText.addTextToLine(date)
-        styledText.addTextToLine(time, PrinterDefinitions.Alignment.Right)
+
+        if (receipt.fullName != null) {
+            styledText.newLine()
+            styledText.addTextToLine(receipt.fullName, PrinterDefinitions.Alignment.Center)
+        }
+
+        if (transactionCode == TransactionCode.VOID.type && !receipt.tranDate.isNullOrEmpty()) {
+            styledText.newLine()
+            styledText.addTextToLine(DateUtil().getFormattedDate(receipt.tranDate!!.substring(0, 8)))
+            styledText.addTextToLine(DateUtil().getFormattedTime(receipt.tranDate!!.substring(8)), PrinterDefinitions.Alignment.Right)
+        }
+
         styledText.setLineSpacing(1f)
         styledText.setFontSize(14)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.newLine()
-        //TODO voidde owner name'in altına ilk işlem tarihini sağa ve sola koyman lazım
         styledText.addTextToLine("TUTAR:")
-        if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type)
+
+        if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type){
             styledText.addTextToLine(stringHelper.getAmount(bundle.getInt(ExtraKeys.REFUND_AMOUNT.name)), PrinterDefinitions.Alignment.Right)
-        else if(transactionCode == TransactionCode.CASH_REFUND.type)
-            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsString(
-                TransactionCols.Col_Amount2).toInt()), PrinterDefinitions.Alignment.Right)
-        else
+        }
+        else{
             styledText.addTextToLine(receipt.amount, PrinterDefinitions.Alignment.Right)
+        }
+
+        if (transactionCode == TransactionCode.INSTALLMENT_SALE.type) {
+            styledText.setFontSize(11)
+            styledText.newLine()
+            val transInsCnt = contentValues.getAsInteger(TransactionCols.Col_InstCnt)
+            styledText.addTextToLine(transInsCnt.toString() + " x " + StringHelper().getInstAmount(contentValues.getAsInteger(TransactionCols.Col_Amount) / transInsCnt ), PrinterDefinitions.Alignment.Center)
+        }
+
         styledText.setLineSpacing(0.5f)
         styledText.setFontSize(10)
         styledText.newLine()
+
         if (transactionCode == TransactionCode.VOID.type){
             styledText.addTextToLine("İPTAL EDİLMİŞTİR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
@@ -127,10 +148,15 @@ class TransactionPrintHelper:BasePrintHelper() {
                 styledText.addTextToLine("===========================",PrinterDefinitions.Alignment.Center)
             }
         }
-        if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type){
+
+        else if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type){
             styledText.addTextToLine("MAL/HİZM İADE EDİLMİŞTİR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
-            styledText.addTextToLine("ORJ. İŞLEM TARİHİ: ${bundle.getString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
+            if (transactionCode == TransactionCode.CASH_REFUND.type){
+                styledText.addTextToLine("ORJ. İŞLEM TARİHİ: " + DateUtil().getCashRefundDate(receipt.tranDate!!), PrinterDefinitions.Alignment.Center)
+            } else{
+                styledText.addTextToLine("ORJ. İŞLEM TARİHİ: ${bundle.getString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
+            }
             styledText.newLine()
             styledText.addTextToLine("ORJ. İŞ YERİ NO: ${receipt.merchantID }",PrinterDefinitions.Alignment.Center)
             styledText.newLine()
@@ -143,67 +169,61 @@ class TransactionPrintHelper:BasePrintHelper() {
                 styledText.addTextToLine(signature,PrinterDefinitions.Alignment.Center)
             }
         }
-        if (transactionCode == TransactionCode.SALE.type){
+        if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
             if (slipType === SlipType.CARDHOLDER_SLIP) {
-                styledText.addTextToLine(
-                    "KARŞILIĞI MAL/HİZM ALDIM",
-                    PrinterDefinitions.Alignment.Center
-                )
+                styledText.addTextToLine("KARŞILIĞI MAL/HİZM ALDIM", PrinterDefinitions.Alignment.Center)
             } else {
-                styledText.addTextToLine(
-                    "İşlem Şifre Girilerek Yapılmıştır",
-                    PrinterDefinitions.Alignment.Center
-                )
+                styledText.addTextToLine("İşlem Şifre Girilerek Yapılmıştır", PrinterDefinitions.Alignment.Center)
                 styledText.newLine()
                 styledText.addTextToLine("İMZAYA GEREK YOKTUR", PrinterDefinitions.Alignment.Center)
             }
         }
+
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)
         styledText.setFontSize(12)
         styledText.newLine()
-        if (transactionCode == TransactionCode.VOID.type)
-            styledText.addTextToLine("SN: " + bundle.getString(TransactionCols.Col_GUP_SN))
-        else
-            styledText.addTextToLine("SN: " + receipt.groupSerialNo)
+        styledText.addTextToLine("SN: " + receipt.groupSerialNo)
         styledText.addTextToLine("ONAY KODU: " + receipt.authCode, PrinterDefinitions.Alignment.Right)
+
         styledText.setFontSize(8)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
         styledText.newLine()
+
         styledText.addTextToLine("GRUP NO: " + receipt.batchNo)
         styledText.addTextToLine("REF NO: " + receipt.refNo, PrinterDefinitions.Alignment.Right)
         styledText.newLine()
+
+        if (!receipt.aid.isNullOrEmpty()){
+            styledText.addTextToLine("AID: " + receipt.aid)
+        }
+        if (!receipt.aidLabel.isNullOrEmpty()){
+            styledText.addTextToLine(receipt.aidLabel,PrinterDefinitions.Alignment.Right)
+        }
+        styledText.newLine()
         styledText.addTextToLine("Ver: 92.12.05")
-        if (transactionCode == TransactionCode.SALE.type){
+
+        if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
             if (slipType === SlipType.MERCHANT_SLIP) {
-                addTextToNewLine(
-                    styledText,
-                    "*MALİ DEĞERİ YOKTUR*",
-                    PrinterDefinitions.Alignment.Center,
-                    8
-                )
-            }
-            if (slipType === SlipType.MERCHANT_SLIP) {
-                if ((context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.ECR.name)
-                ) {
+                if ((context.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.ECR.name) {
+                    if ((context.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.VUK507.name){
+                        addTextToNewLine(styledText, "*MALİ DEĞERİ YOKTUR*", PrinterDefinitions.Alignment.Center, 8)
+                    }
                     styledText.newLine()
                     styledText.addTextToLine("Z NO: ${ZNO ?: 1}", PrinterDefinitions.Alignment.Right) //if null return 1 else return itself
                     styledText.addTextToLine("FİŞ NO: ${ReceiptNo ?: 1}", PrinterDefinitions.Alignment.Left)
-                }
-            }
-            if (slipType === SlipType.MERCHANT_SLIP) {
-                if ((context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.ECR.name)
-                    || (context.applicationContext as AppTemp).getCurrentDeviceMode().equals(DeviceInfo.PosModeEnum.VUK507.name)
-                ) {
-                    addTextToNewLine(styledText, (context.applicationContext as AppTemp).getCurrentFiscalID(),
-                        PrinterDefinitions.Alignment.Center, 8)
+                    if ((context.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.VUK507.name){
+                        addTextToNewLine(styledText, (context.applicationContext as AppTemp).getCurrentFiscalID(), PrinterDefinitions.Alignment.Center, 8)
+                    }
                 }
             }
         }
+        styledText.newLine()
         addTextToNewLine(styledText,"BU İŞLEM YURT İÇİ KARTLA YAPILMIŞTIR", PrinterDefinitions.Alignment.Center, 8)
+        styledText.newLine()
         addTextToNewLine(styledText,"BU BELGEYİ SAKLAYINIZ", PrinterDefinitions.Alignment.Center, 8)
         styledText.newLine()
         styledText.printLogo(context)
-        styledText.addSpace(70)
+        styledText.addSpace(100)
         return styledText.toString()
     }
 }

@@ -94,8 +94,6 @@ data class Transaction(
     var Col_IAD: String?,
     @ColumnInfo(name = TransactionCols.Col_SID)
     var Col_SID: String?,
-    @ColumnInfo(name = TransactionCols.Col_Ext_Conf)
-    var Col_Ext_Conf: Int? = 0,
     @ColumnInfo(name = TransactionCols.Col_Ext_RefundDateTime)
     var Col_Ext_RefundDateTime: String? //TranDate2 in Java
 )
