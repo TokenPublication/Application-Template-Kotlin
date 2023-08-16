@@ -69,7 +69,6 @@ class MainActivity : TimeOutActivity() {
     private lateinit var saleFragment: SaleFragment
     private lateinit var triggerFragment: TriggerFragment
     private lateinit var postTxnFragment: PostTxnFragment
-    private lateinit var refundFragment: RefundFragment
 
     //initializing other variables
     var infoDialog: InfoDialog? = null
@@ -125,8 +124,7 @@ class MainActivity : TimeOutActivity() {
         saleFragment = SaleFragment(transactionViewModel, this, batchViewModel, cardViewModel, activationViewModel)
         settingsFragment = SettingsFragment(this, activationViewModel)
         triggerFragment = TriggerFragment(this)
-        refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel, activationViewModel)
-        postTxnFragment = PostTxnFragment(this, transactionViewModel, refundFragment, batchViewModel, cardViewModel, activationViewModel)
+        postTxnFragment = PostTxnFragment(this, transactionViewModel, batchViewModel, cardViewModel, activationViewModel)
         connectCardService()
 
         setContentView(binding.root)
@@ -183,10 +181,12 @@ class MainActivity : TimeOutActivity() {
             getString(R.string.Sale_Action) -> saleActionReceived()
             getString(R.string.Settings_Action) -> replaceFragment(settingsFragment)
             getString(R.string.BatchClose_Action) -> {
-                if (transactionViewModel.allTransactions()
-                        .isNullOrEmpty()
-                ) { //if it is empty just show no transaction dialog
-                    callbackMessage(ResponseCode.ERROR)
+                if (transactionViewModel.allTransactions().isNullOrEmpty()) { //if it is empty just show no transaction dialog
+                    val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning,getString(R.string.batch_close_not_found),false)
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        infoDialog!!.dismiss()
+                        callbackMessage(ResponseCode.ERROR)
+                    }, 2000)
                 } else { //else implementing batch closing and finish that activity
                     postTxnFragment.doBatchClose()
                 }
@@ -332,6 +332,7 @@ class MainActivity : TimeOutActivity() {
                 refundBundle.putString(ExtraKeys.CARD_NO.name, cardNo)
                 cardViewModel.setTransactionCode(TransactionCode.MATCHED_REFUND.type)
                 readCard()
+                val refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel, activationViewModel)
                 refundFragment.refundAfterReadCard(null,refundBundle)
             }
         }

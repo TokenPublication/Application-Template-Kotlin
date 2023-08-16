@@ -8,13 +8,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
@@ -30,20 +29,16 @@ import kotlinx.coroutines.launch
 
 /**
  * This is the class for Post Transaction Methods.
- */ //TODO don't pass refundFragment
+ */
 class PostTxnFragment(private val mainActivity: MainActivity, private val transactionViewModel: TransactionViewModel,
-                      private val refundFragment: RefundFragment, private val batchViewModel: BatchViewModel,
-                      private val cardViewModel: CardViewModel, private val activationViewModel: ActivationViewModel) : Fragment() {
+                      private val batchViewModel: BatchViewModel, private val cardViewModel: CardViewModel,
+                      private val activationViewModel: ActivationViewModel) : Fragment() {
 
     private var _binding: FragmentPostTxnBinding? = null
     private val binding get() = _binding!!
-    var card: ICCCard? = null
-
-    private lateinit var viewModel: PostTxnViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle? ): View {
         _binding = FragmentPostTxnBinding.inflate(inflater,container,false)
-        viewModel = ViewModelProvider(this)[PostTxnViewModel::class.java]
         return binding.root
     }
 
@@ -66,12 +61,12 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             mainActivity.replaceFragment(voidFragment)
         }))
         menuItems.add(MenuItem(getStrings(R.string.refund), {
+            val refundFragment = RefundFragment(mainActivity, cardViewModel, transactionViewModel, batchViewModel, activationViewModel)
             mainActivity.addFragment(refundFragment)
         }))
         menuItems.add(MenuItem(getStrings(R.string.batch_close), {
             if (transactionViewModel.allTransactions().isNullOrEmpty()){
-                val infoDialog = mainActivity.showInfoDialog(
-                    InfoDialog.InfoType.Warning,getStrings(R.string.batch_close_not_found),false)
+                val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_close_not_found),false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     infoDialog!!.dismiss()
                 }, 2000)
@@ -97,8 +92,8 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
                 mainActivity.print(it)
             }
         }))
-        viewModel.list = menuItems
-        viewModel.replaceFragment(mainActivity)
+        val menuFragment = ListMenuFragment.newInstance(menuItems,"PostTxn", true, R.drawable.token_logo_png)
+        mainActivity.replaceFragment(menuFragment as Fragment)
     }
 
     /**
