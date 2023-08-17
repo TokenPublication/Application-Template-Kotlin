@@ -103,6 +103,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         val isLoyalty = true
         val isCampaign = true
         if (isInstallment) menuItemList.add(MenuItem(getStrings(R.string.installment_sale), {
+            cardViewModel.setTransactionCode(TransactionCode.INSTALLMENT_SALE.type)
             showInstallments()
         }))
         if (isLoyalty) menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))

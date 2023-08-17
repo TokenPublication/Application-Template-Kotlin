@@ -62,7 +62,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
-
         </activity>
         <receiver android:name=".receivers.CheckSaleReceiver"
             android:exported="true">
