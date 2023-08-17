@@ -103,7 +103,6 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         val isLoyalty = true
         val isCampaign = true
         if (isInstallment) menuItemList.add(MenuItem(getStrings(R.string.installment_sale), {
-            cardViewModel.setTransactionCode(TransactionCode.INSTALLMENT_SALE.type)
             showInstallments()
         }))
         if (isLoyalty) menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))
@@ -283,10 +282,10 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         val zNO = mainActivity.intent.extras?.getString("ZNO")
         val receiptNo = mainActivity.intent.extras?.getString("ReceiptNo")
 
-        //TODO Developer, check this variables from PGW.
-        val isOnlinePin = false
-        val isOffline = false
-        val pinByPass = false
+
+        val isOnlinePin = false //TODO ICC karttan al
+        val isOffline = false //TODO true
+        val pinByPass = false //TODO ICC karttan al
         bundle.putInt("IsOnlinePin", if (isOnlinePin) 1 else 0)
         bundle.putInt("IsOffline", if (isOffline) 1 else 0)
         bundle.putInt("PinByPass", if (pinByPass) 1 else 0)

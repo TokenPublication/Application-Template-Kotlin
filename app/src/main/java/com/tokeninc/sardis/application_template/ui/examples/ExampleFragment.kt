@@ -140,7 +140,7 @@ class ExampleFragment(val mainActivity: MainActivity, private val cardViewModel:
                 if (isConnected) {
                     cardViewModel.getCardServiceBinding()!!.showQR(getStrings(R.string.please_read_qr),
                         StringHelper().getAmount(qrAmount),
-                        qrString) //TODO bak
+                        qrString)
                 }
             }
             dialog!!.setQr(qrString, getStrings(R.string.waiting_qr_read)) // Shows the same QR on Info Dialog
