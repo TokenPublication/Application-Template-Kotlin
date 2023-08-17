@@ -25,21 +25,6 @@ class CardRepository @Inject constructor() :
 
     private var amount = 0
     private var transactionCode = 0
-    /**
-    // These variables are both updating from here and mainActivity, they also observed from different classes therefore they are LiveData
-    private var transactionCode = MutableLiveData(0)
-    private fun getTransactionCode(): LiveData<Int> {
-        return transactionCode
-    }
-    fun setTransactionCode(code: Int){
-        transactionCode.postValue(code)
-    }
-
-    private var amount = MutableLiveData(0)
-    fun setAmount(transactionAmount: Int){
-        amount.postValue(transactionAmount)
-    }
-    */
 
     private var callBackMessage = MutableLiveData<ResponseCode>()
     fun getCallBackMessage(): LiveData<ResponseCode> {
