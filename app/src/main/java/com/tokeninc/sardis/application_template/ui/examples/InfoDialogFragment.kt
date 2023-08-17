@@ -20,8 +20,8 @@ class InfoDialogFragment(private val exampleFragment: ExampleFragment) : Fragmen
 
         var mType: InfoType
         var mText: String
-        var mListener: MenuItemClickListener<*>
-        var mAuthenticator: IAuthenticator? = null
+        private var mListener: MenuItemClickListener<*>
+        private var mAuthenticator: IAuthenticator? = null
 
         constructor(type: InfoType, text: String, listener: MenuItemClickListener<*>, authenticator: IAuthenticator?) {
             mType = type

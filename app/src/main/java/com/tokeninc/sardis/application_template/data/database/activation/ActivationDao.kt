@@ -1,6 +1,5 @@
 package com.tokeninc.sardis.application_template.data.database.activation
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query

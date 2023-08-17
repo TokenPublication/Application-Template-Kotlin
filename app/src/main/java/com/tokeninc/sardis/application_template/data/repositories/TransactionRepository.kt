@@ -179,7 +179,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             bundle.putInt("PaymentType", PaymentType.CREDITCARD.type)
 
             var slipType: SlipType = SlipType.NO_SLIP
-            if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) { //TODO sor onlineTransaction başarılı değilse
+            if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.UNABLE_DECLINE || responseCode == ResponseCode.OFFLINE_DECLINE) { //TODO if onlineResponse not successful
                 slipType = SlipType.NO_SLIP
             }
             else{

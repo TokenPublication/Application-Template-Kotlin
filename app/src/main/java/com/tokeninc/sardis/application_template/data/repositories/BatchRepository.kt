@@ -6,7 +6,6 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import com.token.printerlib.PrinterService
 import com.token.printerlib.StyledString
-import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.batch.BatchDao
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
@@ -30,7 +29,7 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
         batchDao.updateBatchNo()
     }
 
-    suspend fun updateBatchSlip(batchSlip: String?,batchNo: Int?){
+    suspend fun updateBatchSlip(batchSlip: String?){
         batchDao.updateBatchSlip(batchSlip)
     }
 

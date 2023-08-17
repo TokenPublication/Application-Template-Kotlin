@@ -11,7 +11,7 @@ import com.tokeninc.sardis.application_template.utils.StringHelper
 /**
  * This class constructs Batch Close slip.
  */
-class BatchClosePrintHelper(): BasePrintHelper() {
+class BatchClosePrintHelper: BasePrintHelper() {
     fun batchText(batch_no: String, transactions: List<Transaction?>, mainActivity: MainActivity,
                   activationViewModel: ActivationViewModel, isCopy: Boolean, isBatch: Boolean): String {
         val styledText = StyledString()
@@ -73,7 +73,7 @@ class BatchClosePrintHelper(): BasePrintHelper() {
         styledText.addSpace(50)
 
         if (isBatch){
-            printHelper.printBatchClose(styledText,batch_no, transactions.size.toString(),totalAmount, merchantID, terminalID)!!
+            printHelper.printBatchClose(styledText,batch_no, transactions.size.toString(),totalAmount, merchantID, terminalID)
             addTextToNewLine(styledText, "---------------------------", PrinterDefinitions.Alignment.Center)
             addTextToNewLine(styledText, "YUKARIDAKİ TOPLAM ÜYE İŞYERİ", PrinterDefinitions.Alignment.Center, 10)
             addTextToNewLine(styledText, "HESABINA ALACAK KAYDEDİLECEKTİR", PrinterDefinitions.Alignment.Center, 10)

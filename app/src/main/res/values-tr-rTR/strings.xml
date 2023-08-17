@@ -42,7 +42,7 @@
     <string name="printing_the_receipt">Slip Basılıyor</string>
     <string name="preparing_the_receipt">Slip Hazırlanıyor</string>
     <string name="batch_close_success">Grup Kapama Başarılı</string>
-
+    <string name="activating_template">Application Template Aktif Edilmeli!</string>
 
     <string name="no_trans_found">İşlem Bulunamadı</string>
     <string name="trans_not_found">İşlem Bulunamadı</string>
@@ -80,6 +80,7 @@
     <string name="confirmation_example">Onaylandı</string>
     <string name="refund_info_not_found">İade Bilgisi Hatası</string>
     <string name="offline_decline">Kart Numaraları Eşleşmedi</string>
+    <string name="config_updated">Config Dosyaları Güncellendi, Lütfen Banka Kurulumu Yapınız</string>
 
     <string name="card_number">Kart Numarası</string>
     <string name="invalid_card_number">Kart Numarası Hatalı</string>

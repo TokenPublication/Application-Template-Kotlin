@@ -11,7 +11,7 @@ import com.tokeninc.sardis.application_template.utils.StringHelper
  */
 class PrintHelper: BasePrintHelper() {
 
-    val dateUtil = DateUtil()
+    private val dateUtil = DateUtil()
 
     fun printSuccess(): String {   // Print the success message
         val styledText = StyledString()

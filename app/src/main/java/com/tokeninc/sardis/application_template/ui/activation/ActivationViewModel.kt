@@ -1,15 +1,10 @@
 package com.tokeninc.sardis.application_template.ui.activation
 
-import android.util.Log
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.token.uicomponents.ListMenuFragment.IListMenuItem
-import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -64,9 +59,9 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     /**
      * This is for not repeating each uiState again.
      */
-    private suspend fun updateUIState(uistate: UIState){
+    private suspend fun updateUIState(ui_state: UIState){
         coroutineScope.launch(Dispatchers.Main) { //update UI in a dummy way
-            uiState.postValue(uistate)
+            uiState.postValue(ui_state)
         }
         delay(2000L)
     }

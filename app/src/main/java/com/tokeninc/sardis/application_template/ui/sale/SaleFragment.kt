@@ -52,8 +52,8 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
 
     var card: ICCCard? = null
     private var amount = 0
-    var installmentCount = 0 // this is for tracking instalment count if it will be an instalment sale
-    var transactionCode = TransactionCode.SALE.type // this is for tracking transaction code, it can be also installment sale
+    private var installmentCount = 0 // this is for tracking instalment count if it will be an instalment sale
+    private var transactionCode = TransactionCode.SALE.type // this is for tracking transaction code, it can be also installment sale
     private var isICC = false
     private var isCancelable = true
     private var qrSuccess = true
@@ -245,7 +245,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             if (isCancelable) {
                 qrSuccess = false
                 mainActivity.setResult(Activity.RESULT_CANCELED)
-                mainActivity.callbackMessage(ResponseCode.CANCELED)
+                mainActivity.responseMessage(ResponseCode.CANCELED,"")
             }
         }
     }
@@ -327,17 +327,13 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         //with respect to its type
         val spinner = binding.spinner
         if (code == ResponseCode.SUCCESS) {
-            val text: String = spinner.selectedItem.toString()
-            if (text == valueOf(PaymentType.TRQRCREDITCARD))
-                paymentType = PaymentType.TRQRCREDITCARD.type
-            else if (text == valueOf(PaymentType.TRQRFAST))
-                paymentType = PaymentType.TRQRFAST.type
-            else if (text == valueOf(PaymentType.TRQRMOBILE))
-                paymentType = PaymentType.TRQRMOBILE.type
-            else if (text == valueOf(PaymentType.TRQROTHER))
-                paymentType = PaymentType.TRQROTHER.type
-            else if (text == valueOf(PaymentType.OTHER))
-                paymentType = PaymentType.OTHER.type
+            when (spinner.selectedItem.toString()) {
+                valueOf(PaymentType.TRQRCREDITCARD) -> paymentType = PaymentType.TRQRCREDITCARD.type
+                valueOf(PaymentType.TRQRFAST) -> paymentType = PaymentType.TRQRFAST.type
+                valueOf(PaymentType.TRQRMOBILE) -> paymentType = PaymentType.TRQRMOBILE.type
+                valueOf(PaymentType.TRQROTHER) -> paymentType = PaymentType.TRQROTHER.type
+                valueOf(PaymentType.OTHER) -> paymentType = PaymentType.OTHER.type
+            }
         }
         //onSaleResponseRetrieved(amount, code, true, slipType, "1234 **** **** 7890", "OWNER NAME", paymentType)
     }

@@ -47,6 +47,8 @@
     <string name="printing_the_receipt">Printing the Receipt</string>
     <string name="preparing_the_receipt">Preparing the Receipt</string>
     <string name="batch_close_success">Batch Closing Successfully</string>
+    <string name="activating_template">You must activate the application template!</string>
+
 
 
     <string name="no_trans_found">No Transactions Found</string>
@@ -84,6 +86,8 @@
     <string name="confirmation_example">Confirmation</string>
     <string name="refund_info_not_found">Refund Info Not Found</string>
     <string name="offline_decline">Card Numbers are Mismatching</string>
+    <string name="config_updated">Config Files Updated, Please Activate the Bank</string>
+
 
     <string name="card_number">Card Number</string>
     <string name="invalid_card_number">Invalid Card Number</string>

@@ -74,11 +74,11 @@ class StringHelper {
     /**
      * It generates approval code
      */
-    fun generateApprovalCode(BatchNo: String, TransactionNo: String, SaleID: String): String? {
+    fun generateApprovalCode(BatchNo: String, TransactionNo: String, SaleID: String): String {
         return BatchNo + TransactionNo + SaleID
     }
 
-    fun getInstAmount(amount: Int): String? {
+    fun getInstAmount(amount: Int): String {
         var str = amount.toString()
         if (str.length == 1) str = "00$str" else if (str.length == 2) str = "0$str"
         val s1 = str.substring(0, str.length - 2)

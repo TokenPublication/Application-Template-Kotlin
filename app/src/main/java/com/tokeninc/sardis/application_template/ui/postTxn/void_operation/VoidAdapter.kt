@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.tokeninc.sardis.application_template.ui.postTxn.PostTxnFragment
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding
@@ -14,7 +13,7 @@ import com.tokeninc.sardis.application_template.utils.StringHelper
 
 /**
  * This adapter arranges Void transactions one by one.
- */ //TODO slip gelince yeni açma bunu kullan
+ */
 class VoidAdapter(private val transactionList: MutableList<Transaction?>): RecyclerView.Adapter<VoidAdapter.TransactionViewHolder>() {
 
     inner class TransactionViewHolder(val binding: TransactionItemsBinding): RecyclerView.ViewHolder(binding.root)

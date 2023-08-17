@@ -1,5 +1,4 @@
 package com.tokeninc.sardis.application_template.data.repositories
-import android.app.Activity
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
@@ -7,14 +6,12 @@ import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
-import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
 import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.data.model.type.EmvProcessType
-import com.tokeninc.sardis.application_template.databinding.ActivityExampleBinding
 import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
@@ -28,7 +25,7 @@ class CardRepository @Inject constructor() :
 
     // These variables are both updating from here and mainActivity, they also observed from different classes therefore they are LiveData
     private var transactionCode = MutableLiveData(0)
-    fun getTransactionCode(): LiveData<Int> {
+    private fun getTransactionCode(): LiveData<Int> {
         return transactionCode
     }
     fun setTransactionCode(code: Int){
@@ -64,7 +61,6 @@ class CardRepository @Inject constructor() :
     //These variables should only for storing the operation's result and intents' responses, because they won't be used
     //for UI updating they don't have to be a LiveData
     var gibSale = false
-    var timeOut = false
     private var isApprove = false //this is a flag for checking whether it is ICC sale (for implementing continue emv)
 
     private var cardServiceBinding: CardServiceBinding? = null
@@ -84,7 +80,6 @@ class CardRepository @Inject constructor() :
         callBackMessage = MutableLiveData<ResponseCode>()
         isCardServiceConnected = MutableLiveData(false)
         gibSale = false
-        timeOut = false
         isApprove = false
     }
 
@@ -169,7 +164,6 @@ class CardRepository @Inject constructor() :
             }
             if (card.resultCode == CardServiceResult.ERROR_TIMEOUT.resultCode()) { //if there timeout is occurred
                 Log.i("CardDataReceived","Card Result Code: TIMEOUT")
-                timeOut = true
                 setCallBackMessage(ResponseCode.CANCELED)
             }
             if (card.resultCode == CardServiceResult.ERROR.resultCode()) {

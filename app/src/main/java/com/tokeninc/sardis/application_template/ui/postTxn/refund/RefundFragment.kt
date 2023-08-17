@@ -67,7 +67,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
 
     /**
      * It prepares list menu item and shows it to the screen.
-     */ //TODO menüden çıkıp diğerine girince 2 kez yapıyor aynı işlemi
+     */
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.matched_refund), {
@@ -172,7 +172,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
                         doRefund(cardData, TransactionCode.MATCHED_REFUND.type)
                     }
                     else{
-                        mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
+                        mainActivity.responseMessage(ResponseCode.OFFLINE_DECLINE,"")
                     }
                 } else{
                     doRefund(cardData,transactionCode)

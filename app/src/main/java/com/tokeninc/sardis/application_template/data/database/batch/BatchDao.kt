@@ -13,7 +13,7 @@ interface BatchDao {
     suspend fun insertBatch(batch: Batch)
 
     @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulSTN} = CASE WHEN ${BatchCols.col_ulSTN} >= 999 THEN 0 ELSE ${BatchCols.col_ulSTN} + 1 END")
-    fun updateSTN()
+    suspend fun updateSTN()
 
     @Query("UPDATE ${DatabaseInfo.BATCH_TABLE} SET ${BatchCols.col_ulGUP_SN} = ${BatchCols.col_ulGUP_SN} + 1")
     suspend fun updateGUPSN()

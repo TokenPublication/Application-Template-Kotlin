@@ -21,7 +21,7 @@ class DateUtil {
         return SimpleDateFormat(format, Locale.getDefault()).format(calDate)
     }
 
-    fun getFormattedDate(dateText: String): String? {
+    fun getFormattedDate(dateText: String): String {
         val year = dateText.substring(0, 4)
         val month = dateText.substring(4, 6)
         val day = dateText.substring(6, 8)
@@ -39,7 +39,7 @@ class DateUtil {
         return "$day/$month/$year"
     }
 
-    fun getFormattedTime(timeText: String): String? {
+    fun getFormattedTime(timeText: String): String {
         val hour = timeText.substring(0, 2)
         val minute = timeText.substring(2, 4)
         val second = timeText.substring(4, 6)

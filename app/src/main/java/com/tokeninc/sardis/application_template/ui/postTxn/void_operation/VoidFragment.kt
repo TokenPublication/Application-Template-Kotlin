@@ -121,10 +121,10 @@ class VoidFragment(private val mainActivity: MainActivity, private val transacti
                 this.card = mCard
                 doVoid(transaction)
             } else {
-                mainActivity.callbackMessage(ResponseCode.OFFLINE_DECLINE)
+                mainActivity.responseMessage(ResponseCode.OFFLINE_DECLINE,"")
             }
         }else{
-            mainActivity.callbackMessage(ResponseCode.ERROR)
+            mainActivity.responseMessage(ResponseCode.ERROR,getString(R.string.no_trans_found))
         }
     }
 

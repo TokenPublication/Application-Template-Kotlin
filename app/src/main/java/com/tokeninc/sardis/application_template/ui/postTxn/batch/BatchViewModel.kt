@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tokeninc.sardis.application_template.MainActivity
+import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.model.resultCode.BatchResult
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
@@ -39,9 +40,9 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
      * This function works in IO thread, so it doesn't lock the main thread.
      * It updates the previous batch slip
      */
-    private fun updateBatchSlip(batchSlip: String?, batchNo: Int?){
+    private fun updateBatchSlip(batchSlip: String?){
         viewModelScope.launch(Dispatchers.IO){
-            batchRepository.updateBatchSlip(batchSlip, batchNo)
+            batchRepository.updateBatchSlip(batchSlip)
         }
     }
 
@@ -114,14 +115,14 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
     private fun finishBatchClose(mainActivity: MainActivity, transactionViewModel: TransactionViewModel,activationViewModel: ActivationViewModel) {
         val transactions = transactionViewModel.allTransactions() //get all transactions from viewModel
         val copySlip = batchRepository.prepareSlip(mainActivity,activationViewModel,transactions,true)
-        updateBatchSlip(copySlip,getBatchNo()) //update the batch slip for previous day
+        updateBatchSlip(copySlip) //update the batch slip for previous day
         val slip = batchRepository.prepareSlip(mainActivity,activationViewModel,transactions,false)
         updateBatchNo() //update the batch number
         transactionViewModel.deleteAll() //delete all the transactions
         val batchCloseResponse = batchRepository.prepareResponse(BatchResult.SUCCESS)
         val intent = batchRepository.prepareBatchIntent(batchCloseResponse,mainActivity,slip) //prepare intent and print slip
         coroutineScope.launch(Dispatchers.Main) {
-            uiState.postValue(UIState.Success("Grup Kapama Başarılı"))
+            uiState.postValue(UIState.Success(mainActivity.getString(R.string.batch_close_success)))
         }
         liveIntent.postValue(intent)
     }

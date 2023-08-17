@@ -22,7 +22,7 @@ class MenuItem @JvmOverloads constructor(
 ) : IListMenuItem {
 
     //this is for cases only the sub menu item list is null, if we don't define there
-    //in cases with only 1 null item, kotlin behaves like this item was authenticator not the itemlist
+    //in cases with only 1 null item, kotlin behaves like this item was authenticator not the itemList
     constructor(
         title: String,
         listener: MenuItemClickListener<*>?,
