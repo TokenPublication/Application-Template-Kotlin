@@ -14,8 +14,6 @@ import javax.inject.Inject
 class CardViewModel @Inject constructor(private val cardRepository: CardRepository) : ViewModel() {
 
     // these functions can be observed from UI and also updated from UI.
-    fun setTransactionCode(code: Int){ cardRepository.setTransactionCode(code) }
-    fun setAmount(amount: Int){ cardRepository.setAmount(amount) }
     fun getCallBackMessage(): LiveData<ResponseCode>  = cardRepository.getCallBackMessage()
     fun getCardLiveData(): LiveData<ICCCard> = cardRepository.getCardData()
     fun getCardServiceConnected() = cardRepository.getCardServiceConnected()
@@ -31,6 +29,6 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
         cardRepository.cardServiceBinder(activity)
     }
 
-    fun readCard() { cardRepository.readCard() }
+    fun readCard(amount: Int, transactionCode: Int) { cardRepository.readCard(amount,transactionCode) }
 }
 

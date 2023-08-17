@@ -57,8 +57,7 @@ class VoidFragment(private val mainActivity: MainActivity, private val transacti
      * It reads the card and show some dialogs or go some function with respect to result of reading card
      */
     private fun cardReader(){
-        cardViewModel.setTransactionCode(TransactionCode.VOID.type)
-        mainActivity.readCard()
+        mainActivity.readCard(0,TransactionCode.VOID.type)
         cardViewModel.getCardLiveData().observe(mainActivity) { cardData ->
             if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) {
                 Log.d("Card Read", cardData.mCardNumber.toString())

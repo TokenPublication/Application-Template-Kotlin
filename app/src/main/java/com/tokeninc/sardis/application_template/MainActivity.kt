@@ -283,7 +283,6 @@ class MainActivity : TimeOutActivity() {
     private fun saleActionReceived() {
         // get the amount from sale intent, and assign amount to corresponding classes
         val amount = intent.extras!!.getInt("Amount")
-        cardViewModel.setAmount(amount)
         saleFragment.setAmount(amount)
         //controlling whether the request coming from gib
         replaceFragment(saleFragment)
@@ -310,10 +309,10 @@ class MainActivity : TimeOutActivity() {
     /**
      * It reads card, if it couldn't connect cardService before, first connect the cardService then reads card
      */
-    fun readCard() {
+    fun readCard(amount: Int, transactionCode: Int) {
         if (cardServiceBinding != null) {
             Handler(Looper.getMainLooper()).postDelayed({
-                cardViewModel.readCard()
+                cardViewModel.readCard(amount,transactionCode)
             }, 500)
             //when read card is cancelled (on back pressed) finish the main activity
             cardViewModel.getCallBackMessage().observe(this) { responseCode ->
@@ -325,7 +324,7 @@ class MainActivity : TimeOutActivity() {
         } else{
             connectCardService()
             Handler(Looper.getMainLooper()).postDelayed({
-                readCard() // wait for connecting cardService, if it doesn't wait it enters recursive loop
+                readCard(amount,transactionCode) // wait for connecting cardService, if it doesn't wait it enters recursive loop
             }, 400)
         }
     }
@@ -344,12 +343,10 @@ class MainActivity : TimeOutActivity() {
             val refNo = json.getString("RefNo")
             transactionViewModel.refNo = refNo
             val amount = json.getString("Amount").toInt()
-            cardViewModel.setAmount(amount)
             val transactionBatchNo = json.getInt("BatchNo")
             val currentBatchNo = batchViewModel.getBatchNo()
             if (transactionBatchNo == currentBatchNo) { // GIB Void Operation
-                cardViewModel.setTransactionCode(TransactionCode.VOID.type)
-                readCard()
+                readCard(amount,TransactionCode.VOID.type)
                 val voidFragment = VoidFragment(this,transactionViewModel,batchViewModel,cardViewModel,activationViewModel,true)
                 replaceFragment(voidFragment)
             } else{ // GIB Refund Operation (because refund request is received after closing batch
@@ -363,8 +360,7 @@ class MainActivity : TimeOutActivity() {
                 refundBundle.putString(ExtraKeys.REF_NO.name, refNo)
                 refundBundle.putString(ExtraKeys.AUTH_CODE.name, authCode)
                 refundBundle.putString(ExtraKeys.CARD_NO.name, cardNo)
-                cardViewModel.setTransactionCode(TransactionCode.MATCHED_REFUND.type)
-                readCard()
+                readCard(amount,TransactionCode.MATCHED_REFUND.type)
                 val refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel, activationViewModel)
                 refundFragment.refundAfterReadCard(null,refundBundle)
             }

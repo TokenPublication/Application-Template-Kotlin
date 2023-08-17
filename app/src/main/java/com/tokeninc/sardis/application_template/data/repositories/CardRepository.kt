@@ -23,6 +23,9 @@ import javax.inject.Inject
 class CardRepository @Inject constructor() :
     CardServiceListener {
 
+    private var amount = 0
+    private var transactionCode = 0
+    /**
     // These variables are both updating from here and mainActivity, they also observed from different classes therefore they are LiveData
     private var transactionCode = MutableLiveData(0)
     private fun getTransactionCode(): LiveData<Int> {
@@ -36,6 +39,7 @@ class CardRepository @Inject constructor() :
     fun setAmount(transactionAmount: Int){
         amount.postValue(transactionAmount)
     }
+    */
 
     private var callBackMessage = MutableLiveData<ResponseCode>()
     fun getCallBackMessage(): LiveData<ResponseCode> {
@@ -75,8 +79,8 @@ class CardRepository @Inject constructor() :
      */
     fun onDestroyed(){
         mutableCardData =  MutableLiveData<ICCCard>()
-        transactionCode = MutableLiveData(0)
-        amount = MutableLiveData(0)
+        transactionCode = 0
+        amount = 0
         callBackMessage = MutableLiveData<ResponseCode>()
         isCardServiceConnected = MutableLiveData(false)
         gibSale = false
@@ -86,19 +90,21 @@ class CardRepository @Inject constructor() :
     /**
      * This reads the card
      */
-    fun readCard() {
+    fun readCard(amount: Int, transactionCode: Int) {
         val obj = JSONObject()
         try {
+            this.amount = amount
+            this.transactionCode = transactionCode
             if (!isApprove) { //if it is not the second readCard (reading ICC card for sale)
                 // in sale and void emv process should be EmvProcessType.READ_CARD, for refunds it should be EmvProcessType.FULL_EMV
                 obj.put("forceOnline", 1)
                 obj.put("zeroAmount", 0)
-                val isVoid = getTransactionCode().value == TransactionCode.VOID.type
-                val isSale = getTransactionCode().value == TransactionCode.SALE.type
+                val isVoid = transactionCode == TransactionCode.VOID.type
+                val isSale = transactionCode == TransactionCode.SALE.type
                 obj.put("emvProcessType", if (isVoid || isSale) EmvProcessType.READ_CARD.ordinal else EmvProcessType.FULL_EMV.ordinal)
                 obj.put("showAmount", if (isVoid) 0 else 1)
                 obj.put("showCardScreen", if (gibSale) 0 else 1)
-                getCard(amount.value!!,obj.toString()) // arrange allowed operations
+                getCard(amount,obj.toString()) // arrange allowed operations
             }
             else{
                 approveCard()
@@ -142,7 +148,7 @@ class CardRepository @Inject constructor() :
             obj.put("zeroAmount", 0)
             obj.put("showAmount", 1)
             obj.put("emvProcessType", EmvProcessType.CONTINUE_EMV.ordinal)
-            getCard(amount.value!!, obj.toString())
+            getCard(amount, obj.toString())
         } catch (e: java.lang.Exception) {
             setCallBackMessage(ResponseCode.ERROR)
             e.printStackTrace()
@@ -170,7 +176,7 @@ class CardRepository @Inject constructor() :
                 setCallBackMessage(ResponseCode.ERROR)
                 Log.i("CardDataReceived","Card Result Code: ERROR")
             }
-            if (card.mCardReadType == CardReadType.ICC.type && getTransactionCode().value == TransactionCode.SALE.type){
+            if (card.mCardReadType == CardReadType.ICC.type && transactionCode == TransactionCode.SALE.type){
                 isApprove = true //make this flag true for the second reading for asking password with continue emv.
             }
             mutableCardData.postValue(card)

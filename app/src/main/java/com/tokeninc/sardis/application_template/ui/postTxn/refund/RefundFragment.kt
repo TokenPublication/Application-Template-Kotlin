@@ -138,14 +138,10 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
      */
     private fun showRefundFragment(inputList: MutableList<CustomInputFormat>){
         val fragment = InputListFragment.newInstance(inputList, getStrings(R.string.refund)){
-            cardViewModel.setTransactionCode(transactionCode) // arrange transaction code in cardRepository to read card correctly
-            // arrange amount to read card with given amount
-            if (transactionCode == TransactionCode.CASH_REFUND.type){
-                cardViewModel.setAmount(inputList[0].text.toInt())
-            } else if (transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.MATCHED_REFUND.type){
-                cardViewModel.setAmount(inputList[1].text.toInt())
-            }
-            mainActivity.readCard()
+            val amount =
+            if (transactionCode == TransactionCode.CASH_REFUND.type) inputList[0].text.toInt()
+            else inputList[1].text.toInt()
+            mainActivity.readCard(amount, transactionCode)
             refundAfterReadCard(inputList, null)
         }
         mainActivity.addFragment(fragment)

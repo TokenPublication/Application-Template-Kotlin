@@ -103,7 +103,6 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         val isLoyalty = true
         val isCampaign = true
         if (isInstallment) menuItemList.add(MenuItem(getStrings(R.string.installment_sale), {
-            cardViewModel.setTransactionCode(TransactionCode.INSTALLMENT_SALE.type)
             showInstallments()
         }))
         if (isLoyalty) menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))
@@ -186,13 +185,10 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     }
 
     fun cardReader(isGib: Boolean){
-        if (installmentCount == 0){
-            cardViewModel.setTransactionCode(TransactionCode.SALE.type)
-        } else {
-            cardViewModel.setTransactionCode(TransactionCode.INSTALLMENT_SALE.type)
-        }
-        cardViewModel.setAmount(amount) // set its sale amount
-        mainActivity.readCard()
+        val transactionCode = if (installmentCount == 0) TransactionCode.SALE.type
+        else TransactionCode.INSTALLMENT_SALE.type
+
+        mainActivity.readCard(amount,transactionCode)
         cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
             if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
                 Log.d("CardResult", cardData.mCardNumber.toString())
