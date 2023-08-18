@@ -74,6 +74,10 @@ class MainActivity : TimeOutActivity() {
     var infoDialog: InfoDialog? = null
     lateinit var tokenKMS: TokenKMS
 
+    private var deviceInfoConnected = false
+    private var kmsServiceConnected = false
+    private var cardServiceNotConnected = false
+
     /**
      * This function is overwritten to continue the activity where it was left when
      * the configuration is changed (i.e screen rotation)
@@ -96,12 +100,55 @@ class MainActivity : TimeOutActivity() {
      * If everything goes well, it calls a function named actionControl, which calls another functions with respect to intent's action.
      */
     private fun startActivity() {
-        buildConfigs()
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-        setDeviceInfo() // connecting device info
-        Log.i("DeviceInfo","Bağlanmadan geldi")
+        infoDialog = showInfoDialog(InfoDialog.InfoType.Connecting, getString(R.string.connecting), false)
+
+        //get ViewModels from Dagger-Hilt easily, but to make this easy you need to implement each dependency clearly
+        val getActivationViewModel: ActivationViewModel by viewModels()
+        activationViewModel = getActivationViewModel
+        val getBatchViewModel: BatchViewModel by viewModels()
+        batchViewModel = getBatchViewModel
+        val getTransactionViewModel: TransactionViewModel by viewModels()
+        transactionViewModel = getTransactionViewModel
+        val getCardViewModel: CardViewModel by viewModels()
+        cardViewModel = getCardViewModel
+
+        saleFragment = SaleFragment(transactionViewModel, this, batchViewModel, cardViewModel, activationViewModel)
+        settingsFragment = SettingsFragment(this, activationViewModel)
+        triggerFragment = TriggerFragment(this)
+        postTxnFragment = PostTxnFragment(this, transactionViewModel, batchViewModel, cardViewModel, activationViewModel)
+
+        buildConfigs()
+        setDeviceInfo()
+        connectKMSService()
+        connectCardService()
+    }
+
+
+    private fun connectKMSService(){
+        tokenKMS = TokenKMS() //connecting KMS Service with this flow
+        tokenKMS.init(applicationContext, object : InitCallbacks {
+            override fun onInitSuccess() {
+                Log.i("Token KMS onInitSuccess", "KMS Init OK")
+                kmsServiceConnected = true
+                Log.i("Connected","KMS")
+                if (deviceInfoConnected) {
+                    infoDialog!!.dismiss()
+                    actionChanged(intent.action)
+                }
+            }
+
+            override fun onInitFailed() {
+                Log.i("Token KMS onInitFailed", "KMS Init Failed")
+                infoDialog = showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.kms_service_error), false)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    infoDialog?.dismiss()
+                    finish()
+                }, 2000)
+            }
+        })
     }
 
     /**
@@ -151,32 +198,17 @@ class MainActivity : TimeOutActivity() {
                 appTemp.setCurrentCardRedirection(fields[2]!!)
                 deviceInfo.unbind()
                 timer.cancel()
-                deviceInfoConnected()
+                deviceInfoConnected = true
+                Log.i("Connected","Device Info")
+                if (kmsServiceConnected) {
+                    infoDialog!!.dismiss()
+                    actionChanged(intent.action)
+                }
             },
             DeviceInfo.Field.FISCAL_ID,
             DeviceInfo.Field.OPERATION_MODE,
             DeviceInfo.Field.CARD_REDIRECTION
         )
-    }
-
-    private fun deviceInfoConnected(){
-        Log.i("DeviceInfo","Bağlanınca geldi")
-        //get ViewModels from Dagger-Hilt easily, but to make this easy you need to implement each dependency clearly
-        val getActivationViewModel: ActivationViewModel by viewModels()
-        activationViewModel = getActivationViewModel
-        val getBatchViewModel: BatchViewModel by viewModels()
-        batchViewModel = getBatchViewModel
-        val getTransactionViewModel: TransactionViewModel by viewModels()
-        transactionViewModel = getTransactionViewModel
-        val getCardViewModel: CardViewModel by viewModels()
-        cardViewModel = getCardViewModel
-
-        saleFragment = SaleFragment(transactionViewModel, this, batchViewModel, cardViewModel, activationViewModel)
-        settingsFragment = SettingsFragment(this, activationViewModel)
-        triggerFragment = TriggerFragment(this)
-        postTxnFragment = PostTxnFragment(this, transactionViewModel, batchViewModel, cardViewModel, activationViewModel)
-
-        connectCardService() //connecting card service
     }
 
     /**
@@ -186,15 +218,20 @@ class MainActivity : TimeOutActivity() {
     private fun connectCardService() {
         var isCancelled = false
         //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
-        val timer: CountDownTimer = object : CountDownTimer(10000, 1000) {
+        val timer: CountDownTimer = object : CountDownTimer(30000, 1000) {
             override fun onTick(millisUntilFinished: Long) {}
             override fun onFinish() { //when it's finished, (after 10 seconds)
-                isCancelled = true //make isCancelled true (because cardService couldn't be connected)
-                showInfoDialog(InfoDialog.InfoType.Declined, "Connect Failed", false)
-                Handler(Looper.getMainLooper()).postDelayed({
-                    infoDialog?.dismiss()
-                    finish()
-                }, 2000)
+                isCancelled = true // make isCancelled true (because cardService couldn't be connected)
+                if (!cardServiceNotConnected){
+                    cardServiceNotConnected = true
+                    val infoDialog = showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.card_service_error), false)
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        infoDialog?.dismiss()
+                        connectCardService()
+                    }, 2000)
+                } else{
+                    connectCardService()
+                }
             }
         }
         timer.start()
@@ -204,30 +241,10 @@ class MainActivity : TimeOutActivity() {
             if (isConnected && !isCancelled) {
                 timer.cancel() // stop timer
                 cardServiceBinding = cardViewModel.getCardServiceBinding()
-                infoDialog?.dismiss()
                 setEMVConfiguration(true) //setEMVConfig when connected
-                cardServiceConnected()
+                Log.i("Connected","CardService")
             }
         }
-    }
-
-    private fun cardServiceConnected(){
-        tokenKMS = TokenKMS() //connecting KMS Service with this flow
-        tokenKMS.init(applicationContext, object : InitCallbacks {
-            override fun onInitSuccess() {
-                Log.i("Token KMS onInitSuccess", "KMS Init OK")
-                actionChanged(intent.action)
-            }
-
-            override fun onInitFailed() {
-                Log.i("Token KMS onInitFailed", "KMS Init Failed")
-                infoDialog = showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.kms_service_error), false)
-                Handler(Looper.getMainLooper()).postDelayed({
-                    infoDialog?.dismiss()
-                    finish()
-                }, 2000)
-            }
-        })
     }
 
     /**
