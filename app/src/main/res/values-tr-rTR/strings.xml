@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Application Template MVVM</string>
+    <string name="amount">Miktar</string>
+    <string name="reports">Raporlar</string>
+    <string name="please_wait">Lütfen Bekleyiniz</string>
+    <string name="approved">Onaylandı</string>
+    <string name="device_info">Cihaz Bilgisi</string>
+    <string name="qr_loading">QR Yükleniyor</string>
+    <string name="show_qr">QR Göster</string>
+    <string name="enter_pin">Lütfen Parolanızı Giriniz</string>
+    <string name="print_success">Başarılı Print</string>
+    <string name="print_error">Hatalı Print</string>
+
+    <string name="pos_operations">POS İşlemleri</string>
+    <string name="void_transaction">İptal</string>
+    <string name="refund">İade</string>
+    <string name="installment">Taksit</string>
+    <string name="matched_refund">Eşlenikli İade</string>
+    <string name="cash_refund">Peşin İade</string>
+    <string name="installment_refund">Taksitli İade</string>
+    <string name="loyalty_refund">Puan İade</string>
+    <string name="previous_batch_slip">Gün Sonu</string>
+    <string name="slip_menu">Slip Tekrarı</string>
+    <string name="sub_menu">Alt Menü</string>
+
+
+    <string name="original_amount">Orijinal Tutar</string>
+    <string name="refund_amount">İade Tutarı</string>
+    <string name="invalid_amount">Tutar Hatalı</string>
+    <string name="ref_no">Ref No</string>
+    <string name="ref_no_invalid_ten_digits">Ref No Hatalı (10 Hane)</string>
+    <string name="confirmation">Onay</string>
+    <string name="confirmation_code">Onay Kodu</string>
+    <string name="confirmation_code_invalid_six_digits">Onay Kodu Hatalı (6 Hane)</string>
+    <string name="tran_date">İşlem Tarihi</string>
+    <string name="tran_date_invalid">İşlem Tarihi Hatalı</string>
+
+    <string name="connecting">Bağlantı Kuruluyor…</string>
+    <string name="connect_failed">Kart Servis Hatası</string>
+    <string name="trans_successful">İşlem Başarılı</string>
+    <string name="printing_the_receipt">Slip Basılıyor</string>
+    <string name="preparing_the_receipt">Slip Hazırlanıyor</string>
+    <string name="batch_close_success">Grup Kapama Başarılı</string>
+    <string name="activating_template">Application Template Aktif Edilmeli!</string>
+
+    <string name="no_trans_found">İşlem Bulunamadı</string>
+    <string name="trans_not_found">İşlem Bulunamadı</string>
+    <string name="card_service_error">Kart Servis Hatası</string>
+    <string name="device_info_service_Error">Cihaz Bilgisi Servis Hatası</string>
+
+    <string name="examples">Örnekler</string>
+    <string name="batch_close">Grup Kapama</string>
+    <string name="batch_close_will_be_done">Grup Kapama Yapılacak</string>
+    <string name="batch_close_not_found">Gün Sonu Bulunamadı</string>
+    <string name="transaction_list">İşlem Listesi</string>
+
+    <string name="info_dialog">Bilgilendirme Ekranı</string>
+    <string name="confirmation_dialog">Onaylama Ekranı</string>
+    <string name="custom_input_list">Girdi Listesi</string>
+    <string name="success">Başarılı</string>
+
+    <string name="confirmed">Onaylandı</string>
+    <string name="warning">Uyarı</string>
+    <string name="info">Bilgi</string>
+    <string name="downloading">İndiriliyor..</string>
+    <string name="uploading">Karşıya Yükleniyor..</string>
+    <string name="processing">İşleniyor..</string>
+    <string name="progress">Yükleniyor..</string>
+    <string name="none">Hiçbiri</string>
+    <string name="cancelled">İptal Edildi</string>
+    <string name="error">Hata</string>
+    <string name="error_timeout">Zaman Aşımı</string>
+    <string name="declined">Reddedildi</string>
+    <string name="success_example">Başarılı</string>
+    <string name="cancelled_example">İptal Edildi</string>
+    <string name="error_example">Hata</string>
+    <string name="connecting_example">Bağlanılıyor..</string>
+    <string name="declined_example">Reddedildi</string>
+    <string name="confirmation_example">Onaylandı</string>
+    <string name="refund_info_not_found">İade Bilgisi Hatası</string>
+    <string name="offline_decline">Kart Numaraları Eşleşmedi</string>
+    <string name="config_updated">Config Dosyaları Güncellendi, Lütfen Banka Kurulumu Yapınız</string>
+
+    <string name="card_number">Kart Numarası</string>
+    <string name="invalid_card_number">Kart Numarası Hatalı</string>
+    <string name="expire_date">Son Kullanma Tarihi</string>
+    <string name="cvv">CVV</string>
+    <string name="date">Tarih</string>
+    <string name="time">Saat</string>
+    <string name="number">Numara</string>
+    <string name="password">Şifre</string>
+    <string name="num_password">Parola</string>
+    <string name="num_pad">Parola Giriş Ekranı</string>
+    <string name="new_text">Yeni Metin</string>
+    <string name="invalid_text">Maksimum Karakter: 10</string>
+
+    <string name="sale">Satış</string>
+    <string name="installment_sale">Taksitli Satış</string>
+    <string name="loyalty_sale">Puan Satış</string>
+    <string name="campaign_sale">Kampanya Satış</string>
+    <string name="sale_type">Satış Tipi</string>
+    <string name="please_read_qr">Lütfen QR Kodu Okutunuz</string>
+    <string name="waiting_qr_read">QR Kodun Okutulması Bekleniyor</string>
+
+    <string name="setup">Kurulum</string>
+    <string name="host_settings">Host Ayarları</string>
+    <string name="settings">Ayarlar</string>
+    <string name="invalid_ip">Geçersiz IP!</string>
+    <string name="invalid_port">Geçersiz Port!</string>
+    <string name="save">Kaydet</string>
+
+    <string name="merchant_no">İşyeri No:</string>
+    <string name="invalid_merchant_no">İşyeri No Geçersiz!</string>
+    <string name="terminal_no">Terminal No:</string>
+    <string name="invalid_terminal_no">Terminal No Geçersiz!</string>
+
+    <string name="print_functions">Print Fonksiyonları</string>
+    <string name="kms_service_error">KMS Servis Hatası</string>
+    <string name="setup_bank">Config Dosyaları Güncellendi, Lütfen Banka Kurulumu Yapınız</string>
+    <string name="starting_activation">Aktivasyon Başlatılıyor…</string>
+    <string name="activation_completed">Aktivasyon Tamamlandı</string>
+    <string name="parameter_loading">Parametre Yükleniyor…</string>
+    <string name="parameter_load_successful">Parametre Yüklemesi: Başarılı</string>
+    <string name="member_act_completed">Üye İşyeri Aktivasyonu: Başarılı</string>
+    <string name="rkl_loading">RKL Yükleniyor…</string>
+    <string name="rkl_loaded">RKL Yüklendi</string>
+    <string name="key_block_loading">Key Blok Yükleniyor…</string>
+
+</resources>

@@ -5,26 +5,23 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import com.token.uicomponents.ListMenuFragment.IAuthenticator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
+import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialog.InfoType
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.ui.examples.viewModels.InfoDialogViewModel
 
 /** It can be deleted
  * This fragment includes Info Dialog methods for example activity
  */
-class InfoDialogFragment : Fragment(R.layout.fragment_info_dialog) {
-
-    var exampleActivity: ExampleActivity? = null
-    private var viewModel = InfoDialogViewModel()
+class InfoDialogFragment(private val exampleFragment: ExampleFragment) : Fragment(R.layout.fragment_info_dialog) {
 
     class InfoDialogItem: IListMenuItem {
 
         var mType: InfoType
         var mText: String
-        var mListener: MenuItemClickListener<*>
-        var mAuthenticator: IAuthenticator? = null
+        private var mListener: MenuItemClickListener<*>
+        private var mAuthenticator: IAuthenticator? = null
 
         constructor(type: InfoType, text: String, listener: MenuItemClickListener<*>, authenticator: IAuthenticator?) {
             mType = type
@@ -51,25 +48,25 @@ class InfoDialogFragment : Fragment(R.layout.fragment_info_dialog) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prepareData()
-        viewModel.list = menuItems
-        viewModel.replaceFragment(exampleActivity!!)
+        val fragment = ListMenuFragment.newInstance(menuItems, exampleFragment.getStrings(R.string.info_dialog), false, R.drawable.token_logo_png)
+        exampleFragment.mainActivity.replaceFragment(fragment as Fragment)
     }
 
     private fun prepareData() {
         val listener = MenuItemClickListener<InfoDialogItem>{
                 item -> showPopup(item)
         }
-        menuItems.add(InfoDialogItem(InfoType.Confirmed, "Confirmed", listener, null))
-        menuItems.add(InfoDialogItem(InfoType.Warning, "Warning", listener, null))
-        menuItems.add(InfoDialogItem(InfoType.Error, "Error", listener, null))
-        menuItems.add(InfoDialogItem(InfoType.Info, "Info", listener, null))
-        menuItems.add(InfoDialogItem(InfoType.Declined, "Declined", listener, null))
-        menuItems.add(InfoDialogItem(InfoType.Connecting, "Connecting", listener, null))
-        menuItems.add(InfoDialogItem(InfoType.Downloading, "Downloading", listener, null))
-        menuItems.add(InfoDialogItem(InfoType.Uploading, "Uploading", listener, null))
-        menuItems.add(InfoDialogItem(InfoType.Processing, "Processing", listener, null))
-        menuItems.add(InfoDialogItem(InfoType.Progress, "Progress", listener, null))
-        menuItems.add(InfoDialogItem(InfoType.None, "None", listener, null))
+        menuItems.add(InfoDialogItem(InfoType.Confirmed, exampleFragment.getStrings(R.string.confirmed), listener, null))
+        menuItems.add(InfoDialogItem(InfoType.Warning, exampleFragment.getStrings(R.string.warning), listener, null))
+        menuItems.add(InfoDialogItem(InfoType.Error, exampleFragment.getStrings(R.string.error), listener, null))
+        menuItems.add(InfoDialogItem(InfoType.Info, exampleFragment.getStrings(R.string.info), listener, null))
+        menuItems.add(InfoDialogItem(InfoType.Declined, exampleFragment.getStrings(R.string.declined), listener, null))
+        menuItems.add(InfoDialogItem(InfoType.Connecting, exampleFragment.getStrings(R.string.connecting), listener, null))
+        menuItems.add(InfoDialogItem(InfoType.Downloading, exampleFragment.getStrings(R.string.downloading), listener, null))
+        menuItems.add(InfoDialogItem(InfoType.Uploading, exampleFragment.getStrings(R.string.uploading), listener, null))
+        menuItems.add(InfoDialogItem(InfoType.Processing, exampleFragment.getStrings(R.string.processing), listener, null))
+        menuItems.add(InfoDialogItem(InfoType.Progress, exampleFragment.getStrings(R.string.progress), listener, null))
+        menuItems.add(InfoDialogItem(InfoType.None, exampleFragment.getStrings(R.string.none), listener, null))
     }
 
     private fun showPopup(item: InfoDialogItem) {

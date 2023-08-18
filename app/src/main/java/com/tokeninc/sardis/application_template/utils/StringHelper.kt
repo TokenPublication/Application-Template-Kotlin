@@ -74,7 +74,27 @@ class StringHelper {
     /**
      * It generates approval code
      */
-    fun generateApprovalCode(BatchNo: String, TransactionNo: String, SaleID: String): String? {
+    fun generateApprovalCode(BatchNo: String, TransactionNo: String, SaleID: String): String {
         return BatchNo + TransactionNo + SaleID
+    }
+
+    fun getInstAmount(amount: Int): String {
+        var str = amount.toString()
+        if (str.length == 1) str = "00$str" else if (str.length == 2) str = "0$str"
+        val s1 = str.substring(0, str.length - 2)
+        val s2 = str.substring(str.length - 2)
+        return "$s1,$s2"
+    }
+
+    /**
+     * This method ensures length of random generated numbers is requested length.
+     */
+    fun addZeros(number: String, length: Int): String{
+        val iterator = length - number.length
+        var numb = number
+        for (i in 1..iterator) {
+            numb = "0$numb"
+        }
+        return numb
     }
 }

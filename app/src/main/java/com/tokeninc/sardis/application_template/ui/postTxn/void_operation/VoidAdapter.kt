@@ -5,10 +5,10 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.tokeninc.sardis.application_template.ui.postTxn.PostTxnFragment
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.utils.StringHelper
 
 /**
@@ -18,7 +18,7 @@ class VoidAdapter(private val transactionList: MutableList<Transaction?>): Recyc
 
     inner class TransactionViewHolder(val binding: TransactionItemsBinding): RecyclerView.ViewHolder(binding.root)
 
-    var postTxnFragment: PostTxnFragment? = null
+    lateinit var voidFragment: VoidFragment
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -34,14 +34,14 @@ class VoidAdapter(private val transactionList: MutableList<Transaction?>): Recyc
         val hb = holder.binding
         hb.textCardNo.text = StringHelper().maskTheCardNo(transaction!!.Col_PAN)
         hb.textDate.text = transaction.Col_TranDate
-        if (transaction.Col_TransCode == 4 || transaction.Col_TransCode == 6)
-            hb.textAmount.text = StringHelper().getAmount(transaction.Col_Amount2)
+        if (transaction.Col_TransCode == TransactionCode.MATCHED_REFUND.type || transaction.Col_TransCode == TransactionCode.INSTALLMENT_REFUND.type)
+            hb.textAmount.text = StringHelper().getAmount(transaction.Col_Amount2!!)
         else
             hb.textAmount.text = StringHelper().getAmount(transaction.Col_Amount)
         hb.textApprovalCode.text = transaction.Col_AuthCode
         hb.tvSN.text = transaction.Col_GUP_SN.toString()
         holder.itemView.setOnClickListener {
-            postTxnFragment!!.voidOperation(transaction)
+            voidFragment.doVoid(transaction)
             Log.d("RecyclerView/onClick","ContentVal: $transaction ")
         }
     }

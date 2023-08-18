@@ -22,6 +22,6 @@
             android:adapter="@{adapter}" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-    
-    
+
+
 </layout>

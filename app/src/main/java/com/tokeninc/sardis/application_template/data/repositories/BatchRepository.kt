@@ -8,7 +8,13 @@ import com.token.printerlib.PrinterService
 import com.token.printerlib.StyledString
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.batch.BatchDao
-import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
+import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
+import com.tokeninc.sardis.application_template.data.model.responses.BatchCloseResponse
+import com.tokeninc.sardis.application_template.data.model.resultCode.BatchResult
+import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
+import com.tokeninc.sardis.application_template.utils.printHelpers.BatchClosePrintHelper
+import java.text.SimpleDateFormat
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -19,20 +25,29 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
     fun getBatchNo() = batchDao.getBatchNo()
     fun getSTN() = batchDao.getSTN()
     fun getPreviousBatchSlip(): LiveData<String?> = batchDao.getBatchPreviousSlip()
-    suspend fun updateBatchNo(batchNo: Int){
-        batchDao.updateBatchNo(batchNo)
+    suspend fun updateBatchNo(){
+        batchDao.updateBatchNo()
     }
 
-    suspend fun updateBatchSlip(batchSlip: String?,batchNo: Int?){
-        batchDao.updateBatchSlip(batchSlip, batchNo)
+    suspend fun updateBatchSlip(batchSlip: String?){
+        batchDao.updateBatchSlip(batchSlip)
     }
 
-    suspend fun updateGUPSN(groupSn: Int){
-        batchDao.updateGUPSN(groupSn)
+    suspend fun updateGUPSN(){
+        batchDao.updateGUPSN()
     }
 
     suspend fun updateSTN(){
         batchDao.updateSTN()
+    }
+
+    fun prepareSlip(mainActivity: MainActivity, activationViewModel: ActivationViewModel, transactionList: List<Transaction?>?, isCopy: Boolean, isBatch: Boolean = true): String {
+        return BatchClosePrintHelper().batchText(getBatchNo().toString(),transactionList!!, mainActivity, activationViewModel, isCopy, isBatch)
+    }
+
+    fun prepareResponse(batchResult: BatchResult): BatchCloseResponse{
+        val date = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
+        return BatchCloseResponse(batchResult,date)
     }
 
     /**

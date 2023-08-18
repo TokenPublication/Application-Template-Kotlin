@@ -10,9 +10,9 @@ interface TransactionDao {
     suspend fun insertTransaction(transaction: Transaction)
 
     @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} WHERE ${TransactionCols.Col_PAN} = :cardNo AND ${TransactionCols.Col_IsVoid} <> 1 ORDER BY  ${TransactionCols.Col_GUP_SN} ASC")
-    fun getTransactionsByCardNo(cardNo: String): List<Transaction?>?
+    fun getTransactionsByCardNo(cardNo: String): List<Transaction?>
 
-    @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} WHERE ${TransactionCols.Col_HostLogKey} = :refNo")
+    @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} WHERE ${TransactionCols.Col_RefNo} = :refNo")
     fun getTransactionsByRefNo(refNo: String): List<Transaction?>?
 
     @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} WHERE ${TransactionCols.Col_UUID} = :uuid")

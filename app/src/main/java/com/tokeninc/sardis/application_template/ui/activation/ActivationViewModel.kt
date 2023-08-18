@@ -1,15 +1,10 @@
 package com.tokeninc.sardis.application_template.ui.activation
 
-import android.util.Log
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.token.uicomponents.ListMenuFragment.IListMenuItem
-import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -27,30 +22,20 @@ import javax.inject.Inject
 @HiltViewModel
 class ActivationViewModel @Inject constructor(val activationRepository: ActivationRepository): ViewModel() {
 
-    val merchantID = activationRepository.merchantID
-    val terminalID = activationRepository.terminalID
-    val hostIP = activationRepository.hostIP
-    val hostPort = activationRepository.hostPort
+    fun merchantID() = activationRepository.merchantID()
+    fun terminalID() = activationRepository.terminalID()
+    fun hostIP() = activationRepository.hostIP()
+    fun hostPort() = activationRepository.hostPort()
 
-    var menuItemList = mutableListOf<IListMenuItem>()
-
-    fun replaceFragment(mainActivity: MainActivity){
-        val menuFragment = ListMenuFragment.newInstance(menuItemList,"Settings",
-            true, R.drawable.token_logo_png)
-        viewModelScope.launch(Dispatchers.Main) {
-            mainActivity.replaceFragment(menuFragment as Fragment)
+    fun updateActivation(terminalId: String?, merchantId: String?){
+        viewModelScope.launch(Dispatchers.IO){
+            activationRepository.updateActivation(terminalId,merchantId)
         }
     }
 
-    fun updateActivation(terminalId: String?, merchantId: String?, ip: String?){
+    fun updateConnection(ip: String?, port: String?){
         viewModelScope.launch(Dispatchers.IO){
-            activationRepository.updateActivation(terminalId,merchantId,ip)
-        }
-    }
-
-    fun updateConnection(ip: String?, port: String?, old_ip: String?){
-        viewModelScope.launch(Dispatchers.IO){
-            activationRepository.updateConnection(ip,port,old_ip)
+            activationRepository.updateConnection(ip,port)
         }
     }
 
@@ -74,9 +59,9 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     /**
      * This is for not repeating each uiState again.
      */
-    private suspend fun updateUIState(uistate: UIState){
+    private suspend fun updateUIState(ui_state: UIState){
         coroutineScope.launch(Dispatchers.Main) { //update UI in a dummy way
-            uiState.postValue(uistate)
+            uiState.postValue(ui_state)
         }
         delay(2000L)
     }
@@ -88,7 +73,6 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
         coroutineScope.launch {
             updateUIState(UIState.Starting)
             withContext(Dispatchers.IO){
-                Log.d("WithContextThread: ",Thread.currentThread().name)
                 mainActivity.setEMVConfiguration(false)
             }
             updateUIState(UIState.ParameterUploading)

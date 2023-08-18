@@ -1,6 +1,4 @@
-package com.tokeninc.sardis.application_template.data.entities.card_entities
-
-import com.tokeninc.sardis.application_template.enums.CardServiceResult
+package com.tokeninc.sardis.application_template.data.model.card
 
 class MSRCard: ICard {
     override var resultCode: Int = CardServiceResult.USER_CANCELLED.resultCode()

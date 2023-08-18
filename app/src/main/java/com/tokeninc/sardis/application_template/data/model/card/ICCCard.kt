@@ -1,6 +1,4 @@
-package com.tokeninc.sardis.application_template.data.entities.card_entities
-
-import com.tokeninc.sardis.application_template.enums.CardServiceResult
+package com.tokeninc.sardis.application_template.data.model.card
 
 /**
  * This is a class for keeping ICC card data.
@@ -14,6 +12,7 @@ class ICCCard: ICard {
     var mTranAmount1 = 0
     var ownerName: String? = null
     var CardSeqNum: String? = null
+    var dateTime: String? = null
     var AC: String? = null
     var CID: String? = null
     var ATC: String? = null
