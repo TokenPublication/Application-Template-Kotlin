@@ -4,8 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
+import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,11 +69,11 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     /** It runs functions in parallel while ui updating dynamically in main thread
      * Additionally, in IO coroutine thread make setEMVConfiguration method
      */
-    suspend fun setupRoutine(mainActivity: MainActivity) {
+    suspend fun setupRoutine(cardViewModel: CardViewModel) {
         coroutineScope.launch {
             updateUIState(UIState.Starting)
             withContext(Dispatchers.IO){
-                mainActivity.setEMVConfiguration(false)
+                cardViewModel.setEMVConfiguration()
             }
             updateUIState(UIState.ParameterUploading)
             updateUIState(UIState.MemberActCompleted)

@@ -177,7 +177,6 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                     uiState.postValue(UIState.Success("Transaction is Successful"))
                 }
             }
-            val kmsService = mainActivity.tokenKMS //to use it later
             val transaction: Transaction =
                 if (transactionCode == TransactionCode.VOID.type){
                     ContentValHelper().getTransaction(extraContent!!)

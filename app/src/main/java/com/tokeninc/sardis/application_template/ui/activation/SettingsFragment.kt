@@ -17,6 +17,7 @@ import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
+import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
 import kotlinx.coroutines.CoroutineScope
@@ -28,7 +29,8 @@ import org.apache.commons.lang3.StringUtils
  * This fragment is for Setting Configuration, it depends on Activation Database
  */
 class SettingsFragment(private val mainActivity: MainActivity,
-                       private val activationViewModel: ActivationViewModel) : Fragment() {
+                       private val activationViewModel: ActivationViewModel,
+                       private val cardViewModel: CardViewModel) : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
@@ -105,7 +107,7 @@ class SettingsFragment(private val mainActivity: MainActivity,
     }
     private fun startActivation(){
         CoroutineScope(Dispatchers.Default).launch {
-            activationViewModel.setupRoutine(mainActivity)
+            activationViewModel.setupRoutine(cardViewModel)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Processing, mainActivity.getString(R.string.starting_activation), false)
         activationViewModel.getUiState().observe(mainActivity) { state ->

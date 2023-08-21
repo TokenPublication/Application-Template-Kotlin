@@ -2,7 +2,6 @@ package com.tokeninc.sardis.application_template
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
@@ -23,8 +22,6 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.BuildConfig
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.deviceinfo.DeviceInfo
-import com.tokeninc.libtokenkms.KMSWrapperInterface.InitCallbacks
-import com.tokeninc.libtokenkms.TokenKMS
 import com.tokeninc.sardis.application_template.*
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
@@ -40,13 +37,12 @@ import com.tokeninc.sardis.application_template.ui.postTxn.void_operation.VoidFr
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.SaleFragment
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
+import com.tokeninc.sardis.application_template.ui.service.ServiceViewModel
 import com.tokeninc.sardis.application_template.ui.trigger.TriggerFragment
 import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.util.*
 
 
@@ -65,18 +61,11 @@ class MainActivity : TimeOutActivity() {
     private lateinit var batchViewModel: BatchViewModel
     private lateinit var transactionViewModel: TransactionViewModel
     private lateinit var cardViewModel: CardViewModel
+    private lateinit var serviceViewModel: ServiceViewModel
     private lateinit var settingsFragment: SettingsFragment
     private lateinit var saleFragment: SaleFragment
     private lateinit var triggerFragment: TriggerFragment
     private lateinit var postTxnFragment: PostTxnFragment
-
-    //initializing other variables
-    var infoDialog: InfoDialog? = null
-    lateinit var tokenKMS: TokenKMS
-
-    private var deviceInfoConnected = false
-    private var kmsServiceConnected = false
-    private var cardServiceNotConnected = false
 
     /**
      * This function is overwritten to continue the activity where it was left when
@@ -103,7 +92,6 @@ class MainActivity : TimeOutActivity() {
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-        infoDialog = showInfoDialog(InfoDialog.InfoType.Connecting, getString(R.string.connecting), false)
 
         //get ViewModels from Dagger-Hilt easily, but to make this easy you need to implement each dependency clearly
         val getActivationViewModel: ActivationViewModel by viewModels()
@@ -114,41 +102,50 @@ class MainActivity : TimeOutActivity() {
         transactionViewModel = getTransactionViewModel
         val getCardViewModel: CardViewModel by viewModels()
         cardViewModel = getCardViewModel
+        val getServiceViewModel: ServiceViewModel by viewModels()
+        serviceViewModel = getServiceViewModel
 
         saleFragment = SaleFragment(transactionViewModel, this, batchViewModel, cardViewModel, activationViewModel)
-        settingsFragment = SettingsFragment(this, activationViewModel)
+        settingsFragment = SettingsFragment(this, activationViewModel,cardViewModel)
         triggerFragment = TriggerFragment(this)
         postTxnFragment = PostTxnFragment(this, transactionViewModel, batchViewModel, cardViewModel, activationViewModel)
 
         buildConfigs()
-        setDeviceInfo()
-        connectKMSService()
-        connectCardService()
+        connectServices()
     }
 
-
-    private fun connectKMSService(){
-        tokenKMS = TokenKMS() //connecting KMS Service with this flow
-        tokenKMS.init(applicationContext, object : InitCallbacks {
-            override fun onInitSuccess() {
-                Log.i("Token KMS onInitSuccess", "KMS Init OK")
-                kmsServiceConnected = true
-                Log.i("Connected","KMS")
-                if (deviceInfoConnected) {
-                    infoDialog!!.dismiss()
+    /**
+     * This function calls serviceRoutine, which firstly connects DeviceInfo service, then KMS service
+     * After it connects these two services successfully, it calls connecting Card Service and without waiting connecting
+     * card service it updates the UI with respect to action mainActivity has. It tries to connect cardService on background
+     * If it couldn't connect KMS or deviceInfo services, it warns the user then finishes the mainActivity
+     */
+    private fun connectServices(){
+        serviceViewModel.serviceRoutine(this)
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,getString(R.string.connect_services),false)
+        serviceViewModel.getUiState().observe(this) { state ->
+            when (state) {
+                is ServiceViewModel.ServiceUIState.ErrorDeviceInfo -> {
+                    dialog.update(InfoDialog.InfoType.Error, getString(R.string.device_info_service_Error))
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        dialog.dismiss()
+                        finish()
+                    }, 2000)
+                }
+                is ServiceViewModel.ServiceUIState.ErrorKMS -> {
+                    dialog.update(InfoDialog.InfoType.Error, getString(R.string.kms_service_error))
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        dialog.dismiss()
+                        finish()
+                    }, 2000)
+                }
+                is ServiceViewModel.ServiceUIState.Connected -> {
+                    dialog.dismiss()
+                    connectCardService()
                     actionChanged(intent.action)
                 }
             }
-
-            override fun onInitFailed() {
-                Log.i("Token KMS onInitFailed", "KMS Init Failed")
-                infoDialog = showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.kms_service_error), false)
-                Handler(Looper.getMainLooper()).postDelayed({
-                    infoDialog?.dismiss()
-                    finish()
-                }, 2000)
-            }
-        })
+        }
     }
 
     /**
@@ -166,52 +163,6 @@ class MainActivity : TimeOutActivity() {
     }
 
     /**
-     * This method for setting Device Info parameters like FiscalID, cardRedirection or deviceMode.
-     * It has timer, so if application cannot get information in 30 seconds, it shows a dialog and
-     * finishes activity. Else, cancel the timer and continue.
-     */
-    private fun setDeviceInfo() {
-        val appTemp = applicationContext as AppTemp
-        val deviceInfo = DeviceInfo(applicationContext)
-        val timer: CountDownTimer = object : CountDownTimer(30000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {}
-            override fun onFinish() {
-                infoDialog = showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.device_info_service_Error), false)
-                Handler(Looper.getMainLooper()).postDelayed({
-                    infoDialog!!.dismiss()
-                    finish()
-                }, 2000)
-            }
-        }
-        timer.start()
-        deviceInfo.getFields(
-            { fields: Array<String?>? ->
-                if (fields == null) {
-                    infoDialog = showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.device_info_service_Error), false)
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        infoDialog!!.dismiss()
-                        finish()
-                    }, 2000)
-                }
-                appTemp.setCurrentFiscalID(fields!![0])
-                appTemp.setCurrentDeviceMode(fields[1]!!)
-                appTemp.setCurrentCardRedirection(fields[2]!!)
-                deviceInfo.unbind()
-                timer.cancel()
-                deviceInfoConnected = true
-                Log.i("Connected","Device Info")
-                if (kmsServiceConnected) {
-                    infoDialog!!.dismiss()
-                    actionChanged(intent.action)
-                }
-            },
-            DeviceInfo.Field.FISCAL_ID,
-            DeviceInfo.Field.OPERATION_MODE,
-            DeviceInfo.Field.CARD_REDIRECTION
-        )
-    }
-
-    /**
      * This function is called whenever cardService is required.
      * If it couldn't connect to the card service after 10 seconds, it shows a dialog and finishes to the mainActivity.
      */
@@ -222,16 +173,12 @@ class MainActivity : TimeOutActivity() {
             override fun onTick(millisUntilFinished: Long) {}
             override fun onFinish() { //when it's finished, (after 10 seconds)
                 isCancelled = true // make isCancelled true (because cardService couldn't be connected)
-                if (!cardServiceNotConnected){
-                    cardServiceNotConnected = true
-                    val infoDialog = showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.card_service_error), false)
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        infoDialog?.dismiss()
-                        connectCardService()
-                    }, 2000)
-                } else{
-                    connectCardService()
-                }
+                Log.i("CardService","Not connected")
+                val infoDialog = showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.card_service_error), false)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    infoDialog?.dismiss()
+                    finish()
+                }, 2000)
             }
         }
         timer.start()
@@ -241,7 +188,11 @@ class MainActivity : TimeOutActivity() {
             if (isConnected && !isCancelled) {
                 timer.cancel() // stop timer
                 cardServiceBinding = cardViewModel.getCardServiceBinding()
-                setEMVConfiguration(true) //setEMVConfig when connected
+                cardViewModel.getToastMessage().observe(this){//if it has message show them with toast
+                    Toast.makeText(this,it,Toast.LENGTH_LONG).show()
+                    // In multi banking pgw, at first installation it always shows Toast until mainActivity finishes; thus it should be reset
+                    cardViewModel.resetToastMessage()
+                }
                 Log.i("Connected","CardService")
             }
         }
@@ -476,84 +427,6 @@ class MainActivity : TimeOutActivity() {
         styledText.addStyledText(printText)
         styledText.finishPrintingProcedure()
         styledText.print(PrinterService.getService(applicationContext))
-    }
-
-
-    /**
-     * This function only works in installation, it calls setConfig and setCLConfig
-     * It also called from onCardServiceConnected method of Card Service Library, if Configs couldn't set in first_run
-     * (it is checked from sharedPreferences), again it setConfigurations, else do nothing.
-     */
-    fun setEMVConfiguration(fromCardService: Boolean) {
-        val sharedPreference = getSharedPreferences("myprefs", Context.MODE_PRIVATE)
-        val editor = sharedPreference.edit()
-        val firstTimeBoolean = sharedPreference.getBoolean("FIRST_RUN", false)
-        if (!firstTimeBoolean) {
-            if (fromCardService) {
-                Toast.makeText(
-                    applicationContext,
-                    getString(R.string.config_updated),
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-            setConfig()
-            setCLConfig()
-            editor.putBoolean("FIRST_RUN", true)
-            Log.d("setEMVConfiguration", "ok")
-            editor.apply()
-        }
-    }
-
-    /**
-     * It sets Config.xml
-     */
-    private fun setConfig() {
-        try {
-            val xmlStream = applicationContext.assets.open("emv_config.xml")
-            val r = BufferedReader(InputStreamReader(xmlStream))
-            val total = StringBuilder()
-            var line: String? = r.readLine()
-            while (line != null) {
-                Log.d("emv_config", "conf line: $line")
-                total.append(line).append('\n')
-                line = r.readLine()
-            }
-            val setConfigResult = cardServiceBinding!!.setEMVConfiguration(total.toString())
-            Toast.makeText(
-                applicationContext,
-                "setEMVConfiguration res=$setConfigResult",
-                Toast.LENGTH_SHORT
-            ).show()
-            Log.i("emv_config", "setEMVConfiguration: $setConfigResult")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    /**
-     * It sets cl_config.xml
-     */
-    private fun setCLConfig() {
-        try {
-            val xmlCLStream = applicationContext.assets.open("emv_cl_config.xml")
-            val rCL = BufferedReader(InputStreamReader(xmlCLStream))
-            val totalCL = java.lang.StringBuilder()
-            var line: String? = rCL.readLine()
-            while (line != null) {
-                Log.d("emv_config", "conf line: $line")
-                totalCL.append(line).append('\n')
-                line = rCL.readLine()
-            }
-            val setCLConfigResult: Int =
-                cardServiceBinding!!.setEMVCLConfiguration(totalCL.toString())
-            Toast.makeText(
-                applicationContext,
-                "setEMVCLConfiguration res=$setCLConfigResult", Toast.LENGTH_SHORT
-            ).show()
-            Log.i("emv_config", "setEMVCLConfiguration: $setCLConfigResult")
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
     }
 
     /**

@@ -1,11 +1,13 @@
 package com.tokeninc.sardis.application_template.data.repositories
+import android.content.Context
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
+import com.tokeninc.sardis.application_template.MainActivity
+import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
 import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
@@ -14,6 +16,8 @@ import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.data.model.type.EmvProcessType
 import org.json.JSONException
 import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import javax.inject.Inject
 
 /**
@@ -27,6 +31,7 @@ class CardRepository @Inject constructor() :
     private var transactionCode = 0
 
     private var callBackMessage = MutableLiveData<ResponseCode>()
+    private lateinit var mainActivity: MainActivity
     fun getCallBackMessage(): LiveData<ResponseCode> {
         return callBackMessage
     }
@@ -54,7 +59,8 @@ class CardRepository @Inject constructor() :
 
     private var cardServiceBinding: CardServiceBinding? = null
 
-    fun cardServiceBinder(activity: AppCompatActivity) {
+    fun cardServiceBinder(activity: MainActivity) {
+        mainActivity = activity
         cardServiceBinding = CardServiceBinding(activity, this)
     }
 
@@ -176,6 +182,7 @@ class CardRepository @Inject constructor() :
      */
     override fun onCardServiceConnected() {
         isCardServiceConnected.postValue(true)
+        setEMVConfiguration(true)
     }
 
     fun getCardServiceBinding(): CardServiceBinding? {
@@ -184,4 +191,77 @@ class CardRepository @Inject constructor() :
 
     override fun onPinReceived(s: String) {}
     override fun onICCTakeOut() {}
+
+    var toastMessage = MutableLiveData<String>()
+    fun getToastMessage(): LiveData<String> {
+        return toastMessage
+    }
+
+
+    /**
+     * This function only works in installation, it calls setConfig and setCLConfig
+     * It also called from onCardServiceConnected method of Card Service Library, if Configs couldn't set in first_run
+     * (it is checked from sharedPreferences), again it setConfigurations, else do nothing.
+     */
+    fun setEMVConfiguration(fromCardService: Boolean) {
+        val sharedPreference = mainActivity.getSharedPreferences("myprefs", Context.MODE_PRIVATE)
+        val editor = sharedPreference.edit()
+        val firstTimeBoolean = sharedPreference.getBoolean("FIRST_RUN", false)
+        if (!firstTimeBoolean) {
+            Log.i("FIRST_RUN","Girdi")
+            if (fromCardService) {
+                toastMessage.postValue(mainActivity.getString(R.string.config_updated))
+            }
+            setConfig()
+            setCLConfig()
+            editor.putBoolean("FIRST_RUN", true)
+            Log.d("setEMVConfiguration", "ok")
+            editor.apply()
+        }
+    }
+
+    /**
+     * It sets Config.xml
+     */
+    private fun setConfig() {
+        try {
+            val xmlStream = mainActivity.assets.open("emv_config.xml")
+            val r = BufferedReader(InputStreamReader(xmlStream))
+            val total = StringBuilder()
+            var line: String? = r.readLine()
+            while (line != null) {
+                Log.d("emv_config", "conf line: $line")
+                total.append(line).append('\n')
+                line = r.readLine()
+            }
+            val setConfigResult = cardServiceBinding!!.setEMVConfiguration(total.toString())
+            toastMessage.postValue("setEMVConfiguration res=$setConfigResult")
+            Log.i("emv_config", "setEMVConfiguration: $setConfigResult")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    /**
+     * It sets cl_config.xml
+     */
+    private fun setCLConfig() {
+        try {
+            val xmlCLStream = mainActivity.assets.open("emv_cl_config.xml")
+            val rCL = BufferedReader(InputStreamReader(xmlCLStream))
+            val totalCL = java.lang.StringBuilder()
+            var line: String? = rCL.readLine()
+            while (line != null) {
+                Log.d("emv_config", "conf line: $line")
+                totalCL.append(line).append('\n')
+                line = rCL.readLine()
+            }
+            val setCLConfigResult: Int = cardServiceBinding!!.setEMVCLConfiguration(totalCL.toString())
+            toastMessage.postValue("setEMVCLConfiguration res=$setCLConfigResult")
+            Log.i("emv_config", "setEMVCLConfiguration: $setCLConfigResult")
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
+    }
+
 }
