@@ -1,9 +1,10 @@
 package com.tokeninc.sardis.application_template.ui.sale
 
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.tokeninc.cardservicebinding.CardServiceBinding
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.data.repositories.CardRepository
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
@@ -25,8 +26,19 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
 
     fun onDestroyed(){ cardRepository.onDestroyed()}
 
-    fun initializeCardServiceBinding(activity: AppCompatActivity) {
+    fun initializeCardServiceBinding(activity: MainActivity) {
         cardRepository.cardServiceBinder(activity)
+    }
+
+    fun setEMVConfiguration(){
+        cardRepository.setEMVConfiguration(false)
+    }
+
+    fun getToastMessage(): LiveData<String> {
+        return cardRepository.getToastMessage()
+    }
+    fun resetToastMessage() {
+        cardRepository.toastMessage = MutableLiveData<String>()
     }
 
     fun readCard(amount: Int, transactionCode: Int) { cardRepository.readCard(amount,transactionCode) }

@@ -136,5 +136,7 @@
     <string name="rkl_loading">RKL Loading</string>
     <string name="rkl_loaded">RKL Loaded</string>
     <string name="key_block_loading">Key Block Loading</string>
+    <string name="connect_services">Connecting to Services…</string>
+
 
 </resources>

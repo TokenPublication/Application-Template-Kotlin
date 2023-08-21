@@ -8,6 +8,7 @@ import com.tokeninc.sardis.application_template.ui.activation.ActivationViewMode
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
+import com.tokeninc.sardis.application_template.ui.service.ServiceViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,4 +46,9 @@ object ViewModelModule {
     @ViewModelScoped
     fun provideCardViewModel(repository: CardRepository): CardViewModel =
         CardViewModel(repository)
+
+    @Provides
+    @ViewModelScoped
+    fun provideServiceViewModel(): ServiceViewModel =
+        ServiceViewModel()
 }

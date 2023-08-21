@@ -126,5 +126,6 @@
     <string name="rkl_loading">RKL Yükleniyor…</string>
     <string name="rkl_loaded">RKL Yüklendi</string>
     <string name="key_block_loading">Key Blok Yükleniyor…</string>
+    <string name="connect_services">Servislere Bağlanılıyor…</string>
 
 </resources>
