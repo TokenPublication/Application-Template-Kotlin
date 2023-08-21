@@ -208,7 +208,6 @@ class CardRepository @Inject constructor() :
         val editor = sharedPreference.edit()
         val firstTimeBoolean = sharedPreference.getBoolean("FIRST_RUN", false)
         if (!firstTimeBoolean) {
-            Log.i("FIRST_RUN","Girdi")
             if (fromCardService) {
                 toastMessage.postValue(mainActivity.getString(R.string.config_updated))
             }
