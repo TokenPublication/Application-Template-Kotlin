@@ -16,14 +16,15 @@ import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentPostTxnBinding
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
-import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import com.tokeninc.sardis.application_template.ui.examples.ExampleFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.ui.postTxn.demoMode.DemoFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.refund.RefundFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.slip.SlipFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.void_operation.VoidFragment
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
+import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -92,6 +93,11 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             val slipFragment = SlipFragment(mainActivity,activationViewModel,transactionViewModel,batchViewModel)
             mainActivity.addFragment(slipFragment)
         }))
+        menuItems.add(MenuItem(getString(R.string.demo_mode), {
+            val demoFragment = DemoFragment(mainActivity)
+            mainActivity.addFragment(demoFragment)
+        }))
+
         val menuFragment = ListMenuFragment.newInstance(menuItems,"PostTxn", true, R.drawable.token_logo_png)
         mainActivity.replaceFragment(menuFragment as Fragment)
     }

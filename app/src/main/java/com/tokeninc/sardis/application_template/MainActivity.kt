@@ -259,11 +259,16 @@ class MainActivity : TimeOutActivity() {
         // get the amount from sale intent, and assign amount to corresponding classes
         val amount = intent.extras!!.getInt("Amount")
         saleFragment.setAmount(amount)
+
         //controlling whether the request coming from gib
-        replaceFragment(saleFragment)
-        val bundle = intent.extras
         val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.GIB.name
+        val bundle = intent.extras
         val cardData: String? = bundle?.getString("CardData")
+
+        // controlling whether demoMode is enabled (open)
+        val sharedPreferences = getSharedPreferences("myprefs", MODE_PRIVATE)
+        val isDemoMode = sharedPreferences.getBoolean("demo_mode", false)
+
         // when sale operation is called from pgw which has multi bank and app temp is the only issuer of this card
         if (!isGIB && cardData != null && cardData != "CardData" && cardData != " ") {
             //replaceFragment(saleFragment)
@@ -271,12 +276,23 @@ class MainActivity : TimeOutActivity() {
                 saleFragment.doSale(cardData)
             }, 500)
         }
+
         // when sale request comes from GIB
         else if (intent.extras != null) {
             val cardReadType = intent.extras!!.getInt("CardReadType")
             if (cardReadType == CardReadType.ICC.type) {
                 cardViewModel.setGibSale(true)
                 saleFragment.cardReader(true)
+            }
+            else{ // it couldn't enter here if it is a gib sale because intent doesn't include cardReadType because
+                // card wouldn't be read before enter the application template in a normal scenerio
+                // when app temp is only banking app or user selects app temp for sale
+                if (isDemoMode){
+                    replaceFragment(saleFragment)
+                }
+                else{
+                    saleFragment.cardReader(false)
+                }
             }
         }
     }
