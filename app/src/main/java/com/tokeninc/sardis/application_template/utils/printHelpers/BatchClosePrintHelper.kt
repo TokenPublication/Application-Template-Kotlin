@@ -1,10 +1,12 @@
 package com.tokeninc.sardis.application_template.utils.printHelpers
 
+import android.util.Log
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
 
@@ -51,13 +53,17 @@ class BatchClosePrintHelper: BasePrintHelper() {
                 6 -> transactionType = "T. İADE "
             }
             if (it.Col_IsVoid == 1){
-                transactionType += "İPTALİ "
+                transactionType = "İPTAL "
             }
             addText(styledText,transactionType+it.Col_GUP_SN, PrinterDefinitions.Alignment.Right)
             addTextToNewLine(styledText,stringHelper.maskTheCardNo(it.Col_PAN),PrinterDefinitions.Alignment.Left)
             addText(styledText,it.Col_ExpDate,PrinterDefinitions.Alignment.Right)
             addTextToNewLine(styledText,it.Col_RefNo,PrinterDefinitions.Alignment.Left)
-            val amount = it.Col_Amount
+            val amount = if (it.Col_TransCode == TransactionCode.INSTALLMENT_REFUND.type || it.Col_TransCode == TransactionCode.MATCHED_REFUND.type){
+                it.Col_Amount2!!
+            } else{
+                it.Col_Amount
+            }
             totalAmount += amount
             addText(styledText,stringHelper.getAmount(amount),PrinterDefinitions.Alignment.Right)
             styledText.newLine()

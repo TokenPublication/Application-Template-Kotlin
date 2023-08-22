@@ -47,6 +47,10 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         transactionDao.setVoid(gupSN,date,card_SID)
     }
 
+    fun isEmpty(): Boolean{
+        return (transactionDao.getCount() == 0)
+    }
+
     suspend fun deleteAll(){
         transactionDao.deleteAll()
     }
@@ -186,9 +190,9 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
                 if (transactionResponse.responseCode == ResponseCode.SUCCESS){
                     val printHelper = TransactionPrintHelper()
                     bundle.putString("customerSlipData", printHelper.getFormattedText( receipt,
-                        SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, Bundle(), transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false))
+                        SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false))
                     bundle.putString("merchantSlipData", printHelper.getFormattedText( receipt,
-                        SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, Bundle(), transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false))
+                        SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false))
                     bundle.putString("RefundInfo", getRefundInfo(ContentValHelper().getTransaction(transactionResponse.contentVal!!),card,receipt))
                     if(transactionResponse.contentVal != null) {
                         bundle.putString("RefNo", transactionResponse.contentVal!!.getAsString(
@@ -238,8 +242,8 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
                                 zNO: String?, receiptNo: Int?): Intent{
         Log.d("TransactionResponse/Refund", "responseCode:${transactionResponse.responseCode} ContentValues: ${transactionResponse.contentVal}")
         val printHelper = TransactionPrintHelper()
-        val customerSlip = printHelper.getFormattedText(receipt, SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!,transactionResponse.bundle, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false)
-        val merchantSlip = printHelper.getFormattedText(receipt, SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!,transactionResponse.bundle, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false)
+        val customerSlip = printHelper.getFormattedText(receipt, SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false)
+        val merchantSlip = printHelper.getFormattedText(receipt, SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false)
         print(customerSlip, mainActivity)
         print(merchantSlip, mainActivity)
         val responseCode = transactionResponse.responseCode
@@ -248,6 +252,21 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         bundle.putInt("ResponseCode", responseCode.ordinal)
         intent.putExtras(bundle)
         return intent
+    }
+
+    /**
+     * It prepares and prints the slip.
+     */
+    fun prepareCopySlip(receipt: SampleReceipt, mainActivity: MainActivity, transaction: Transaction,
+        transactionCode: Int) {
+        val transactionPrintHelper = TransactionPrintHelper()
+        val contentValHelper = ContentValHelper()
+        val customerSlipData: String = transactionPrintHelper.getFormattedText(receipt,SlipType.CARDHOLDER_SLIP,contentValHelper.getContentVal(transaction),
+            transactionCode,mainActivity,transaction.ZNO,transaction.Col_ReceiptNo,true)
+        val merchantSlipData: String = transactionPrintHelper.getFormattedText(receipt,SlipType.MERCHANT_SLIP,contentValHelper.getContentVal(transaction),
+            transactionCode,mainActivity,transaction.ZNO,transaction.Col_ReceiptNo,true)
+        print(customerSlipData,mainActivity)
+        print(merchantSlipData,mainActivity)
     }
 
     private fun print(printText: String?, mainActivity: MainActivity) {

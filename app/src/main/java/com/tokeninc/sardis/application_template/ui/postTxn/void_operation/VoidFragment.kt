@@ -36,7 +36,7 @@ class VoidFragment(private val mainActivity: MainActivity, private val transacti
                    private val activationViewModel: ActivationViewModel, private val isGib: Boolean
 ) : Fragment() {
 
-    private lateinit var adapter: VoidAdapter
+    private lateinit var adapter: TransactionAdapter
     private lateinit var binding: FragmentVoidBinding
     private lateinit var card: ICCCard
 
@@ -101,7 +101,7 @@ class VoidFragment(private val mainActivity: MainActivity, private val transacti
         recyclerView.layoutManager =LinearLayoutManager(requireContext())
         transactionViewModel.createLiveData(card.mCardNumber) //list = getTransactionsByCardNo(cardNo)
         transactionViewModel.list.observe(viewLifecycleOwner) {
-            adapter = VoidAdapter(it.toMutableList())
+            adapter = TransactionAdapter(it.toMutableList(),true)
             adapter.voidFragment = this
             binding.adapter = adapter
         }

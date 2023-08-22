@@ -20,6 +20,7 @@ import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import com.tokeninc.sardis.application_template.ui.examples.ExampleFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.refund.RefundFragment
+import com.tokeninc.sardis.application_template.ui.postTxn.slip.SlipFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.void_operation.VoidFragment
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
@@ -85,12 +86,11 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
         }))
         menuItems.add(MenuItem(getStrings(R.string.examples), {
             val exampleFragment = ExampleFragment(mainActivity,cardViewModel)
-            mainActivity.replaceFragment(exampleFragment)
+            mainActivity.addFragment(exampleFragment)
         }))
         menuItems.add(MenuItem(getStrings(R.string.slip_menu),{
-            batchViewModel.getPreviousBatchSlip().observe(mainActivity){
-                mainActivity.print(it)
-            }
+            val slipFragment = SlipFragment(mainActivity,activationViewModel,transactionViewModel,batchViewModel)
+            mainActivity.addFragment(slipFragment)
         }))
         val menuFragment = ListMenuFragment.newInstance(menuItems,"PostTxn", true, R.drawable.token_logo_png)
         mainActivity.replaceFragment(menuFragment as Fragment)

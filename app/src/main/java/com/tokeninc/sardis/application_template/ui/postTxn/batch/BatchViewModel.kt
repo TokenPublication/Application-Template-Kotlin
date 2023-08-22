@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
+import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
 import com.tokeninc.sardis.application_template.data.model.resultCode.BatchResult
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
@@ -126,4 +127,29 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
         }
         liveIntent.postValue(intent)
     }
+
+    private val isPrinted = MutableLiveData<Boolean>(false)
+    fun getIsPrinted(): LiveData<Boolean> = isPrinted
+
+    /**
+     * It prepares and prints current transaction List
+     */
+    fun printTransactionListSlip(mainActivity: MainActivity, activationViewModel: ActivationViewModel, transactions: List<Transaction?>?){
+        viewModelScope.launch(Dispatchers.IO) {
+            val transactionListSlip = batchRepository.prepareSlip(mainActivity, activationViewModel, transactions, false, false)
+            batchRepository.print(transactionListSlip, mainActivity)
+            isPrinted.postValue(true)
+        }
+    }
+
+    /**
+     * It prepares and prints current transaction List
+     */
+    fun printPreviousBatchSlip(mainActivity: MainActivity, batchSlip: String?){
+        viewModelScope.launch(Dispatchers.IO){
+            batchRepository.print(batchSlip,mainActivity)
+            isPrinted.postValue(true)
+        }
+    }
+
 }

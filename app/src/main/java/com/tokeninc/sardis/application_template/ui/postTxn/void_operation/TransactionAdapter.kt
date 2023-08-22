@@ -7,18 +7,20 @@ import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
-import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
+import com.tokeninc.sardis.application_template.databinding.TransactionItemsBinding
+import com.tokeninc.sardis.application_template.ui.postTxn.slip.SlipFragment
 import com.tokeninc.sardis.application_template.utils.StringHelper
 
 /**
  * This adapter arranges Void transactions one by one.
  */
-class VoidAdapter(private val transactionList: MutableList<Transaction?>): RecyclerView.Adapter<VoidAdapter.TransactionViewHolder>() {
+class TransactionAdapter(private val transactionList: MutableList<Transaction?>, private val isVoid: Boolean): RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
 
     inner class TransactionViewHolder(val binding: TransactionItemsBinding): RecyclerView.ViewHolder(binding.root)
 
     lateinit var voidFragment: VoidFragment
+    lateinit var slipFragment: SlipFragment
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -41,8 +43,12 @@ class VoidAdapter(private val transactionList: MutableList<Transaction?>): Recyc
         hb.textApprovalCode.text = transaction.Col_AuthCode
         hb.tvSN.text = transaction.Col_GUP_SN.toString()
         holder.itemView.setOnClickListener {
-            voidFragment.doVoid(transaction)
-            Log.d("RecyclerView/onClick","ContentVal: $transaction ")
+            if (isVoid){
+                voidFragment.doVoid(transaction)
+            } else{
+                slipFragment.prepareSlip(transaction)
+            }
+            Log.i("RecyclerView/onClick","ContentVal: $transaction ")
         }
     }
 
