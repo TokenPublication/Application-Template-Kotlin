@@ -121,7 +121,7 @@ class SettingsFragment(private val mainActivity: MainActivity,
                 is ActivationViewModel.UIState.ActivationCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,mainActivity.getString(R.string.activation_completed))
                 is ActivationViewModel.UIState.Finished -> {
                     //TODO Developer: If you don't implement this your application couldn't be activated and couldn't seen in atms
-                    val deviceInfo = DeviceInfo(mainActivity)
+                    val deviceInfo = DeviceInfo(mainActivity) //TODO serviceViewModelle yap
                     deviceInfo.setBankParams({ success -> //it informs atms with new terminal and merchant ID
                         if (success) {
                             mainActivity.print(PrintHelper().printSuccess())

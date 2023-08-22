@@ -76,6 +76,10 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
         }
     }
 
+    fun isEmpty(): Boolean{
+        return transactionRepository.isEmpty()
+    }
+
     fun deleteAll(){
         viewModelScope.launch(Dispatchers.IO) {
             transactionRepository.deleteAll()
@@ -192,6 +196,17 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                     transactionRepository.prepareRefundVoidIntent(transactionResponse,mainActivity,receipt,transaction.ZNO, transaction.Col_ReceiptNo)
                 }
             liveIntent.postValue(intent)
+        }
+    }
+
+    private val isPrinted = MutableLiveData<Boolean>(false)
+    fun getIsPrinted(): LiveData<Boolean> = isPrinted
+
+    fun prepareCopySlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
+        viewModelScope.launch(Dispatchers.IO){
+            val receipt = SampleReceipt(transaction,activationRepository)
+            transactionRepository.prepareCopySlip(receipt,mainActivity,transaction,transactionCode)
+            isPrinted.postValue(true)
         }
     }
 }

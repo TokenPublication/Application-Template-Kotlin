@@ -66,7 +66,7 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
         return intent
     }
 
-    private fun print(printText: String?, mainActivity: MainActivity) {
+    fun print(printText: String?, mainActivity: MainActivity) {
         val styledText = StyledString()
         styledText.addStyledText(printText)
         styledText.finishPrintingProcedure()

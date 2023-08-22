@@ -177,7 +177,6 @@ class MainActivity : TimeOutActivity() {
                 val infoDialog = showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.card_service_error), false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     infoDialog?.dismiss()
-                    finish()
                 }, 2000)
             }
         }

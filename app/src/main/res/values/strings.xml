@@ -50,7 +50,6 @@
     <string name="activating_template">You must activate the application template!</string>
 
 
-
     <string name="no_trans_found">No Transactions Found</string>
     <string name="trans_not_found">Transaction Not Found</string>
     <string name="card_service_error">Card Service Error</string>
@@ -137,6 +136,5 @@
     <string name="rkl_loaded">RKL Loaded</string>
     <string name="key_block_loading">Key Block Loading</string>
     <string name="connect_services">Connecting to Services…</string>
-
 
 </resources>

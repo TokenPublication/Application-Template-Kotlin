@@ -43,12 +43,12 @@ class CheckSaleReceiver : BroadcastReceiver() {
                 bundle.putString("customerSlipData",
                     printHelper.getFormattedText(sampleReceipt,
                         SlipType.CARDHOLDER_SLIP,ContentValHelper().getContentVal(transaction),
-                        Bundle(), TransactionCode.SALE.type, context,transaction.ZNO,transaction.Col_ReceiptNo,false))
+                        TransactionCode.SALE.type, context,transaction.ZNO,transaction.Col_ReceiptNo,false))
                 bundle.putString(
                     "merchantSlipData",
                     printHelper.getFormattedText(sampleReceipt,
                         SlipType.MERCHANT_SLIP,ContentValHelper().getContentVal(transaction),
-                        Bundle(), TransactionCode.SALE.type, context,transaction.ZNO,transaction.Col_ReceiptNo,false))
+                        TransactionCode.SALE.type, context,transaction.ZNO,transaction.Col_ReceiptNo,false))
                 bundle.putInt("BatchNo", transaction.Col_BatchNo)
                 bundle.putInt("TxnNo", transaction.Col_GUP_SN)
                 bundle.putInt("SlipType", SlipType.BOTH_SLIPS.value)

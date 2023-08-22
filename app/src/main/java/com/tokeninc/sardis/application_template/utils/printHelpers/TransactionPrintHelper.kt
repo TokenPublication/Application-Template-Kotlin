@@ -22,7 +22,7 @@ import java.util.Locale
  * Sale, Void and all types of refund.
  */
 class TransactionPrintHelper:BasePrintHelper() {
-    fun getFormattedText(receipt: SampleReceipt, slipType: SlipType, contentValues: ContentValues, bundle: Bundle,
+    fun getFormattedText(receipt: SampleReceipt, slipType: SlipType, contentValues: ContentValues,
                          transactionCode: Int, context: Context, ZNO: String?, ReceiptNo: Int?, isCopy: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
@@ -115,7 +115,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         styledText.addTextToLine("TUTAR:")
 
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type || transactionCode == TransactionCode.CASH_REFUND.type){
-            styledText.addTextToLine(stringHelper.getAmount(bundle.getInt(ExtraKeys.REFUND_AMOUNT.name)), PrinterDefinitions.Alignment.Right)
+            styledText.addTextToLine(stringHelper.getAmount(contentValues.getAsInteger(TransactionCols.Col_Amount2)), PrinterDefinitions.Alignment.Right)
         }
         else{
             styledText.addTextToLine(receipt.amount, PrinterDefinitions.Alignment.Right)
@@ -155,7 +155,7 @@ class TransactionPrintHelper:BasePrintHelper() {
             if (transactionCode == TransactionCode.CASH_REFUND.type){
                 styledText.addTextToLine("ORJ. İŞLEM TARİHİ: " + DateUtil().getCashRefundDate(receipt.tranDate!!), PrinterDefinitions.Alignment.Center)
             } else{
-                styledText.addTextToLine("ORJ. İŞLEM TARİHİ: ${bundle.getString(ExtraKeys.TRAN_DATE.name)}",PrinterDefinitions.Alignment.Center)
+                styledText.addTextToLine("ORJ. İŞLEM TARİHİ: ${contentValues.getAsString(TransactionCols.Col_Ext_RefundDateTime)}",PrinterDefinitions.Alignment.Center)
             }
             styledText.newLine()
             styledText.addTextToLine("ORJ. İŞ YERİ NO: ${receipt.merchantID }",PrinterDefinitions.Alignment.Center)
