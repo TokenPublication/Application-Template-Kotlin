@@ -143,7 +143,7 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
     }
 
     /**
-     * It prepares and prints current transaction List
+     * It prints previous batchSlip
      */
     fun printPreviousBatchSlip(mainActivity: MainActivity, batchSlip: String?){
         viewModelScope.launch(Dispatchers.IO){
