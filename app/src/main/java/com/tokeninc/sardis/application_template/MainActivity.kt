@@ -120,7 +120,7 @@ class MainActivity : TimeOutActivity() {
      * card service it updates the UI with respect to action mainActivity has. It tries to connect cardService on background
      * If it couldn't connect KMS or deviceInfo services, it warns the user then finishes the mainActivity
      */
-    private fun connectServices(){
+    fun connectServices(fromActivation: Boolean = false){
         serviceViewModel.serviceRoutine(this)
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,getString(R.string.connect_services),false)
         serviceViewModel.getUiState().observe(this) { state ->
@@ -141,8 +141,10 @@ class MainActivity : TimeOutActivity() {
                 }
                 is ServiceViewModel.ServiceUIState.Connected -> {
                     dialog.dismiss()
-                    connectCardService()
-                    actionChanged(intent.action)
+                    if (!fromActivation){
+                        connectCardService()
+                        actionChanged(intent.action)
+                    }
                 }
             }
         }

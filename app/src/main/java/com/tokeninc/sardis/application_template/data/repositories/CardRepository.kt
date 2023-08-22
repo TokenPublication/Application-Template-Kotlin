@@ -176,13 +176,17 @@ class CardRepository @Inject constructor() :
         }
     }
 
+    var onConnectedFromActivation = false
+
     /**
      * When connecting to the card service, make this flag's value true to observe it from different classes.
      * After that call setEMVConfiguration method, it checks whether the Setup is Done before, if it is do nothing, else set EMV
      */
     override fun onCardServiceConnected() {
         isCardServiceConnected.postValue(true)
-        setEMVConfiguration(true)
+        if (!onConnectedFromActivation){
+            setEMVConfiguration(true)
+        }
     }
 
     fun getCardServiceBinding(): CardServiceBinding? {

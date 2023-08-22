@@ -42,5 +42,6 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     }
 
     fun readCard(amount: Int, transactionCode: Int) { cardRepository.readCard(amount,transactionCode) }
+    fun callFromActivation(){ cardRepository.onConnectedFromActivation = true }
 }
 

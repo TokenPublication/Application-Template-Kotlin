@@ -4,8 +4,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tokeninc.deviceinfo.DeviceInfo
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
+import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,19 +72,55 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     /** It runs functions in parallel while ui updating dynamically in main thread
      * Additionally, in IO coroutine thread make setEMVConfiguration method
      */
-    suspend fun setupRoutine(cardViewModel: CardViewModel) {
+    suspend fun setupRoutine(cardViewModel: CardViewModel,mainActivity: MainActivity,terminalId: String?,merchantId: String?) {
         coroutineScope.launch {
             updateUIState(UIState.Starting)
-            withContext(Dispatchers.IO){
-                cardViewModel.setEMVConfiguration()
-            }
+            setEMVConfiguration(cardViewModel,mainActivity)
             updateUIState(UIState.ParameterUploading)
             updateUIState(UIState.MemberActCompleted)
             updateUIState(UIState.RKLLoading)
             updateUIState(UIState.RKLLoaded)
             updateUIState(UIState.KeyBlockLoading)
             updateUIState(UIState.ActivationCompleted)
+            setDeviceInfoParams(mainActivity,terminalId,merchantId)
             uiState.postValue(UIState.Finished)
         }.join() //wait that job to finish to return it
+    }
+
+    /**
+     * It connects card service, if it connects then calls setEMVConfiguration
+     */
+    private fun setEMVConfiguration(cardViewModel: CardViewModel, mainActivity: MainActivity){
+        if (cardViewModel.getCardServiceBinding() != null){ // if it connects cardService before
+            cardViewModel.setEMVConfiguration()
+        } else{
+            cardViewModel.callFromActivation()
+            cardViewModel.initializeCardServiceBinding(mainActivity)
+            cardViewModel.getCardServiceConnected().observe(mainActivity){connected ->
+                if (connected){
+                    cardViewModel.setEMVConfiguration()
+                }
+            }
+        }
+    }
+
+    //TODO Developer: If you don't implement this function in your application couldn't be activated and couldn't seen in atms
+    /**
+     * It connects services if it connects then set terminal ID and merchant ID into device Info
+     * It is called in mainThread because services can connect only in main thread
+     */
+    private suspend fun setDeviceInfoParams(mainActivity: MainActivity,terminalId: String?,merchantId: String?){
+        withContext(Dispatchers.Main) {
+            mainActivity.connectServices(true) // to ensure connect Services
+            val deviceInfo = DeviceInfo(mainActivity)
+            deviceInfo.setBankParams({ success -> //it informs atms with new terminal and merchant ID
+                if (success) {
+                    mainActivity.print(PrintHelper().printSuccess())
+                } else {
+                    mainActivity.print(PrintHelper().printError())
+                }
+                deviceInfo.unbind()
+            }, terminalId, merchantId)
+        }
     }
 }
