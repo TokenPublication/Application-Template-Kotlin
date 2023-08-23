@@ -282,13 +282,6 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         val zNO = mainActivity.intent.extras?.getString("ZNO")
         val receiptNo = mainActivity.intent.extras?.getString("ReceiptNo")
 
-
-        val isOnlinePin = false //TODO ICC karttan al
-        val isOffline = false //TODO true
-        val pinByPass = false //TODO ICC karttan al
-        bundle.putInt("IsOnlinePin", if (isOnlinePin) 1 else 0)
-        bundle.putInt("IsOffline", if (isOffline) 1 else 0)
-        bundle.putInt("PinByPass", if (pinByPass) 1 else 0)
         bundle.putString("UUID", uuid)
         if (zNO != null && receiptNo != null) { // zNo and receiptNo comes sales in 1000TR
             bundle.putString("ZNO", zNO)

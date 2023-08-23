@@ -97,4 +97,15 @@ class StringHelper {
         }
         return numb
     }
+
+    fun hexStringToAscii(hexString: String): String {
+        val output = java.lang.StringBuilder()
+        var i = 0
+        while (i < hexString.length) {
+            val str2 = hexString.substring(i, i + 2)
+            output.append(str2.toInt(16).toChar())
+            i += 2
+        }
+        return output.toString()
+    }
 }

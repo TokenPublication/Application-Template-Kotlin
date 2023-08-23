@@ -82,16 +82,10 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         val content = ContentValues()
         val responseCode = ResponseCode.SUCCESS
         val uuid = bundle.getString("UUID")
-        val isOnlinePin = bundle.getInt("IsOnlinePin")
-        val isOffline = bundle.getInt("IsOffline")
-        val pinByPass = bundle.getInt("PinByPass")
         val zNO = bundle.getString("ZNO")
         val receiptNo = bundle.getInt("ReceiptNo")
         // transaction columns from parameters
         content.put(TransactionCols.Col_UUID, uuid)
-        content.put(TransactionCols.Col_isPinByPass, pinByPass)
-        content.put(TransactionCols.Col_isOffline, isOffline)
-        content.put(TransactionCols.Col_is_onlinePIN, isOnlinePin)
         content.put(TransactionCols.Col_ReceiptNo, receiptNo)
         content.put(TransactionCols.col_ZNO, zNO)
         content.put(TransactionCols.Col_BatchNo, batchNo)
@@ -102,15 +96,15 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         content.put(TransactionCols.col_isSignature,0)
         // if it is different later it will change in if blocks
         content.put(TransactionCols.Col_Amount, card.mTranAmount1)
-        content.put(TransactionCols.Col_AuthCode, onlineTransactionResponse.mAuthCode)
 
         // transaction parameters with respect to transaction type
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type){
             content.put(TransactionCols.Col_Amount2,bundle.getInt(ExtraKeys.REFUND_AMOUNT.name))
             content.put(TransactionCols.Col_Amount,bundle.getInt(ExtraKeys.ORG_AMOUNT.name))
-            content.put(TransactionCols.Col_AuthCode,bundle.getString(ExtraKeys.AUTH_CODE.name))
-            content.put(TransactionCols.Col_RefNo,bundle.getString(ExtraKeys.REF_NO.name))
             content.put(TransactionCols.Col_Ext_RefundDateTime,bundle.getString(ExtraKeys.TRAN_DATE.name))
+            // these two info is for finding the corresponding sale, they are not this transaction's authCode and refNo
+            //content.put(TransactionCols.Col_AuthCode,bundle.getString(ExtraKeys.AUTH_CODE.name))
+            //content.put(TransactionCols.Col_RefNo,bundle.getString(ExtraKeys.REF_NO.name))
         } else if (transactionCode == TransactionCode.CASH_REFUND.type){
             content.put(TransactionCols.Col_Amount2, bundle.getInt(ExtraKeys.REFUND_AMOUNT.name))
         } else{
@@ -140,12 +134,14 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         content.put(TransactionCols.Col_SID, card.SID)
         content.put(TransactionCols.Col_Aid, card.AID2)
         content.put(TransactionCols.Col_AidLabel, card.AIDLabel)
+        content.put(TransactionCols.Col_isOffline, 0) //TODO Developer, check for offline transaction
+        content.put(TransactionCols.Col_isPinByPass, if(card.isPinByPass()) 1 else 0)
+        content.put(TransactionCols.Col_is_onlinePIN, card.OnlPINReq)
 
         // transaction parameters comes from online Transaction Response
-        content.put(TransactionCols.Col_TranDate, onlineTransactionResponse.dateTime )
-        if (! (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type) ) {
-            content.put(TransactionCols.Col_RefNo, onlineTransactionResponse.mRefNo)
-        }
+        content.put(TransactionCols.Col_TranDate, onlineTransactionResponse.dateTime)
+        content.put(TransactionCols.Col_RefNo, onlineTransactionResponse.mRefNo)
+        content.put(TransactionCols.Col_AuthCode, onlineTransactionResponse.mAuthCode)
         content.put(TransactionCols.Col_TextPrintCode, onlineTransactionResponse.mTextPrintCode)
         content.put(TransactionCols.Col_DisplayData, onlineTransactionResponse.mDisplayData)
         content.put(TransactionCols.Col_KeySequenceNumber, onlineTransactionResponse.mKeySequenceNumber)
