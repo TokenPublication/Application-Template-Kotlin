@@ -64,7 +64,9 @@ class BatchClosePrintHelper: BasePrintHelper() {
             } else{
                 it.Col_Amount
             }
-            totalAmount += amount
+            if (it.Col_IsVoid == 0){
+                totalAmount += amount
+            }
             addText(styledText,stringHelper.getAmount(amount),PrinterDefinitions.Alignment.Right)
             styledText.newLine()
         }
