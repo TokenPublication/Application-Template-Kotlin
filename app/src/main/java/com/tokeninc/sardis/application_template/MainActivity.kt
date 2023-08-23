@@ -120,7 +120,7 @@ class MainActivity : TimeOutActivity() {
      * card service it updates the UI with respect to action mainActivity has. It tries to connect cardService on background
      * If it couldn't connect KMS or deviceInfo services, it warns the user then finishes the mainActivity
      */
-    fun connectServices(fromActivation: Boolean = false){
+    private fun connectServices(){
         serviceViewModel.serviceRoutine(this)
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,getString(R.string.connect_services),false)
         serviceViewModel.getUiState().observe(this) { state ->
@@ -141,10 +141,8 @@ class MainActivity : TimeOutActivity() {
                 }
                 is ServiceViewModel.ServiceUIState.Connected -> {
                     dialog.dismiss()
-                    if (!fromActivation){
-                        connectCardService()
-                        actionChanged(intent.action)
-                    }
+                    connectCardService()
+                    actionChanged(intent.action)
                 }
             }
         }
@@ -168,11 +166,12 @@ class MainActivity : TimeOutActivity() {
      * This function is called whenever cardService is required.
      * If it couldn't connect to the card service after 10 seconds, it shows a dialog and finishes to the mainActivity.
      */
-    private fun connectCardService() {
+    fun connectCardService(fromActivation: Boolean = false) {
         var isCancelled = false
         //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
         val timer: CountDownTimer = object : CountDownTimer(30000, 1000) {
             override fun onTick(millisUntilFinished: Long) {}
+
             override fun onFinish() { //when it's finished, (after 10 seconds)
                 isCancelled = true // make isCancelled true (because cardService couldn't be connected)
                 Log.i("CardService","Not connected")
@@ -182,17 +181,22 @@ class MainActivity : TimeOutActivity() {
                 }, 2000)
             }
         }
+
         timer.start()
         cardViewModel.initializeCardServiceBinding(this)
+
         cardViewModel.getCardServiceConnected().observe(this) { isConnected ->
             // cardService is connected before 10 seconds (which is the limit of the timer)
             if (isConnected && !isCancelled) {
                 timer.cancel() // stop timer
                 cardServiceBinding = cardViewModel.getCardServiceBinding()
                 cardViewModel.getToastMessage().observe(this){//if it has message show them with toast
-                    Toast.makeText(this,it,Toast.LENGTH_LONG).show()
+                    Toast.makeText(this,it,Toast.LENGTH_SHORT).show()
                     // In multi banking pgw, at first installation it always shows Toast until mainActivity finishes; thus it should be reset
                     cardViewModel.resetToastMessage()
+                    if (!fromActivation){
+                        Toast.makeText(this,getString(R.string.config_updated),Toast.LENGTH_LONG).show()
+                    }
                 }
                 Log.i("Connected","CardService")
             }

@@ -30,15 +30,15 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     fun hostIP() = activationRepository.hostIP()
     fun hostPort() = activationRepository.hostPort()
 
-    fun updateActivation(terminalId: String?, merchantId: String?){
-        viewModelScope.launch(Dispatchers.IO){
-            activationRepository.updateActivation(terminalId,merchantId)
+    fun updateActivation(terminalId: String?, merchantId: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            activationRepository.updateActivation(terminalId, merchantId)
         }
     }
 
-    fun updateConnection(ip: String?, port: String?){
-        viewModelScope.launch(Dispatchers.IO){
-            activationRepository.updateConnection(ip,port)
+    fun updateConnection(ip: String?, port: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            activationRepository.updateConnection(ip, port)
         }
     }
 
@@ -62,7 +62,7 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     /**
      * This is for not repeating each uiState again.
      */
-    private suspend fun updateUIState(ui_state: UIState){
+    private suspend fun updateUIState(ui_state: UIState) {
         coroutineScope.launch(Dispatchers.Main) { //update UI in a dummy way
             uiState.postValue(ui_state)
         }
@@ -75,45 +75,40 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     suspend fun setupRoutine(cardViewModel: CardViewModel,mainActivity: MainActivity,terminalId: String?,merchantId: String?) {
         coroutineScope.launch {
             updateUIState(UIState.Starting)
-            setEMVConfiguration(cardViewModel,mainActivity)
+            setEMVConfiguration(cardViewModel, mainActivity)
             updateUIState(UIState.ParameterUploading)
             updateUIState(UIState.MemberActCompleted)
             updateUIState(UIState.RKLLoading)
             updateUIState(UIState.RKLLoaded)
             updateUIState(UIState.KeyBlockLoading)
             updateUIState(UIState.ActivationCompleted)
-            setDeviceInfoParams(mainActivity,terminalId,merchantId)
+            setDeviceInfoParams(mainActivity, terminalId, merchantId)
             uiState.postValue(UIState.Finished)
         }.join() //wait that job to finish to return it
     }
 
     /**
-     * It connects card service, if it connects then calls setEMVConfiguration
+     * It checks whether connect cardService before, if it connect then sets emv configuration
+     * else It tries to connect cardService, whenever it connects it tries to set emv configuration
+     * If it sets it before, it won't set it again (checks from sharedPref)
      */
-    private fun setEMVConfiguration(cardViewModel: CardViewModel, mainActivity: MainActivity){
-        if (cardViewModel.getCardServiceBinding() != null){ // if it connects cardService before
+    private fun setEMVConfiguration(cardViewModel: CardViewModel, mainActivity: MainActivity) {
+        if (cardViewModel.getCardServiceBinding() != null) { // if it connects cardService before
             cardViewModel.setEMVConfiguration()
-        } else{
-            cardViewModel.callFromActivation()
-            cardViewModel.initializeCardServiceBinding(mainActivity)
-            cardViewModel.getCardServiceConnected().observe(mainActivity){connected ->
-                if (connected){
-                    cardViewModel.setEMVConfiguration()
-                }
-            }
+        } else {
+            mainActivity.connectCardService(true)
         }
     }
 
     //TODO Developer: If you don't implement this function in your application couldn't be activated and couldn't seen in atms
     /**
-     * It connects services if it connects then set terminal ID and merchant ID into device Info
-     * It is called in mainThread because services can connect only in main thread
+     *  It tries to connect deviceInfo. If it connects then set terminal ID and merchant ID into device Info and
+     *  print success slip else print error slip
      */
     private suspend fun setDeviceInfoParams(mainActivity: MainActivity,terminalId: String?,merchantId: String?){
         withContext(Dispatchers.Main) {
-            mainActivity.connectServices(true) // to ensure connect Services
             val deviceInfo = DeviceInfo(mainActivity)
-            deviceInfo.setBankParams({ success -> //it informs atms with new terminal and merchant ID
+            deviceInfo.setAppParams({ success -> //it informs atms with new terminal and merchant ID
                 if (success) {
                     mainActivity.print(PrintHelper().printSuccess())
                 } else {
