@@ -53,9 +53,6 @@ import java.util.*
 @AndroidEntryPoint
 class MainActivity : TimeOutActivity() {
 
-    //initializing bindings
-    private var cardServiceBinding: CardServiceBinding? = null
-
     //initializing View Models and Fragments
     private lateinit var activationViewModel: ActivationViewModel
     private lateinit var batchViewModel: BatchViewModel
@@ -166,11 +163,12 @@ class MainActivity : TimeOutActivity() {
      * This function is called whenever cardService is required.
      * If it couldn't connect to the card service after 10 seconds, it shows a dialog and finishes to the mainActivity.
      */
-    private fun connectCardService() {
+    fun connectCardService(fromActivation: Boolean = false) {
         var isCancelled = false
         //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
         val timer: CountDownTimer = object : CountDownTimer(30000, 1000) {
             override fun onTick(millisUntilFinished: Long) {}
+
             override fun onFinish() { //when it's finished, (after 10 seconds)
                 isCancelled = true // make isCancelled true (because cardService couldn't be connected)
                 Log.i("CardService","Not connected")
@@ -180,18 +178,24 @@ class MainActivity : TimeOutActivity() {
                 }, 2000)
             }
         }
+
         timer.start()
         cardViewModel.initializeCardServiceBinding(this)
+
         cardViewModel.getCardServiceConnected().observe(this) { isConnected ->
             // cardService is connected before 10 seconds (which is the limit of the timer)
             if (isConnected && !isCancelled) {
                 timer.cancel() // stop timer
-                cardServiceBinding = cardViewModel.getCardServiceBinding()
-                cardViewModel.getToastMessage().observe(this){//if it has message show them with toast
-                    Toast.makeText(this,it,Toast.LENGTH_LONG).show()
+                //if it has message show them with toast ( it comes first connection with setEMVConfiguration)
+                cardViewModel.getToastMessage().observe(this){
+                    Toast.makeText(this,it,Toast.LENGTH_SHORT).show()
                     // In multi banking pgw, at first installation it always shows Toast until mainActivity finishes; thus it should be reset
                     cardViewModel.resetToastMessage()
+                    if (!fromActivation){
+                        Toast.makeText(this,getString(R.string.config_updated),Toast.LENGTH_LONG).show()
+                    }
                 }
+
                 Log.i("Connected","CardService")
             }
         }
@@ -259,11 +263,16 @@ class MainActivity : TimeOutActivity() {
         // get the amount from sale intent, and assign amount to corresponding classes
         val amount = intent.extras!!.getInt("Amount")
         saleFragment.setAmount(amount)
+
         //controlling whether the request coming from gib
-        replaceFragment(saleFragment)
-        val bundle = intent.extras
         val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.GIB.name
+        val bundle = intent.extras
         val cardData: String? = bundle?.getString("CardData")
+
+        // controlling whether demoMode is enabled (open)
+        val sharedPreferences = getSharedPreferences("myprefs", MODE_PRIVATE)
+        val isDemoMode = sharedPreferences.getBoolean("demo_mode", false)
+
         // when sale operation is called from pgw which has multi bank and app temp is the only issuer of this card
         if (!isGIB && cardData != null && cardData != "CardData" && cardData != " ") {
             //replaceFragment(saleFragment)
@@ -271,12 +280,23 @@ class MainActivity : TimeOutActivity() {
                 saleFragment.doSale(cardData)
             }, 500)
         }
+
         // when sale request comes from GIB
         else if (intent.extras != null) {
             val cardReadType = intent.extras!!.getInt("CardReadType")
             if (cardReadType == CardReadType.ICC.type) {
                 cardViewModel.setGibSale(true)
                 saleFragment.cardReader(true)
+            }
+            else{ // it couldn't enter here if it is a gib sale because intent doesn't include cardReadType because
+                // card wouldn't be read before enter the application template in a normal scenerio
+                // when app temp is only banking app or user selects app temp for sale
+                if (isDemoMode){
+                    replaceFragment(saleFragment)
+                }
+                else{
+                    saleFragment.cardReader(false)
+                }
             }
         }
     }
@@ -285,7 +305,7 @@ class MainActivity : TimeOutActivity() {
      * It reads card, if it couldn't connect cardService before, first connect the cardService then reads card
      */
     fun readCard(amount: Int, transactionCode: Int) {
-        if (cardServiceBinding != null) {
+        if (cardViewModel.getCardServiceBinding() != null) {
             Handler(Looper.getMainLooper()).postDelayed({
                 cardViewModel.readCard(amount,transactionCode)
             }, 500)

@@ -13,13 +13,11 @@ import com.token.uicomponents.CustomInput.InputValidator
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
 import com.token.uicomponents.infodialog.InfoDialog
-import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
-import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -107,7 +105,7 @@ class SettingsFragment(private val mainActivity: MainActivity,
     }
     private fun startActivation(){
         CoroutineScope(Dispatchers.Default).launch {
-            activationViewModel.setupRoutine(cardViewModel)
+            activationViewModel.setupRoutine(cardViewModel,mainActivity,terminalId,merchantId)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Processing, mainActivity.getString(R.string.starting_activation), false)
         activationViewModel.getUiState().observe(mainActivity) { state ->
@@ -119,19 +117,7 @@ class SettingsFragment(private val mainActivity: MainActivity,
                 is ActivationViewModel.UIState.RKLLoaded -> dialog.update(InfoDialog.InfoType.Confirmed,mainActivity.getString(R.string.rkl_loaded))
                 is ActivationViewModel.UIState.KeyBlockLoading -> dialog.update(InfoDialog.InfoType.Progress,mainActivity.getString(R.string.key_block_loading))
                 is ActivationViewModel.UIState.ActivationCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,mainActivity.getString(R.string.activation_completed))
-                is ActivationViewModel.UIState.Finished -> {
-                    //TODO Developer: If you don't implement this your application couldn't be activated and couldn't seen in atms
-                    val deviceInfo = DeviceInfo(mainActivity) //TODO serviceViewModelle yap
-                    deviceInfo.setBankParams({ success -> //it informs atms with new terminal and merchant ID
-                        if (success) {
-                            mainActivity.print(PrintHelper().printSuccess())
-                        } else {
-                            mainActivity.print(PrintHelper().printError())
-                        }
-                        deviceInfo.unbind()
-                    }, terminalId, merchantId)
-                    dialog.dismiss()
-                }
+                is ActivationViewModel.UIState.Finished -> dialog.dismiss()
             }
         }
     }

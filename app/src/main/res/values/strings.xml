@@ -137,4 +137,9 @@
     <string name="key_block_loading">Key Block Loading</string>
     <string name="connect_services">Connecting to Services…</string>
 
+    <string name="demo_mode">Demo Mode</string>
+    <string name="demo_mode_enabled">Demo Mode Enabled</string>
+    <string name="demo_mode_disabled">Demo Mode Disabled</string>
+
+
 </resources>

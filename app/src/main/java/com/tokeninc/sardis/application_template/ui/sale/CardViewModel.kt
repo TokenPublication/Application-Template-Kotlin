@@ -31,7 +31,7 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     }
 
     fun setEMVConfiguration(){
-        cardRepository.setEMVConfiguration(false)
+        cardRepository.setEMVConfiguration()
     }
 
     fun getToastMessage(): LiveData<String> {
@@ -42,5 +42,5 @@ class CardViewModel @Inject constructor(private val cardRepository: CardReposito
     }
 
     fun readCard(amount: Int, transactionCode: Int) { cardRepository.readCard(amount,transactionCode) }
-}
 
+}

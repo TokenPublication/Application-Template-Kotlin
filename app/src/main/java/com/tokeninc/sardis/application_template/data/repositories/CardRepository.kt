@@ -182,7 +182,7 @@ class CardRepository @Inject constructor() :
      */
     override fun onCardServiceConnected() {
         isCardServiceConnected.postValue(true)
-        setEMVConfiguration(true)
+        setEMVConfiguration()
     }
 
     fun getCardServiceBinding(): CardServiceBinding? {
@@ -203,14 +203,11 @@ class CardRepository @Inject constructor() :
      * It also called from onCardServiceConnected method of Card Service Library, if Configs couldn't set in first_run
      * (it is checked from sharedPreferences), again it setConfigurations, else do nothing.
      */
-    fun setEMVConfiguration(fromCardService: Boolean) {
+    fun setEMVConfiguration() {
         val sharedPreference = mainActivity.getSharedPreferences("myprefs", Context.MODE_PRIVATE)
         val editor = sharedPreference.edit()
         val firstTimeBoolean = sharedPreference.getBoolean("FIRST_RUN", false)
         if (!firstTimeBoolean) {
-            if (fromCardService) {
-                toastMessage.postValue(mainActivity.getString(R.string.config_updated))
-            }
             setConfig()
             setCLConfig()
             editor.putBoolean("FIRST_RUN", true)

@@ -128,4 +128,9 @@
     <string name="key_block_loading">Key Blok Yükleniyor…</string>
     <string name="connect_services">Servislere Bağlanılıyor…</string>
 
+    <string name="demo_mode">Demo Modu</string>
+    <string name="demo_mode_enabled">Demo Modu Açık</string>
+    <string name="demo_mode_disabled">Demo Modu Kapalı</string>
+
+
 </resources>
