@@ -96,15 +96,15 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         content.put(TransactionCols.col_isSignature,0)
         // if it is different later it will change in if blocks
         content.put(TransactionCols.Col_Amount, card.mTranAmount1)
-        content.put(TransactionCols.Col_AuthCode, onlineTransactionResponse.mAuthCode)
 
         // transaction parameters with respect to transaction type
         if (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type){
             content.put(TransactionCols.Col_Amount2,bundle.getInt(ExtraKeys.REFUND_AMOUNT.name))
             content.put(TransactionCols.Col_Amount,bundle.getInt(ExtraKeys.ORG_AMOUNT.name))
-            content.put(TransactionCols.Col_AuthCode,bundle.getString(ExtraKeys.AUTH_CODE.name))
-            content.put(TransactionCols.Col_RefNo,bundle.getString(ExtraKeys.REF_NO.name))
             content.put(TransactionCols.Col_Ext_RefundDateTime,bundle.getString(ExtraKeys.TRAN_DATE.name))
+            // these two info is for finding the corresponding sale, they are not this transaction's authCode and refNo
+            //content.put(TransactionCols.Col_AuthCode,bundle.getString(ExtraKeys.AUTH_CODE.name))
+            //content.put(TransactionCols.Col_RefNo,bundle.getString(ExtraKeys.REF_NO.name))
         } else if (transactionCode == TransactionCode.CASH_REFUND.type){
             content.put(TransactionCols.Col_Amount2, bundle.getInt(ExtraKeys.REFUND_AMOUNT.name))
         } else{
@@ -139,10 +139,9 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         content.put(TransactionCols.Col_is_onlinePIN, card.OnlPINReq)
 
         // transaction parameters comes from online Transaction Response
-        content.put(TransactionCols.Col_TranDate, onlineTransactionResponse.dateTime )
-        if (! (transactionCode == TransactionCode.MATCHED_REFUND.type || transactionCode == TransactionCode.INSTALLMENT_REFUND.type) ) {
-            content.put(TransactionCols.Col_RefNo, onlineTransactionResponse.mRefNo)
-        }
+        content.put(TransactionCols.Col_TranDate, onlineTransactionResponse.dateTime)
+        content.put(TransactionCols.Col_RefNo, onlineTransactionResponse.mRefNo)
+        content.put(TransactionCols.Col_AuthCode, onlineTransactionResponse.mAuthCode)
         content.put(TransactionCols.Col_TextPrintCode, onlineTransactionResponse.mTextPrintCode)
         content.put(TransactionCols.Col_DisplayData, onlineTransactionResponse.mDisplayData)
         content.put(TransactionCols.Col_KeySequenceNumber, onlineTransactionResponse.mKeySequenceNumber)

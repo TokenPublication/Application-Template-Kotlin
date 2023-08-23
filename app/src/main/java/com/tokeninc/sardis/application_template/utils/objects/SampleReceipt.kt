@@ -1,6 +1,7 @@
 package com.tokeninc.sardis.application_template.utils.objects
 
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
+import com.tokeninc.sardis.application_template.data.model.responses.OnlineTransactionResponse
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
 import com.tokeninc.sardis.application_template.utils.StringHelper
 
@@ -11,6 +12,7 @@ import com.tokeninc.sardis.application_template.utils.StringHelper
 class SampleReceipt(
     var transaction: Transaction,
     activationRepository: ActivationRepository,
+    onlineTransactionResponse: OnlineTransactionResponse? = null
 ) {
     var merchantName = "Token Financial Technologies"
     var merchantID = activationRepository.merchantID()
@@ -19,8 +21,8 @@ class SampleReceipt(
     var aidLabel = transaction.Col_AidLabel
     var cardNo = StringHelper().maskCardNumber(transaction.Col_PAN)
     var amount = StringHelper().getAmount(transaction.Col_Amount)
-    var authCode = transaction.Col_AuthCode
-    var refNo = transaction.Col_RefNo
+    var authCode = if (onlineTransactionResponse == null) transaction.Col_AuthCode else onlineTransactionResponse.mAuthCode
+    var refNo = if(onlineTransactionResponse == null)  transaction.Col_RefNo else onlineTransactionResponse.mRefNo
     var batchNo = transaction.Col_BatchNo.toString()
     var transactionCode = transaction.Col_TransCode
     var groupSerialNo =  transaction.Col_GUP_SN.toString()
