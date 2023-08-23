@@ -82,16 +82,10 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         val content = ContentValues()
         val responseCode = ResponseCode.SUCCESS
         val uuid = bundle.getString("UUID")
-        val isOnlinePin = bundle.getInt("IsOnlinePin")
-        val isOffline = bundle.getInt("IsOffline")
-        val pinByPass = bundle.getInt("PinByPass")
         val zNO = bundle.getString("ZNO")
         val receiptNo = bundle.getInt("ReceiptNo")
         // transaction columns from parameters
         content.put(TransactionCols.Col_UUID, uuid)
-        content.put(TransactionCols.Col_isPinByPass, pinByPass)
-        content.put(TransactionCols.Col_isOffline, isOffline)
-        content.put(TransactionCols.Col_is_onlinePIN, isOnlinePin)
         content.put(TransactionCols.Col_ReceiptNo, receiptNo)
         content.put(TransactionCols.col_ZNO, zNO)
         content.put(TransactionCols.Col_BatchNo, batchNo)
@@ -140,6 +134,9 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         content.put(TransactionCols.Col_SID, card.SID)
         content.put(TransactionCols.Col_Aid, card.AID2)
         content.put(TransactionCols.Col_AidLabel, card.AIDLabel)
+        content.put(TransactionCols.Col_isOffline, 0) //TODO Developer, check for offline transaction
+        content.put(TransactionCols.Col_isPinByPass, if(card.isPinByPass()) 1 else 0)
+        content.put(TransactionCols.Col_is_onlinePIN, card.OnlPINReq)
 
         // transaction parameters comes from online Transaction Response
         content.put(TransactionCols.Col_TranDate, onlineTransactionResponse.dateTime )

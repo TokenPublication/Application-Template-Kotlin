@@ -26,4 +26,5 @@ class SampleReceipt(
     var groupSerialNo =  transaction.Col_GUP_SN.toString()
     var fullName = transaction.Col_CustomerName
     var tranDate = transaction.Col_TranDate
+    var isOffline = transaction.Col_isOffline
 }

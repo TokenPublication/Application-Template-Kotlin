@@ -164,10 +164,12 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 val voidBundle = Bundle()
                 voidBundle.putString(TransactionCols.Col_GUP_SN,gupSn.toString())
                 transactionResponse = TransactionResponse(responseCode,onlineTransactionResponse,extraContent, voidBundle,transactionCode)
-            } else{
+            }
+            else{
                 batchViewModel.updateGUPSN()
                 transactionResponse = transactionRepository.getTransactionResponse(card, transactionCode,onlineTransactionResponse,batchNo,groupSn, stn, bundle)
                 val responseTransactionCode = transactionResponse.transactionCode
+
                 if (responseTransactionCode != 0){
                     val content = transactionResponse.contentVal!!
                     val transaction = ContentValHelper().getTransaction(content)
@@ -176,6 +178,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                     Log.d("Service","Success: ")
                 }
             }
+
             if (responseCode == ResponseCode.SUCCESS){
                 coroutineScope.launch(Dispatchers.Main) {
                     uiState.postValue(UIState.Success("Transaction is Successful"))

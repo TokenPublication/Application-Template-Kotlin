@@ -219,13 +219,6 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         } else if (transactionCode == TransactionCode.CASH_REFUND.type) {
             bundle.putInt(ExtraKeys.REFUND_AMOUNT.name, inputList[0].text.toInt())
         }
-        //TODO Developer, check this variables from PGW.
-        val isOnlinePin = false
-        val isOffline = false
-        val pinByPass = false
-        bundle.putInt("IsOnlinePin", if (isOnlinePin) 1 else 0)
-        bundle.putInt("IsOffline", if (isOffline) 1 else 0)
-        bundle.putInt("PinByPass", if (pinByPass) 1 else 0)
         return bundle
     }
 

@@ -85,12 +85,13 @@ class TransactionPrintHelper:BasePrintHelper() {
         }
         val dateTime = sdf.format(Calendar.getInstance().time)
         var lineTime = dateTime
-        if (transactionCode == TransactionCode.VOID.type)
-            lineTime += " M OFFLINE"
-        if (transactionCode == TransactionCode.SALE.type)
-            lineTime += " C ONLINE"
-        if (transactionCode == TransactionCode.MATCHED_REFUND.type)
-            lineTime += " M ONLINE"
+
+        if (slipType == SlipType.CARDHOLDER_SLIP){
+            lineTime += if (receipt.isOffline == 1) " C OFFLINE" else " C ONLINE"
+        } else if (slipType == SlipType.MERCHANT_SLIP){
+            lineTime += if (receipt.isOffline == 1) " M OFFLINE" else " M ONLINE"
+        }
+
         styledText.newLine()
         styledText.addTextToLine(lineTime, PrinterDefinitions.Alignment.Center )
         styledText.newLine()
