@@ -53,9 +53,6 @@ import java.util.*
 @AndroidEntryPoint
 class MainActivity : TimeOutActivity() {
 
-    //initializing bindings
-    private var cardServiceBinding: CardServiceBinding? = null
-
     //initializing View Models and Fragments
     private lateinit var activationViewModel: ActivationViewModel
     private lateinit var batchViewModel: BatchViewModel
@@ -189,8 +186,8 @@ class MainActivity : TimeOutActivity() {
             // cardService is connected before 10 seconds (which is the limit of the timer)
             if (isConnected && !isCancelled) {
                 timer.cancel() // stop timer
-                cardServiceBinding = cardViewModel.getCardServiceBinding()
-                cardViewModel.getToastMessage().observe(this){//if it has message show them with toast
+                //if it has message show them with toast ( it comes first connection with setEMVConfiguration)
+                cardViewModel.getToastMessage().observe(this){
                     Toast.makeText(this,it,Toast.LENGTH_SHORT).show()
                     // In multi banking pgw, at first installation it always shows Toast until mainActivity finishes; thus it should be reset
                     cardViewModel.resetToastMessage()
@@ -198,6 +195,7 @@ class MainActivity : TimeOutActivity() {
                         Toast.makeText(this,getString(R.string.config_updated),Toast.LENGTH_LONG).show()
                     }
                 }
+
                 Log.i("Connected","CardService")
             }
         }
@@ -307,7 +305,7 @@ class MainActivity : TimeOutActivity() {
      * It reads card, if it couldn't connect cardService before, first connect the cardService then reads card
      */
     fun readCard(amount: Int, transactionCode: Int) {
-        if (cardServiceBinding != null) {
+        if (cardViewModel.getCardServiceBinding() != null) {
             Handler(Looper.getMainLooper()).postDelayed({
                 cardViewModel.readCard(amount,transactionCode)
             }, 500)
