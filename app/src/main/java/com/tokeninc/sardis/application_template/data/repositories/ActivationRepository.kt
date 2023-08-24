@@ -1,5 +1,8 @@
 package com.tokeninc.sardis.application_template.data.repositories
 
+import com.token.printerlib.PrinterService
+import com.token.printerlib.StyledString
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.activation.ActivationDao
 import javax.inject.Inject
 

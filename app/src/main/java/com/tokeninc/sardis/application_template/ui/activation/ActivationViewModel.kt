@@ -81,8 +81,8 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
             updateUIState(UIState.RKLLoading)
             updateUIState(UIState.RKLLoaded)
             updateUIState(UIState.KeyBlockLoading)
-            updateUIState(UIState.ActivationCompleted)
             setDeviceInfoParams(mainActivity, terminalId, merchantId)
+            updateUIState(UIState.ActivationCompleted)
             uiState.postValue(UIState.Finished)
         }.join() //wait that job to finish to return it
     }
@@ -110,9 +110,9 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
             val deviceInfo = DeviceInfo(mainActivity)
             deviceInfo.setAppParams({ success -> //it informs atms with new terminal and merchant ID
                 if (success) {
-                    mainActivity.print(PrintHelper().printSuccess())
+                    PrintHelper().printSuccess(mainActivity.applicationContext)
                 } else {
-                    mainActivity.print(PrintHelper().printError())
+                    PrintHelper().printError(mainActivity.applicationContext)
                 }
                 deviceInfo.unbind()
             }, terminalId, merchantId)

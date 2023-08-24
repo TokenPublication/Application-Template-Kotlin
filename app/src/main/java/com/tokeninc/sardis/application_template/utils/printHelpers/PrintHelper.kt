@@ -13,7 +13,7 @@ class PrintHelper: BasePrintHelper() {
 
     private val dateUtil = DateUtil()
 
-    fun printSuccess(): String {   // Print the success message
+    fun printSuccess(context: Context) {   // Print the success message
         val styledText = StyledString()
 
         // Strings must be max 29 digits
@@ -35,10 +35,10 @@ class PrintHelper: BasePrintHelper() {
         addText(styledText, dateUtil.getTime("HH:mm"), PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.addSpace(100)
-        return styledText.toString()
+        styledText.print(PrinterService.getService(context))
     }
 
-    fun printError(): String {   // Print the error message if necessary
+    fun printError(context: Context) {   // Print the error message if necessary
         val styledText = StyledString()
         addTextToNewLine(styledText, "Uygulama kurulumunda hata", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "ile karşılaşılmıştır", PrinterDefinitions.Alignment.Center)
@@ -49,7 +49,7 @@ class PrintHelper: BasePrintHelper() {
         addText(styledText, dateUtil.getTime("HH:mm"), PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.addSpace(100)
-        return styledText.toString()
+        styledText.print(PrinterService.getService(context))
     }
 
     fun printBatchClose(styledText: StyledString, batch_no: String, tx_no: String, totalAmount: Int, MID: String?, TID: String?): String {
