@@ -22,14 +22,4 @@ class ActivationRepository @Inject constructor(private val activationDao: Activa
     suspend fun updateConnection(ip: String?, port: String?){
         activationDao.updateConnection(ip,port)
     }
-
-    /**
-     * This function is for printing.
-     */
-    fun print(printText: String?,mainActivity: MainActivity) {
-        val styledText = StyledString()
-        styledText.addStyledText(printText)
-        styledText.finishPrintingProcedure()
-        styledText.print(PrinterService.getService(mainActivity.applicationContext))
-    }
 }

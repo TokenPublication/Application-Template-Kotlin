@@ -110,9 +110,9 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
             val deviceInfo = DeviceInfo(mainActivity)
             deviceInfo.setAppParams({ success -> //it informs atms with new terminal and merchant ID
                 if (success) {
-                    activationRepository.print(PrintHelper().printSuccess(),mainActivity)
+                    PrintHelper().printSuccess(mainActivity.applicationContext)
                 } else {
-                    activationRepository.print(PrintHelper().printError(),mainActivity)
+                    PrintHelper().printError(mainActivity.applicationContext)
                 }
                 deviceInfo.unbind()
             }, terminalId, merchantId)

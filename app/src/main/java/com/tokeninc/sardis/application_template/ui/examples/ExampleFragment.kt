@@ -48,13 +48,6 @@ class ExampleFragment(val mainActivity: MainActivity, private val cardViewModel:
         mainActivity.replaceFragment(fragment as Fragment)
     }
 
-    fun print(printText: String?) {
-        val styledText = StyledString()
-        styledText.addStyledText(printText)
-        styledText.finishPrintingProcedure()
-        styledText.print(PrinterService.getService(mainActivity.applicationContext))
-    }
-
     private fun prepareData() {
         val subList1 = mutableListOf<IListMenuItem>()
         subList1.add(MenuItem( "MenuItem 1", {
@@ -147,19 +140,19 @@ class ExampleFragment(val mainActivity: MainActivity, private val cardViewModel:
         }))
         val subListPrint = mutableListOf<IListMenuItem>()
         subListPrint.add(MenuItem(getStrings(R.string.print_success), {
-            print(PrintHelper().printSuccess()) // Message print: Load Success
+            PrintHelper().printSuccess(mainActivity.applicationContext) // Message print: Load Success
         }))
         subListPrint.add(MenuItem(getStrings(R.string.print_error), {
-            print(PrintHelper().printError()) // Message print: Load Error
+            PrintHelper().printError(mainActivity.applicationContext) // Message print: Load Error
         }))
         subListPrint.add(MenuItem("Print Contactless 32", {
-            print(PrintHelper().printContactless(true,mainActivity.applicationContext))
+            PrintHelper().printContactless(true,mainActivity.applicationContext)
         }))
         subListPrint.add(MenuItem("Print Contactless 64", {
-            print(PrintHelper().printContactless(false,mainActivity.applicationContext))
+            PrintHelper().printContactless(false,mainActivity.applicationContext)
         }))
         subListPrint.add(MenuItem("Print Visa", {
-            print(PrintHelper().printVisa(mainActivity.applicationContext))
+            PrintHelper().printVisa(mainActivity.applicationContext)
         }))
         menuItems.add(MenuItem(getStrings(R.string.print_functions), subListPrint, null))
     }
