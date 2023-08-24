@@ -1,5 +1,8 @@
 package com.tokeninc.sardis.application_template.data.repositories
 
+import com.token.printerlib.PrinterService
+import com.token.printerlib.StyledString
+import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.database.activation.ActivationDao
 import javax.inject.Inject
 
@@ -18,5 +21,15 @@ class ActivationRepository @Inject constructor(private val activationDao: Activa
 
     suspend fun updateConnection(ip: String?, port: String?){
         activationDao.updateConnection(ip,port)
+    }
+
+    /**
+     * This function is for printing.
+     */
+    fun print(printText: String?,mainActivity: MainActivity) {
+        val styledText = StyledString()
+        styledText.addStyledText(printText)
+        styledText.finishPrintingProcedure()
+        styledText.print(PrinterService.getService(mainActivity.applicationContext))
     }
 }

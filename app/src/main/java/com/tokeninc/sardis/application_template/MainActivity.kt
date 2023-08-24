@@ -292,10 +292,10 @@ class MainActivity : TimeOutActivity() {
                 // card wouldn't be read before enter the application template in a normal scenerio
                 // when app temp is only banking app or user selects app temp for sale
                 if (isDemoMode){
-                    replaceFragment(saleFragment)
+                    saleFragment.cardReader(false)
                 }
                 else{
-                    saleFragment.cardReader(false)
+                    replaceFragment(saleFragment)
                 }
             }
         }
@@ -436,16 +436,6 @@ class MainActivity : TimeOutActivity() {
         val fragment = InfoDialog.newInstance(type, text, isCancelable)
         fragment.show(supportFragmentManager, "")
         return fragment
-    }
-
-    /**
-     * This function is for printing.
-     */
-    fun print(printText: String?) {
-        val styledText = StyledString()
-        styledText.addStyledText(printText)
-        styledText.finishPrintingProcedure()
-        styledText.print(PrinterService.getService(applicationContext))
     }
 
     /**
