@@ -34,8 +34,8 @@ class CheckSaleReceiver : BroadcastReceiver() {
             val transaction = transactionList?.get(0)
             val resultIntent = Intent()
             val printHelper = TransactionPrintHelper()
+            val bundle = Bundle()
             if (transaction != null) {
-                val bundle = Bundle()
                 bundle.putInt("ResponseCode", ResponseCode.SUCCESS.ordinal)
                 bundle.putInt("PaymentStatus", 0)
                 bundle.putInt("Amount", transaction.Col_Amount)
@@ -54,6 +54,8 @@ class CheckSaleReceiver : BroadcastReceiver() {
                 bundle.putInt("SlipType", SlipType.BOTH_SLIPS.value)
                 bundle.putBoolean("IsSlip", true)
                 resultIntent.putExtras(bundle)
+            } else { // When PGW reboot on sale screen without any sale attempt it ensures to not giving an error
+                bundle.putInt("ResponseCode", ResponseCode.ERROR.ordinal)
             }
             resultIntent.action = "check_sale_result"
             resultIntent.setPackage("com.tokeninc.sardis.paymentgateway")
