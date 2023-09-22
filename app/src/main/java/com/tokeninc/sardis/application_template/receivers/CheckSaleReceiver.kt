@@ -31,7 +31,7 @@ class CheckSaleReceiver : BroadcastReceiver() {
             val db: AppTempDB = AppTempDB.getInstance(context)
             val activationRepository = ActivationRepository(db.activationDao)
             val transactionList = db.transactionDao.getTransactionsByUUID(uuid!!)
-            val transaction = transactionList?.get(0)
+            val transaction =  if (transactionList.isNullOrEmpty()) null else transactionList[0]
             val resultIntent = Intent()
             val printHelper = TransactionPrintHelper()
             val bundle = Bundle()
