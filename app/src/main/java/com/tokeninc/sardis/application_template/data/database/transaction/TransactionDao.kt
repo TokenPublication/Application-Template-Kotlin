@@ -10,9 +10,9 @@ interface TransactionDao {
     suspend fun insertTransaction(transaction: Transaction)
 
     @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} WHERE ${TransactionCols.Col_PAN} = :cardNo AND ${TransactionCols.Col_IsVoid} <> 1 ORDER BY  ${TransactionCols.Col_GUP_SN} ASC")
-    fun getTransactionsByCardNo(cardNo: String): List<Transaction?>?
+    fun getTransactionsByCardNo(cardNo: String): List<Transaction?>
 
-    @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} WHERE ${TransactionCols.Col_HostLogKey} = :refNo")
+    @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} WHERE ${TransactionCols.Col_RefNo} = :refNo")
     fun getTransactionsByRefNo(refNo: String): List<Transaction?>?
 
     @Query("SELECT * FROM ${DatabaseInfo.TRANSACTION_TABLE} WHERE ${TransactionCols.Col_UUID} = :uuid")
@@ -24,6 +24,9 @@ interface TransactionDao {
 
     @Query("UPDATE ${DatabaseInfo.TRANSACTION_TABLE} SET ${TransactionCols.Col_IsVoid} = 1, ${TransactionCols.Col_VoidDateTime} = :date, ${TransactionCols.Col_SID} = :card_SID WHERE ${TransactionCols.Col_GUP_SN} = :gupSN")
     suspend fun setVoid(gupSN: Int, date: String?, card_SID: String?)
+
+    @Query("SELECT COUNT(*) FROM " + DatabaseInfo.TRANSACTION_TABLE)
+    fun getCount(): Int
 
     @Query("DELETE FROM ${DatabaseInfo.TRANSACTION_TABLE}")
     suspend fun deleteAll()

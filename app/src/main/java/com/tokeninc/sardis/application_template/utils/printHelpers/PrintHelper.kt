@@ -1,6 +1,8 @@
 package com.tokeninc.sardis.application_template.utils.printHelpers
 
+import android.content.Context
 import com.token.printerlib.PrinterDefinitions
+import com.token.printerlib.PrinterService
 import com.token.printerlib.StyledString
 import com.tokeninc.sardis.application_template.utils.StringHelper
 
@@ -9,9 +11,9 @@ import com.tokeninc.sardis.application_template.utils.StringHelper
  */
 class PrintHelper: BasePrintHelper() {
 
-    val dateUtil = DateUtil()
+    private val dateUtil = DateUtil()
 
-    fun printSuccess(): String {   // Print the success message
+    fun printSuccess(context: Context) {   // Print the success message
         val styledText = StyledString()
 
         // Strings must be max 29 digits
@@ -29,39 +31,25 @@ class PrintHelper: BasePrintHelper() {
         addTextToNewLine(styledText, "Beko YazarkasaPos", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "Çözüm Merkezi", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "0850 250 0 767", PrinterDefinitions.Alignment.Center)
-        addTextToNewLine(styledText, dateUtil.getDate("dd-MM-yy"),
-            PrinterDefinitions.Alignment.Left
-        )
+        addTextToNewLine(styledText, dateUtil.getDate("dd-MM-yy"), PrinterDefinitions.Alignment.Left)
         addText(styledText, dateUtil.getTime("HH:mm"), PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.addSpace(100)
-        return styledText.toString()
+        styledText.print(PrinterService.getService(context))
     }
 
-    fun printError(): String {   // Print the error message if necessary
+    fun printError(context: Context) {   // Print the error message if necessary
         val styledText = StyledString()
-        addTextToNewLine(
-            styledText,
-            "Uygulama kurulumunda hata",
-            PrinterDefinitions.Alignment.Center
-        )
+        addTextToNewLine(styledText, "Uygulama kurulumunda hata", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "ile karşılaşılmıştır", PrinterDefinitions.Alignment.Center)
-        addTextToNewLine(
-            styledText,
-            "Lütfen Beko YazarkasaPos",
-            PrinterDefinitions.Alignment.Center
-        )
+        addTextToNewLine(styledText, "Lütfen Beko YazarkasaPos", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "Çözüm Merkezi'ni arayın", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "0850 250 0 767", PrinterDefinitions.Alignment.Center)
-        addTextToNewLine(
-            styledText,
-            dateUtil.getDate("dd-MM-yy"),
-            PrinterDefinitions.Alignment.Left
-        )
+        addTextToNewLine(styledText, dateUtil.getDate("dd-MM-yy"), PrinterDefinitions.Alignment.Left)
         addText(styledText, dateUtil.getTime("HH:mm"), PrinterDefinitions.Alignment.Right)
         styledText.newLine()
         styledText.addSpace(100)
-        return styledText.toString()
+        styledText.print(PrinterService.getService(context))
     }
 
     fun printBatchClose(styledText: StyledString, batch_no: String, tx_no: String, totalAmount: Int, MID: String?, TID: String?): String {
@@ -73,19 +61,17 @@ class PrintHelper: BasePrintHelper() {
         addTextToNewLine(styledText, "TERMİNAL NO: ", PrinterDefinitions.Alignment.Left)
         addText(styledText, TID, PrinterDefinitions.Alignment.Right)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
+
         if (batch_no == "") {
             addTextToNewLine(styledText, "Grup Yok", PrinterDefinitions.Alignment.Center)
         } else {
-            addTextToNewLine(styledText, "GRUP NO: ", PrinterDefinitions.Alignment.Center)
-            addText(styledText, batch_no, PrinterDefinitions.Alignment.Right)
+            addTextToNewLine(styledText, "GRUP $batch_no", PrinterDefinitions.Alignment.Center)
         }
-        addTextToNewLine(
-            styledText,
-            dateUtil.getDate("dd/MM/yy"),
-            PrinterDefinitions.Alignment.Left
-        )
+
+        addTextToNewLine(styledText, dateUtil.getDate("dd/MM/yy"), PrinterDefinitions.Alignment.Left)
         addText(styledText, dateUtil.getTime("HH:mm"), PrinterDefinitions.Alignment.Right)
-        if (tx_no == "" || tx_no == "null" || tx_no == "0") {
+
+        if (tx_no == "0") {
             addTextToNewLine(styledText, "İşlem Yok", PrinterDefinitions.Alignment.Center)
         } else {
             addTextToNewLine(styledText, "İşlem Sayısı: ", PrinterDefinitions.Alignment.Left)
@@ -95,8 +81,23 @@ class PrintHelper: BasePrintHelper() {
         addText(styledText,StringHelper().getAmount(totalAmount),PrinterDefinitions.Alignment.Right)
         addTextToNewLine(styledText, " ", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "Grup Kapama Başarılı", PrinterDefinitions.Alignment.Center)
-        addTextToNewLine(styledText, " ", PrinterDefinitions.Alignment.Center)
         styledText.newLine()
         return styledText.toString()
+    }
+
+    fun printContactless(is32: Boolean, context: Context?) {
+        val styledText = StyledString()
+        styledText.printBitmap(if (is32) "contactless32" else "contactless64", 0)
+        styledText.newLine()
+        styledText.addSpace(100)
+        styledText.print(PrinterService.getService(context))
+    }
+
+    fun printVisa(context: Context?) {
+        val styledText = StyledString()
+        styledText.printBitmap("visa-contactless", 0)
+        styledText.newLine()
+        styledText.addSpace(100)
+        styledText.print(PrinterService.getService(context))
     }
 }

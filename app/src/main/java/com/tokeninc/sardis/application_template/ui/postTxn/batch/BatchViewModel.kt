@@ -6,22 +6,21 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.data.entities.responses.BatchCloseResponse
+import com.tokeninc.sardis.application_template.R
+import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
+import com.tokeninc.sardis.application_template.data.model.resultCode.BatchResult
 import com.tokeninc.sardis.application_template.data.repositories.BatchRepository
-import com.tokeninc.sardis.application_template.enums.BatchResult
+import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
-import com.tokeninc.sardis.application_template.utils.printHelpers.BatchClosePrintHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): ViewModel() {
+class BatchViewModel @Inject constructor(private val batchRepository: BatchRepository): ViewModel() {
 
     fun getGroupSN()  = batchRepository.getGroupSN()
     fun getBatchNo() = batchRepository.getBatchNo()
@@ -32,9 +31,9 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
      * This function works in IO thread, so it doesn't lock the main thread.
      * It increases batch number 1 and make groupSn 1
      */
-    private fun updateBatchNo(batchNo: Int){
+    private fun updateBatchNo(){
         viewModelScope.launch(Dispatchers.IO) {
-            batchRepository.updateBatchNo(batchNo)
+            batchRepository.updateBatchNo()
         }
     }
 
@@ -42,9 +41,9 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
      * This function works in IO thread, so it doesn't lock the main thread.
      * It updates the previous batch slip
      */
-    private fun updateBatchSlip(batchSlip: String?, batchNo: Int?){
+    private fun updateBatchSlip(batchSlip: String?){
         viewModelScope.launch(Dispatchers.IO){
-            batchRepository.updateBatchSlip(batchSlip, batchNo)
+            batchRepository.updateBatchSlip(batchSlip)
         }
     }
 
@@ -52,9 +51,9 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
      * This function works in IO thread, so it doesn't lock the main thread.
      * It increases the group Serial No as one.
      */
-    fun updateGUPSN(groupSn: Int){
+    fun updateGUPSN(){
         viewModelScope.launch(Dispatchers.IO) {
-            batchRepository.updateGUPSN(groupSn)
+            batchRepository.updateGUPSN()
         }
     }
 
@@ -89,7 +88,7 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
     /** It runs functions in parallel while ui updating dynamically in main thread with UI States
      * It also calls finishBatchClose functions in parallel in IO coroutine thread.
      */
-    suspend fun batchRoutine(mainActivity: MainActivity, transactionViewModel: TransactionViewModel){
+    suspend fun batchCloseRoutine(mainActivity: MainActivity, transactionViewModel: TransactionViewModel, activationViewModel: ActivationViewModel){
         var downloadNumber = 0
         coroutineScope.launch(Dispatchers.Main){//firstly updating the UI as loading
             uiState.postValue(UIState.Loading)
@@ -105,7 +104,7 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
                 downloadNumber++
             }
             coroutineScope.launch(Dispatchers.IO) {
-                finishBatchClose(mainActivity,transactionViewModel)
+                finishBatchClose(mainActivity,transactionViewModel,activationViewModel)
             }
         }.join()
     }
@@ -114,19 +113,43 @@ class BatchViewModel @Inject constructor(val batchRepository: BatchRepository): 
      * Lastly insert this slip to database, to print it again in next day. If it inserts it successfully, ui is updating
      * with Success Message. Finally, update Batch number and resets group number and delete all transactions from Transaction Table.
      */
-    private fun finishBatchClose(mainActivity: MainActivity, transactionViewModel: TransactionViewModel) {
+    private fun finishBatchClose(mainActivity: MainActivity, transactionViewModel: TransactionViewModel,activationViewModel: ActivationViewModel) {
         val transactions = transactionViewModel.allTransactions() //get all transactions from viewModel
-        coroutineScope.launch(Dispatchers.Main) {
-            uiState.postValue(UIState.Success("Grup Kapama Başarılı"))
-        }
-        val printService = BatchClosePrintHelper()
-        val copySlip = printService.batchText(getBatchNo().toString(),transactions!!,mainActivity,true)
-        updateBatchSlip(copySlip,getBatchNo()) //update the batch slip for previous day
-        val slip = printService.batchText(getBatchNo().toString(),transactions,mainActivity,false)
-        updateBatchNo(getBatchNo()) //update the batch number
+        val copySlip = batchRepository.prepareSlip(mainActivity,activationViewModel,transactions,true)
+        updateBatchSlip(copySlip) //update the batch slip for previous day
+        val slip = batchRepository.prepareSlip(mainActivity,activationViewModel,transactions,false)
+        updateBatchNo() //update the batch number
         transactionViewModel.deleteAll() //delete all the transactions
-        val batchCloseResponse = BatchCloseResponse(BatchResult.SUCCESS, SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault()))
+        val batchCloseResponse = batchRepository.prepareResponse(BatchResult.SUCCESS)
         val intent = batchRepository.prepareBatchIntent(batchCloseResponse,mainActivity,slip) //prepare intent and print slip
+        coroutineScope.launch(Dispatchers.Main) {
+            uiState.postValue(UIState.Success(mainActivity.getString(R.string.batch_close_success)))
+        }
         liveIntent.postValue(intent)
     }
+
+    private val isPrinted = MutableLiveData<Boolean>(false)
+    fun getIsPrinted(): LiveData<Boolean> = isPrinted
+
+    /**
+     * It prepares and prints current transaction List
+     */
+    fun printTransactionListSlip(mainActivity: MainActivity, activationViewModel: ActivationViewModel, transactions: List<Transaction?>?){
+        viewModelScope.launch(Dispatchers.IO) {
+            val transactionListSlip = batchRepository.prepareSlip(mainActivity, activationViewModel, transactions, false, false)
+            batchRepository.print(transactionListSlip, mainActivity)
+            isPrinted.postValue(true)
+        }
+    }
+
+    /**
+     * It prints previous batchSlip
+     */
+    fun printPreviousBatchSlip(mainActivity: MainActivity, batchSlip: String?){
+        viewModelScope.launch(Dispatchers.IO){
+            batchRepository.print(batchSlip,mainActivity)
+            isPrinted.postValue(true)
+        }
+    }
+
 }

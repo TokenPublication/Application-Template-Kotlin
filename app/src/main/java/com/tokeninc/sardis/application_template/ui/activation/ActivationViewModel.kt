@@ -1,16 +1,14 @@
 package com.tokeninc.sardis.application_template.ui.activation
 
-import android.util.Log
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.token.uicomponents.ListMenuFragment.IListMenuItem
-import com.token.uicomponents.ListMenuFragment.ListMenuFragment
+import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
+import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
+import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,30 +25,20 @@ import javax.inject.Inject
 @HiltViewModel
 class ActivationViewModel @Inject constructor(val activationRepository: ActivationRepository): ViewModel() {
 
-    val merchantID = activationRepository.merchantID
-    val terminalID = activationRepository.terminalID
-    val hostIP = activationRepository.hostIP
-    val hostPort = activationRepository.hostPort
+    fun merchantID() = activationRepository.merchantID()
+    fun terminalID() = activationRepository.terminalID()
+    fun hostIP() = activationRepository.hostIP()
+    fun hostPort() = activationRepository.hostPort()
 
-    var menuItemList = mutableListOf<IListMenuItem>()
-
-    fun replaceFragment(mainActivity: MainActivity){
-        val menuFragment = ListMenuFragment.newInstance(menuItemList,"Settings",
-            true, R.drawable.token_logo_png)
-        viewModelScope.launch(Dispatchers.Main) {
-            mainActivity.replaceFragment(menuFragment as Fragment)
+    fun updateActivation(terminalId: String?, merchantId: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            activationRepository.updateActivation(terminalId, merchantId)
         }
     }
 
-    fun updateActivation(terminalId: String?, merchantId: String?, ip: String?){
-        viewModelScope.launch(Dispatchers.IO){
-            activationRepository.updateActivation(terminalId,merchantId,ip)
-        }
-    }
-
-    fun updateConnection(ip: String?, port: String?, old_ip: String?){
-        viewModelScope.launch(Dispatchers.IO){
-            activationRepository.updateConnection(ip,port,old_ip)
+    fun updateConnection(ip: String?, port: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            activationRepository.updateConnection(ip, port)
         }
     }
 
@@ -74,9 +62,9 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     /**
      * This is for not repeating each uiState again.
      */
-    private suspend fun updateUIState(uistate: UIState){
+    private suspend fun updateUIState(ui_state: UIState) {
         coroutineScope.launch(Dispatchers.Main) { //update UI in a dummy way
-            uiState.postValue(uistate)
+            uiState.postValue(ui_state)
         }
         delay(2000L)
     }
@@ -84,20 +72,50 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     /** It runs functions in parallel while ui updating dynamically in main thread
      * Additionally, in IO coroutine thread make setEMVConfiguration method
      */
-    suspend fun setupRoutine(mainActivity: MainActivity) {
+    suspend fun setupRoutine(cardViewModel: CardViewModel,mainActivity: MainActivity,terminalId: String?,merchantId: String?) {
         coroutineScope.launch {
             updateUIState(UIState.Starting)
-            withContext(Dispatchers.IO){
-                Log.d("WithContextThread: ",Thread.currentThread().name)
-                mainActivity.setEMVConfiguration(false)
-            }
+            setEMVConfiguration(cardViewModel, mainActivity)
             updateUIState(UIState.ParameterUploading)
             updateUIState(UIState.MemberActCompleted)
             updateUIState(UIState.RKLLoading)
             updateUIState(UIState.RKLLoaded)
             updateUIState(UIState.KeyBlockLoading)
+            setDeviceInfoParams(mainActivity, terminalId, merchantId)
             updateUIState(UIState.ActivationCompleted)
             uiState.postValue(UIState.Finished)
         }.join() //wait that job to finish to return it
+    }
+
+    /**
+     * It checks whether connect cardService before, if it connect then sets emv configuration
+     * else It tries to connect cardService, whenever it connects it tries to set emv configuration
+     * If it sets it before, it won't set it again (checks from sharedPref)
+     */
+    private fun setEMVConfiguration(cardViewModel: CardViewModel, mainActivity: MainActivity) {
+        if (cardViewModel.getCardServiceBinding() != null) { // if it connects cardService before
+            cardViewModel.setEMVConfiguration()
+        } else {
+            mainActivity.connectCardService(true)
+        }
+    }
+
+    //TODO Developer: If you don't implement this function in your application couldn't be activated and couldn't seen in atms
+    /**
+     *  It tries to connect deviceInfo. If it connects then set terminal ID and merchant ID into device Info and
+     *  print success slip else print error slip
+     */
+    private suspend fun setDeviceInfoParams(mainActivity: MainActivity,terminalId: String?,merchantId: String?){
+        withContext(Dispatchers.Main) {
+            val deviceInfo = DeviceInfo(mainActivity)
+            deviceInfo.setAppParams({ success -> //it informs atms with new terminal and merchant ID
+                if (success) {
+                    PrintHelper().printSuccess(mainActivity.applicationContext)
+                } else {
+                    PrintHelper().printError(mainActivity.applicationContext)
+                }
+                deviceInfo.unbind()
+            }, terminalId, merchantId)
+        }
     }
 }

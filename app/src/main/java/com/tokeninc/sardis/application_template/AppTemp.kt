@@ -11,16 +11,11 @@ class AppTemp: Application() {
     private var currentFiscalID: String? = null
     private var currentCardRedirection = DeviceInfo.CardRedirect.NOT_ASSIGNED.name
 
-    override fun onCreate() {
-        super.onCreate()
-        startDeviceInfo()
-    }
-
     fun getCurrentDeviceMode(): String {
         return currentDeviceMode
     }
 
-    private fun setCurrentDeviceMode(currentDeviceMode: String) {
+    fun setCurrentDeviceMode(currentDeviceMode: String) {
         this.currentDeviceMode = currentDeviceMode
     }
 
@@ -28,7 +23,7 @@ class AppTemp: Application() {
         return currentFiscalID
     }
 
-    private fun setCurrentFiscalID(currentFiscalID: String?) {
+    fun setCurrentFiscalID(currentFiscalID: String?) {
         this.currentFiscalID = currentFiscalID
     }
 
@@ -36,24 +31,7 @@ class AppTemp: Application() {
         return currentCardRedirection
     }
 
-    private fun setCurrentCardRedirection(currentCardRedirection: String) {
+    fun setCurrentCardRedirection(currentCardRedirection: String) {
         this.currentCardRedirection = currentCardRedirection
-    }
-
-    private fun startDeviceInfo() {
-        val deviceInfo = DeviceInfo(this)
-        deviceInfo.getFields(
-            { fields: Array<String>? ->
-                if (fields == null) return@getFields
-                // fields is the string array that contains info in the requested order
-                setCurrentFiscalID(fields[0])
-                setCurrentDeviceMode(fields[1])
-                setCurrentCardRedirection(fields[2])
-                deviceInfo.unbind()
-            },
-            DeviceInfo.Field.FISCAL_ID,
-            DeviceInfo.Field.OPERATION_MODE,
-            DeviceInfo.Field.CARD_REDIRECTION
-        )
     }
 }

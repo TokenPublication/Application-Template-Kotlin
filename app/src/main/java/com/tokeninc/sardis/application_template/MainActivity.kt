@@ -1,8 +1,7 @@
 package com.tokeninc.sardis.application_template
 
 import android.annotation.SuppressLint
-import android.content.ContentValues
-import android.content.Context
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
@@ -23,27 +22,27 @@ import com.token.uicomponents.timeoutmanager.TimeOutActivity
 import com.tokeninc.cardservicebinding.BuildConfig
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.deviceinfo.DeviceInfo
-import com.tokeninc.libtokenkms.KMSWrapperInterface.InitCallbacks
-import com.tokeninc.libtokenkms.TokenKMS
 import com.tokeninc.sardis.application_template.*
+import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
+import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
-import com.tokeninc.sardis.application_template.enums.*
 import com.tokeninc.sardis.application_template.ui.*
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.activation.SettingsFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.PostTxnFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.refund.RefundFragment
+import com.tokeninc.sardis.application_template.ui.postTxn.void_operation.VoidFragment
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.SaleFragment
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
+import com.tokeninc.sardis.application_template.ui.service.ServiceViewModel
 import com.tokeninc.sardis.application_template.ui.trigger.TriggerFragment
+import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -54,23 +53,16 @@ import java.util.*
 @AndroidEntryPoint
 class MainActivity : TimeOutActivity() {
 
-    //initializing bindings
-    private var cardServiceBinding: CardServiceBinding? = null
-
     //initializing View Models and Fragments
     private lateinit var activationViewModel: ActivationViewModel
     private lateinit var batchViewModel: BatchViewModel
     private lateinit var transactionViewModel: TransactionViewModel
     private lateinit var cardViewModel: CardViewModel
+    private lateinit var serviceViewModel: ServiceViewModel
     private lateinit var settingsFragment: SettingsFragment
     private lateinit var saleFragment: SaleFragment
     private lateinit var triggerFragment: TriggerFragment
     private lateinit var postTxnFragment: PostTxnFragment
-    private lateinit var refundFragment: RefundFragment
-
-    //initializing other variables
-    var infoDialog: InfoDialog? = null
-    lateinit var tokenKMS: TokenKMS
 
     /**
      * This function is overwritten to continue the activity where it was left when
@@ -88,26 +80,15 @@ class MainActivity : TimeOutActivity() {
     }
 
     /**
-    Firstly, added TR1000 and TR400 configurations to build.gradle file. After that,
-    related to Build Variant (400TRDebug or 1000TRDebug) the manifest file created with apk
-    and the app name in manifest file will be 1000TR or 400TR.
-     */
-    private fun buildConfigs() {
-        if (BuildConfig.FLAVOR == "TR1000") {
-            Log.d("TR1000 APP", "Application Template for 1000TR")
-        }
-        if (BuildConfig.FLAVOR == "TR400") {
-            Log.d("TR400 APP", "Application Template for 400TR")
-        }
-    }
-
-    /**
-     * This is for starting the activity, databases which are created with respect to context and viewModels which are created
-     * wrt to databases and services are created here. After that, some functions are called with respect to action of the current intent
+     * This is for starting the activity, to start the activity it should be connected
+     * Device Info, Card Service and KMS Service; if it couldn't connect any of them application shouldn't start
+     * Additionally, viewModels are created here with dependency Injection, and also fragments are created here as well.
+     * If everything goes well, it calls a function named actionControl, which calls another functions with respect to intent's action.
      */
     private fun startActivity() {
-        buildConfigs()
         val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
 
         //get ViewModels from Dagger-Hilt easily, but to make this easy you need to implement each dependency clearly
         val getActivationViewModel: ActivationViewModel by viewModels()
@@ -118,64 +99,110 @@ class MainActivity : TimeOutActivity() {
         transactionViewModel = getTransactionViewModel
         val getCardViewModel: CardViewModel by viewModels()
         cardViewModel = getCardViewModel
+        val getServiceViewModel: ServiceViewModel by viewModels()
+        serviceViewModel = getServiceViewModel
 
         saleFragment = SaleFragment(transactionViewModel, this, batchViewModel, cardViewModel, activationViewModel)
-        settingsFragment = SettingsFragment(this, activationViewModel, intent)
+        settingsFragment = SettingsFragment(this, activationViewModel,cardViewModel)
         triggerFragment = TriggerFragment(this)
-        refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel, activationViewModel)
-        postTxnFragment = PostTxnFragment(this, transactionViewModel, refundFragment, batchViewModel, cardViewModel, activationViewModel)
-        observeTIDMID()
-        connectCardService()
+        postTxnFragment = PostTxnFragment(this, transactionViewModel, batchViewModel, cardViewModel, activationViewModel)
 
-        setContentView(binding.root)
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-
-        tokenKMS = TokenKMS() //connecting KMS Service with this flow
-        tokenKMS.init(applicationContext, object : InitCallbacks {
-            override fun onInitSuccess() {
-                Log.i("Token KMS onInitSuccess", "KMS Init OK")
-                actionChanged(intent.action)
-            }
-
-            override fun onInitFailed() {
-                Log.i("Token KMS onInitFailed", "KMS Init Failed")
-                infoDialog = showInfoDialog(InfoDialog.InfoType.Error, "KMS Servis Hatası", false)
-                Handler(Looper.getMainLooper()).postDelayed({
-                    infoDialog?.dismiss()
-                    finish()
-                }, 2000)
-            }
-        })
+        buildConfigs()
+        connectServices()
     }
 
-    /** This function checks activation by checking MID and TID parameters
-     *  if they are empty, warns the customer to activate application then finishes the mainActivity
-     *  TODO in first installation it enters here although it has default MID and TID ?
+    /**
+     * This function calls serviceRoutine, which firstly connects DeviceInfo service, then KMS service
+     * After it connects these two services successfully, it calls connecting Card Service and without waiting connecting
+     * card service it updates the UI with respect to action mainActivity has. It tries to connect cardService on background
+     * If it couldn't connect KMS or deviceInfo services, it warns the user then finishes the mainActivity
      */
-    private fun checkActivation(finish: Boolean) {
-        activationViewModel.merchantID.observe(this) {
-            activationWarning(it == null, finish)
-        }
-        activationViewModel.terminalID.observe(this) {
-            activationWarning(it == null, finish)
+    private fun connectServices(){
+        serviceViewModel.serviceRoutine(this)
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,getString(R.string.connect_services),false)
+        serviceViewModel.getUiState().observe(this) { state ->
+            when (state) {
+                is ServiceViewModel.ServiceUIState.ErrorDeviceInfo -> {
+                    dialog.update(InfoDialog.InfoType.Error, getString(R.string.device_info_service_Error))
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        dialog.dismiss()
+                        finish()
+                    }, 2000)
+                }
+                is ServiceViewModel.ServiceUIState.ErrorKMS -> {
+                    dialog.update(InfoDialog.InfoType.Error, getString(R.string.kms_service_error))
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        dialog.dismiss()
+                        finish()
+                    }, 2000)
+                }
+                is ServiceViewModel.ServiceUIState.Connected -> {
+                    dialog.dismiss()
+                    connectCardService()
+                    actionChanged(intent.action)
+                }
+            }
         }
     }
 
     /**
-     * It shows a warning if isNull is true then finishes the activity
+    Firstly, added TR1000 and TR400 configurations to build.gradle file. After that,
+    related to Build Variant (400TRDebug or 1000TRDebug) the manifest file created with apk
+    and the app name in manifest file will be 1000TR or 400TR.
      */
-    private fun activationWarning(isNull: Boolean, finish: Boolean) {
-        if (isNull) {
-            val infoDialog = showInfoDialog(
-                InfoDialog.InfoType.Warning,
-                "You must activate the application template!",
-                false
-            )
-            Handler(Looper.getMainLooper()).postDelayed({
-                infoDialog!!.dismiss()
-                if (finish)
-                    finish()
-            }, 3000)
+    private fun buildConfigs() {
+        when (BuildConfig.FLAVOR) {
+            "TR1000" -> {
+                Log.i("TR1000 APP", "Application Template for 1000TR")
+            }
+            "TR400" -> {
+                Log.i("TR400 APP", "Application Template for 400TR")
+            }
+            "330" -> {
+                Log.i("TR330 APP", "Application Template for 330TR")
+            }
+        }
+    }
+
+    /**
+     * This function is called whenever cardService is required.
+     * If it couldn't connect to the card service after 10 seconds, it shows a dialog and finishes to the mainActivity.
+     */
+    fun connectCardService(fromActivation: Boolean = false) {
+        var isCancelled = false
+        //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
+        val timer: CountDownTimer = object : CountDownTimer(30000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {}
+
+            override fun onFinish() { //when it's finished, (after 10 seconds)
+                isCancelled = true // make isCancelled true (because cardService couldn't be connected)
+                Log.i("CardService","Not connected")
+                val infoDialog = showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.card_service_error), false)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    infoDialog?.dismiss()
+                }, 2000)
+            }
+        }
+
+        timer.start()
+        cardViewModel.initializeCardServiceBinding(this)
+
+        cardViewModel.getCardServiceConnected().observe(this) { isConnected ->
+            // cardService is connected before 10 seconds (which is the limit of the timer)
+            if (isConnected && !isCancelled) {
+                timer.cancel() // stop timer
+                //if it has message show them with toast ( it comes first connection with setEMVConfiguration)
+                cardViewModel.getToastMessage().observe(this){
+                    Toast.makeText(this,it,Toast.LENGTH_SHORT).show()
+                    // In multi banking pgw, at first installation it always shows Toast until mainActivity finishes; thus it should be reset
+                    cardViewModel.resetToastMessage()
+                    if (!fromActivation){
+                        Toast.makeText(this,getString(R.string.config_updated),Toast.LENGTH_LONG).show()
+                    }
+                }
+
+                Log.i("Connected","CardService")
+            }
         }
     }
 
@@ -185,27 +212,47 @@ class MainActivity : TimeOutActivity() {
     private fun actionChanged(action: String?){
         if (action.equals(getString(R.string.PosTxn_Action)) || action.equals(getString(R.string.Sale_Action)) || action.equals(getString(R.string.BatchClose_Action))
             || action.equals(getString(R.string.Parameter_Action)) || action.equals(getString(R.string.Refund_Action)) )   {
-            checkActivation(true)
+            activationWarning((activationViewModel.merchantID() == null || activationViewModel.terminalID() == null),true)
         } else {
-            checkActivation(false)
+            activationWarning((activationViewModel.merchantID() == null || activationViewModel.terminalID() == null),false)
         }
         when (action) {
             getString(R.string.PosTxn_Action) -> replaceFragment(postTxnFragment)
             getString(R.string.Sale_Action) -> saleActionReceived()
             getString(R.string.Settings_Action) -> replaceFragment(settingsFragment)
             getString(R.string.BatchClose_Action) -> {
-                if (transactionViewModel.allTransactions()
-                        .isNullOrEmpty()
-                ) { //if it is empty just show no transaction dialog
-                    callbackMessage(ResponseCode.ERROR)
+                if (transactionViewModel.allTransactions().isNullOrEmpty()) { //if it is empty just show no transaction dialog
+                    val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning,getString(R.string.batch_close_not_found),false)
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        infoDialog!!.dismiss()
+                        responseMessage(ResponseCode.ERROR,getString(R.string.batch_close_not_found))
+                    }, 2000)
                 } else { //else implementing batch closing and finish that activity
-                    postTxnFragment.startBatchClose()
+                    postTxnFragment.doBatchClose()
                 }
             }
 
             getString(R.string.Parameter_Action) -> replaceFragment(triggerFragment)
             getString(R.string.Refund_Action) -> refundActionReceived()
             else -> replaceFragment(settingsFragment)
+        }
+    }
+
+    /** This function checks activation by checking MID and TID parameters
+     *  If they are empty, warns the customer to activate application then finishes the mainActivity     *
+     */
+    private fun activationWarning(isNull: Boolean, finish: Boolean) {
+        if (isNull) {
+            val infoDialog = showInfoDialog(
+                InfoDialog.InfoType.Warning,
+                getString(R.string.activating_template),
+                false
+            )
+            Handler(Looper.getMainLooper()).postDelayed({
+                infoDialog!!.dismiss()
+                if (finish)
+                    finish()
+            }, 3000)
         }
     }
 
@@ -220,91 +267,66 @@ class MainActivity : TimeOutActivity() {
     private fun saleActionReceived() {
         // get the amount from sale intent, and assign amount to corresponding classes
         val amount = intent.extras!!.getInt("Amount")
-        cardViewModel.setAmount(amount)
         saleFragment.setAmount(amount)
+
         //controlling whether the request coming from gib
         val isGIB = (this.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.GIB.name
         val bundle = intent.extras
         val cardData: String? = bundle?.getString("CardData")
+
+        // controlling whether demoMode is enabled (open)
+        val sharedPreferences = getSharedPreferences("myprefs", MODE_PRIVATE)
+        val isDemoMode = sharedPreferences.getBoolean("demo_mode", false)
+
         // when sale operation is called from pgw which has multi bank and app temp is the only issuer of this card
         if (!isGIB && cardData != null && cardData != "CardData" && cardData != " ") {
-            replaceFragment(saleFragment)
-            saleFragment.doSale(cardData)
+            //replaceFragment(saleFragment)
+            Handler(Looper.getMainLooper()).postDelayed({
+                saleFragment.doSale(cardData)
+            }, 500)
         }
+
         // when sale request comes from GIB
         else if (intent.extras != null) {
             val cardReadType = intent.extras!!.getInt("CardReadType")
             if (cardReadType == CardReadType.ICC.type) {
                 cardViewModel.setGibSale(true)
-                readCard()
-                saleFragment.gibSale()
-            } else {
-                replaceFragment(saleFragment)
+                saleFragment.cardReader(true)
             }
-        } else { // when user select application template as a banking application
-            replaceFragment(saleFragment)
+            else{ // it couldn't enter here if it is a gib sale because intent doesn't include cardReadType because
+                // card wouldn't be read before enter the application template in a normal scenerio
+                // when app temp is only banking app or user selects app temp for sale
+                if (isDemoMode){
+                    saleFragment.cardReader(false)
+                }
+                else{
+                    replaceFragment(saleFragment)
+                }
+            }
         }
     }
 
     /**
-     * This function is called whenever cardService is required.
-     * If it couldn't connect to the card service after 10 seconds, it shows a dialog and finishes to the mainActivity.
+     * It reads card, if it couldn't connect cardService before, first connect the cardService then reads card
      */
-    private fun connectCardService() {
-        var isCancelled = false
-        //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
-        val timer: CountDownTimer = object : CountDownTimer(10000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {}
-            override fun onFinish() { //when it's finished, (after 10 seconds)
-                isCancelled = true //make isCancelled true (because cardService couldn't be connected)
-                showInfoDialog(InfoDialog.InfoType.Declined, "Connect Failed", false)
-                Handler(Looper.getMainLooper()).postDelayed({
-                    infoDialog?.dismiss()
-                    finish()
-                }, 2000)
-            }
-        }
-        timer.start()
-        cardViewModel.initializeCardServiceBinding(this)
-        cardViewModel.getCardServiceConnected().observe(this) { isConnected ->
-            // cardService is connected before 10 seconds (which is the limit of the timer)
-            if (isConnected && !isCancelled) {
-                timer.cancel() // stop timer
-                cardServiceBinding = cardViewModel.getCardServiceBinding()
-                infoDialog?.dismiss()
-                setEMVConfiguration(true) //setEMVConfig when connected
-            }
-        }
-    }
-
-    fun readCard() {
-        if (cardServiceBinding != null) {
+    fun readCard(amount: Int, transactionCode: Int) {
+        if (cardViewModel.getCardServiceBinding() != null) {
             Handler(Looper.getMainLooper()).postDelayed({
-                cardViewModel.readCard()
+                cardViewModel.readCard(amount,transactionCode)
             }, 500)
             //when read card is cancelled (on back pressed) finish the main activity
             cardViewModel.getCallBackMessage().observe(this) { responseCode ->
                 Log.d("Card Result Code with call back message", responseCode.name)
                 if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.ERROR) { //if it is canceled
-                    callbackMessage(responseCode)
+                    responseMessage(responseCode,"")
                 }
             }
         } else{
             connectCardService()
-            readCard()
+            Handler(Looper.getMainLooper()).postDelayed({
+                readCard(amount,transactionCode) // wait for connecting cardService, if it doesn't wait it enters recursive loop
+            }, 400)
         }
-    }
-
-
-    /**
-     * Whenever mainActivity is destroyed, it calls the onDestroy method of cardViewModel and CardRepository from there.
-     * It is needed because the lifecycle of CardRepository is different than the mainActivity, it couldn't finish with the mainActivity,
-     * thus some variable's values are preserved and that gives an error in the following operations.
-     */
-    override fun onDestroy() {
-        Log.d("Main Activity On Destroy", "MainActivity is destroyed")
-        cardViewModel.onDestroyed()
-        super.onDestroy()
     }
 
     /** This function only calls whenever Refund Action is received.
@@ -314,34 +336,33 @@ class MainActivity : TimeOutActivity() {
      * else start refund operation. */
     private fun refundActionReceived() {
         if (intent.extras == null || intent.extras!!.getString("RefundInfo") == null) {
-            callbackMessage(ResponseCode.ERROR)
+            responseMessage(ResponseCode.ERROR,getString(R.string.refund_info_not_found))
         } else {
             val refundInfo = intent.extras!!.getString("RefundInfo")
             val json = JSONObject(refundInfo!!)
             val refNo = json.getString("RefNo")
             transactionViewModel.refNo = refNo
-            val refAmount = json.getString("Amount")
-            val amount = refAmount.toInt()
-            cardViewModel.setAmount(amount)
+            val amount = json.getString("Amount").toInt()
             val transactionBatchNo = json.getInt("BatchNo")
             val currentBatchNo = batchViewModel.getBatchNo()
             if (transactionBatchNo == currentBatchNo) { // GIB Void Operation
-                cardViewModel.setTransactionCode(TransactionCode.VOID.type)
-                readCard()
-                postTxnFragment.gibVoidAfterConnected()
-            } else { // GIB Refund Operation (because refund request is received after closing batch
+                readCard(amount,TransactionCode.VOID.type)
+                val voidFragment = VoidFragment(this,transactionViewModel,batchViewModel,cardViewModel,activationViewModel,true)
+                replaceFragment(voidFragment)
+            } else{ // GIB Refund Operation (because refund request is received after closing batch
                 val authCode = json.getString("AuthCode")
-                val tranDate = SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
+                val tranDate = json.getString("TranDate")
                 val cardNo = json.getString("CardNo")
-                val extraContents = ContentValues()
-                extraContents.put(ExtraKeys.ORG_AMOUNT.name, refAmount.toString())
-                extraContents.put(ExtraKeys.REFUND_AMOUNT.name, refAmount.toString())
-                extraContents.put(ExtraKeys.TRAN_DATE.name, tranDate.toString())
-                extraContents.put(ExtraKeys.REF_NO.name, refNo)
-                extraContents.put(ExtraKeys.AUTH_CODE.name, authCode)
-                extraContents.put(ExtraKeys.CARD_NO.name, cardNo)
-                readCard()
-                refundFragment.gibRefund(extraContents)
+                val refundBundle = Bundle()
+                refundBundle.putString(ExtraKeys.ORG_AMOUNT.name, amount.toString())
+                refundBundle.putString(ExtraKeys.REFUND_AMOUNT.name, amount.toString())
+                refundBundle.putString(ExtraKeys.TRAN_DATE.name, tranDate.toString())
+                refundBundle.putString(ExtraKeys.REF_NO.name, refNo)
+                refundBundle.putString(ExtraKeys.AUTH_CODE.name, authCode)
+                refundBundle.putString(ExtraKeys.CARD_NO.name, cardNo)
+                readCard(amount,TransactionCode.MATCHED_REFUND.type)
+                val refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel, activationViewModel)
+                refundFragment.refundAfterReadCard(null,refundBundle)
             }
         }
     }
@@ -367,16 +388,9 @@ class MainActivity : TimeOutActivity() {
      * Dialog will be dismissed automatically when user taps on to confirm/cancel button.
      * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, String, InfoDialog.InfoDialogButtons, int, InfoDialogListener)}
      */
-    fun showConfirmationDialog(
-        type: InfoDialog.InfoType,
-        title: String,
-        info: String,
-        buttons: InfoDialog.InfoDialogButtons,
-        arg: Int,
-        listener: InfoDialogListener
-    ): InfoDialog? {
-        //created a dialog with InfoDialog newInstance method
-        val dialog = InfoDialog.newInstance(type, title, info, buttons, arg, listener)
+    fun showConfirmationDialog(type: InfoDialog.InfoType, title: String, info: String,
+                               buttons: InfoDialog.InfoDialogButtons, arg: Int, listener: InfoDialogListener): InfoDialog? {
+        val dialog = InfoDialog.newInstance(type, title, info, buttons, arg, listener)  //created a dialog with InfoDialog newInstance method
         dialog.show(supportFragmentManager, "")
         return dialog
     }
@@ -423,151 +437,49 @@ class MainActivity : TimeOutActivity() {
     /**
      * This shows infoDialog
      */
-    fun showInfoDialog(
-        type: InfoDialog.InfoType, text: String, isCancelable: Boolean
-    ): InfoDialog? {
+    fun showInfoDialog(type: InfoDialog.InfoType, text: String, isCancelable: Boolean): InfoDialog? {
         val fragment = InfoDialog.newInstance(type, text, isCancelable)
         fragment.show(supportFragmentManager, "")
         return fragment
     }
 
-
     /**
-     * This function only works in installation, it calls setConfig and setCLConfig
-     * It also called from onCardServiceConnected method of Card Service Library, if Configs couldn't set in first_run
-     * (it is checked from sharedPreferences), again it setConfigurations, else do nothing.
+     * It takes @param responseCode and message and control it with switch case.
+     * Related to it's value, the info dialog shows in screen and activity will
+     * finish with intent contains response code. Also with message parameter, the
+     * error messages can seen at screen.
      */
-    fun setEMVConfiguration(fromCardService: Boolean) {
-        val sharedPreference = getSharedPreferences("myprefs", Context.MODE_PRIVATE)
-        val editor = sharedPreference.edit()
-        val firstTimeBoolean = sharedPreference.getBoolean("FIRST_RUN", false)
-        if (!firstTimeBoolean) {
-            if (fromCardService) {
-                Toast.makeText(
-                    applicationContext,
-                    "Config Dosyaları Güncellendi, Lütfen Banka Kurulumu Yapınız",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-            setConfig()
-            setCLConfig()
-            editor.putBoolean("FIRST_RUN", true)
-            Log.d("setEMVConfiguration", "ok")
-            editor.apply()
-        }
-    }
-
-    /**
-     * It sets Config.xml
-     */
-    private fun setConfig() {
-        try {
-            val xmlStream = applicationContext.assets.open("emv_config.xml")
-            val r = BufferedReader(InputStreamReader(xmlStream))
-            val total = StringBuilder()
-            var line: String? = r.readLine()
-            while (line != null) {
-                Log.d("emv_config", "conf line: $line")
-                total.append(line).append('\n')
-                line = r.readLine()
-            }
-            val setConfigResult = cardServiceBinding!!.setEMVConfiguration(total.toString())
-            Toast.makeText(
-                applicationContext,
-                "setEMVConfiguration res=$setConfigResult",
-                Toast.LENGTH_SHORT
-            ).show()
-            Log.i("emv_config", "setEMVConfiguration: $setConfigResult")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    /**
-     * It sets cl_config.xml
-     */
-    private fun setCLConfig() {
-        try {
-            val xmlCLStream = applicationContext.assets.open("emv_cl_config.xml")
-            val rCL = BufferedReader(InputStreamReader(xmlCLStream))
-            val totalCL = java.lang.StringBuilder()
-            var line: String? = rCL.readLine()
-            while (line != null) {
-                Log.d("emv_config", "conf line: $line")
-                totalCL.append(line).append('\n')
-                line = rCL.readLine()
-            }
-            val setCLConfigResult: Int =
-                cardServiceBinding!!.setEMVCLConfiguration(totalCL.toString())
-            Toast.makeText(
-                applicationContext,
-                "setEMVCLConfiguration res=$setCLConfigResult", Toast.LENGTH_SHORT
-            ).show()
-            Log.i("emv_config", "setEMVCLConfiguration: $setCLConfigResult")
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    /**
-     * It passes responseCode as a callBack message with respect to given parameter
-     */
-    fun callbackMessage(responseCode: ResponseCode) {
-        val intent = Intent()
+    fun responseMessage(responseCode: ResponseCode, message: String) {
         val bundle = Bundle()
-        bundle.putInt("ResponseCode", responseCode.ordinal)
-        intent.putExtras(bundle)
-
+        val intent = Intent()
         when (responseCode) {
-            ResponseCode.OFFLINE_DECLINE -> {
-                val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning, "Card Numbers are Mismatching", true)
-                Handler(Looper.getMainLooper()).postDelayed({
-                    infoDialog!!.dismiss()
-                    setResult(intent)
-                }, 2000)
-            }
-            ResponseCode.CANCELED -> {
-                val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning, "İşlem İptal Edildi", false)
-                if (cardViewModel.getTimeOut()){
-                    infoDialog?.update(InfoDialog.InfoType.Warning,"İşlem Zaman Aşımına Uğradı")
+            ResponseCode.ERROR -> {
+                if (message != "") {
+                    showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.error) + ": " + message, true)
+                } else {
+                    showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.error), true)
                 }
-                Handler(Looper.getMainLooper()).postDelayed({
-                    infoDialog!!.dismiss()
-                    setResult(intent)
-                }, 2000)
             }
-            else -> {
-                setResult(intent)
-            }
+            ResponseCode.CANCELED -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.cancelled), true)
+            ResponseCode.OFFLINE_DECLINE -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.offline_decline), true)
+            else -> showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.declined), true)
         }
+        Handler(Looper.getMainLooper()).postDelayed({
+            bundle.putInt("ResponseCode", responseCode.ordinal)
+            intent.putExtras(bundle)
+            setResult(intent)
+            setResult(Activity.RESULT_CANCELED)
+        }, 2000)
     }
 
     /**
-     * This function is for printing.
+     * Whenever mainActivity is destroyed, it calls the onDestroy method of cardViewModel and CardRepository from there.
+     * It is needed because the lifecycle of CardRepository is different than the mainActivity, it couldn't finish with the mainActivity,
+     * thus some variable's values are preserved and that gives an error in the following operations.
      */
-    fun print(printText: String?) {
-        val styledText = StyledString()
-        styledText.addStyledText(printText)
-        styledText.finishPrintingProcedure()
-        styledText.print(PrinterService.getService(applicationContext))
-    }
-
-    //This is for holding MID and TID, Because this values are LiveData,
-    // instead of writing this functions everywhere it is used call it from mainActivity.
-    var currentMID: String? = ""
-    var currentTID: String? = ""
-
-    /**
-     * After TID and MID is changed, it is called from there and hold data for it. It also called everytime whenever MainActivity is created.
-     */
-    fun observeTIDMID() {
-        activationViewModel.merchantID.observe(this) {
-            if (it != null)
-                currentMID = it
-        }
-        activationViewModel.terminalID.observe(this) {
-            if (it != null)
-                currentTID = it
-        }
+    override fun onDestroy() {
+        Log.d("Main Activity On Destroy", "MainActivity is destroyed")
+        cardViewModel.onDestroyed()
+        super.onDestroy()
     }
 }
