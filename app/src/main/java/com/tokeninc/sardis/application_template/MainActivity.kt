@@ -151,11 +151,16 @@ class MainActivity : TimeOutActivity() {
     and the app name in manifest file will be 1000TR or 400TR.
      */
     private fun buildConfigs() {
-        if (BuildConfig.FLAVOR == "TR1000") {
-            Log.d("TR1000 APP", "Application Template for 1000TR")
-        }
-        if (BuildConfig.FLAVOR == "TR400") {
-            Log.d("TR400 APP", "Application Template for 400TR")
+        when (BuildConfig.FLAVOR) {
+            "TR1000" -> {
+                Log.i("TR1000 APP", "Application Template for 1000TR")
+            }
+            "TR400" -> {
+                Log.i("TR400 APP", "Application Template for 400TR")
+            }
+            "330" -> {
+                Log.i("TR330 APP", "Application Template for 330TR")
+            }
         }
     }
 
