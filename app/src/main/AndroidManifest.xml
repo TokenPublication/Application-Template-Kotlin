@@ -15,7 +15,6 @@
         android:logo="@drawable/token_logo"
         android:theme="@style/AppTheme.NoActionBar"
         tools:targetApi="s"> <!-- Token theme without Actionbar -->
-        <activity android:name=".ui.examples.ExampleFragment"/>
 
         <activity
             android:name=".MainActivity"

@@ -50,6 +50,13 @@ android {
 
     flavorDimensions "default"
     productFlavors{
+        TR330{
+            manifestPlaceholders = [
+                    APP_LABEL:"Application Template",
+                    MODEL_NAME:"330TR",
+                    APP_NAME:"BNK_000_TMPLT"
+            ]
+        }
         TR400{
             manifestPlaceholders = [
                     APP_LABEL:"Application Template",
@@ -60,7 +67,7 @@ android {
         TR1000{
             manifestPlaceholders = [
                     APP_LABEL:"Application Template",
-                    MODEL_NAME:"400TR",
+                    MODEL_NAME:"1000TR",
                     APP_NAME:"BNK_000_TMPLT"
             ]
         }
@@ -69,6 +76,7 @@ android {
 
 
 configurations {
+    TR330
     TR400
     TR1000
 }
