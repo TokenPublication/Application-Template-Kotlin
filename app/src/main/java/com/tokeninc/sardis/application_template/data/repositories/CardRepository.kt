@@ -60,6 +60,7 @@ class CardRepository @Inject constructor() :
     private var cardServiceBinding: CardServiceBinding? = null
 
     fun cardServiceBinder(activity: MainActivity) {
+        Log.i("cardLogs","enter cardServiceBinder")
         mainActivity = activity
         cardServiceBinding = CardServiceBinding(activity, this)
     }
@@ -181,6 +182,7 @@ class CardRepository @Inject constructor() :
      * After that call setEMVConfiguration method, it checks whether the Setup is Done before, if it is do nothing, else set EMV
      */
     override fun onCardServiceConnected() {
+        Log.i("cardLogs","enter onCardServiceConnected")
         isCardServiceConnected.postValue(true)
         setEMVConfiguration()
     }
