@@ -133,9 +133,6 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                     coroutineScope.launch(Dispatchers.IO) {
                         val onlineTransactionResponse = transactionRepository.parseResponse()
                         batchViewModel.updateSTN() //update STN since it communicates with host
-                        coroutineScope.launch(Dispatchers.Main) {
-                            uiState.postValue(UIState.Success("Preparing The Data"))
-                        }
                         finishTransaction( card,transactionCode, bundle, extraContent,
                             onlineTransactionResponse,batchViewModel,mainActivity,activationRepository)
                     }
@@ -161,6 +158,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             if (transactionCode == TransactionCode.VOID.type){ // if it is a void operation
                 val gupSn = extraContent!!.getAsString(TransactionCols.Col_GUP_SN).toInt()
                 setVoid(gupSn,"${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}",card.SID)
+                Log.i("finishTransaction","setVoid SN: $gupSn")
                 responseCode = ResponseCode.SUCCESS
                 val voidBundle = Bundle()
                 voidBundle.putString(TransactionCols.Col_GUP_SN,gupSn.toString())
@@ -176,13 +174,13 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                     val transaction = ContentValHelper().getTransaction(content)
                     insertTransaction(transaction)
                     responseCode = ResponseCode.SUCCESS
-                    Log.d("Service","Success: ")
+                    Log.i("finishTransaction","Transaction Inserted SN: ${transaction.Col_GUP_SN} ")
                 }
             }
 
             if (responseCode == ResponseCode.SUCCESS){
                 coroutineScope.launch(Dispatchers.Main) {
-                    uiState.postValue(UIState.Success("Transaction is Successful"))
+                    uiState.postValue(UIState.Success(onlineTransactionResponse.mAuthCode!!))
                 }
             }
             val transaction: Transaction =
@@ -199,6 +197,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 else{
                     transactionRepository.prepareRefundVoidIntent(transactionResponse,mainActivity,receipt,transaction.ZNO, transaction.Col_ReceiptNo)
                 }
+            Log.i("finishTransaction","Intent sending")
             liveIntent.postValue(intent)
         }
     }

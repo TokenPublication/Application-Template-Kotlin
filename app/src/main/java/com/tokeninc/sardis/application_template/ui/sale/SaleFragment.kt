@@ -264,8 +264,8 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         transactionViewModel.getUiState().observe(mainActivity) { state ->
             when (state) {
                 is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
-                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting % ${state.data}")
-                is TransactionViewModel.UIState.Success -> Log.i("Transaction Result: "," Success")
+                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,getStrings(R.string.connecting)+" %"+state.data)
+                is TransactionViewModel.UIState.Success -> dialog.update(InfoDialog.InfoType.Confirmed, getStrings(R.string.confirmation_code)+": "+state.message)
             }
         }
         transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
