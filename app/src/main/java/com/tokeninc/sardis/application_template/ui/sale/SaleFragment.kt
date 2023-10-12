@@ -279,6 +279,9 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     private fun generateBundle(): Bundle {
         val bundle = Bundle()
         val uuid = mainActivity.intent.extras?.getString("UUID")
+        if (uuid != null) {
+            Log.i("Sale UUID",uuid)
+        }
         val zNO = mainActivity.intent.extras?.getString("ZNO")
         val receiptNo = mainActivity.intent.extras?.getString("ReceiptNo")
 
