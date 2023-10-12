@@ -15,10 +15,11 @@ import com.tokeninc.sardis.application_template.data.database.transaction.Transa
 import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.data.model.responses.OnlineTransactionResponse
 import com.tokeninc.sardis.application_template.data.model.responses.TransactionResponse
-import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
-import com.tokeninc.sardis.application_template.data.repositories.TransactionRepository
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.type.SlipType
+import com.tokeninc.sardis.application_template.data.repositories.ActivationRepository
+import com.tokeninc.sardis.application_template.data.repositories.TransactionRepository
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.utils.ContentValHelper
 import com.tokeninc.sardis.application_template.utils.objects.SampleReceipt
@@ -201,6 +202,18 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             liveIntent.postValue(intent)
         }
     }
+
+
+    fun prepareDummyResponse(
+        price: Int,
+        code: ResponseCode,
+        slipType: SlipType,
+        paymentType: Int
+    ) {
+        val intent = transactionRepository.prepareDummyResponse(price, code,slipType,paymentType)
+        liveIntent.postValue(intent)
+    }
+
 
     private val isPrinted = MutableLiveData<Boolean>(false)
     fun getIsPrinted(): LiveData<Boolean> = isPrinted

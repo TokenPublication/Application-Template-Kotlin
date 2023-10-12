@@ -449,7 +449,7 @@ class MainActivity : TimeOutActivity() {
      * finish with intent contains response code. Also with message parameter, the
      * error messages can seen at screen.
      */
-    fun responseMessage(responseCode: ResponseCode, message: String) {
+    fun responseMessage(responseCode: ResponseCode, message: String, resultIntent: Intent? = null) {
         val bundle = Bundle()
         val intent = Intent()
         when (responseCode) {
@@ -466,6 +466,18 @@ class MainActivity : TimeOutActivity() {
         }
         Handler(Looper.getMainLooper()).postDelayed({
             bundle.putInt("ResponseCode", responseCode.ordinal)
+            if (resultIntent != null){
+                val resBundle = resultIntent.extras
+                val amount = resBundle!!.getInt("Amount")
+                val resCode = resBundle.getInt("ResponseCode")
+                val slipType = resBundle.getInt("SlipType")
+                val paymentType = resBundle.getInt("PaymentType")
+                bundle.putInt("Amount",amount)
+                bundle.putInt("ResponseCode",resCode)
+                bundle.putInt("SlipType",slipType)
+                bundle.putInt("PaymentType",paymentType)
+                Log.i("Dummy Response","Amount: $amount, ResponseCode: $resCode, SlipType: $slipType, PaymentType: $paymentType")
+            }
             intent.putExtras(bundle)
             setResult(intent)
             setResult(Activity.RESULT_CANCELED)

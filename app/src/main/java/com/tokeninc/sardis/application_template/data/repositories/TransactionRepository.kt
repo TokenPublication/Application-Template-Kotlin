@@ -189,7 +189,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
                         SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false))
                     bundle.putString("merchantSlipData", printHelper.getFormattedText( receipt,
                         SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false))
-                    bundle.putString("RefundInfo", getRefundInfo(ContentValHelper().getTransaction(transactionResponse.contentVal!!),card,receipt))
+                    bundle.putString("RefundInfo", getRefundInfo(ContentValHelper().getTransaction(transactionResponse.contentVal!!),card.mCardNumber,receipt))
                     if(transactionResponse.contentVal != null) {
                         bundle.putString("RefNo", transactionResponse.contentVal!!.getAsString(
                             TransactionCols.Col_RefNo))
@@ -207,7 +207,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
     /**
      * @return refundInfo which is Json with necessary components
      */
-    private fun getRefundInfo(transaction: Transaction, card: ICCCard, receipt: SampleReceipt): String {
+    private fun getRefundInfo(transaction: Transaction, cardNo: String?, receipt: SampleReceipt): String {
         val json = JSONObject()
         try {
             json.put("BatchNo", receipt.batchNo)
@@ -215,7 +215,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             json.put("Amount", transaction.Col_Amount)
             json.put("MID",receipt.merchantID)
             json.put("TID",receipt.terminalID)
-            json.put("CardNo",card.mCardNumber!!)
+            json.put("CardNo",cardNo)
             json.put("RefNo", transaction.Col_RefNo)
             json.put("AuthCode", transaction.Col_AuthCode)
             json.put("TranDate", transaction.Col_TranDate)
@@ -270,5 +270,21 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         styledText.addStyledText(printText)
         styledText.finishPrintingProcedure()
         styledText.print(PrinterService.getService(mainActivity.applicationContext))
+    }
+
+    fun prepareDummyResponse(
+        price: Int,
+        code: ResponseCode,
+        slipType: SlipType,
+        paymentType: Int
+    ): Intent {
+        val resultIntent = Intent()
+        val bundle = Bundle()
+        bundle.putInt("Amount",price)
+        bundle.putInt("ResponseCode", code.ordinal)
+        bundle.putInt("SlipType", slipType.value)
+        bundle.putInt("PaymentType", paymentType)
+        resultIntent.putExtras(bundle)
+        return resultIntent
     }
 }

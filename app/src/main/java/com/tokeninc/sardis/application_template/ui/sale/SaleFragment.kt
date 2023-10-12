@@ -21,17 +21,17 @@ import com.token.uicomponents.ListMenuFragment.MenuItemClickListener
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
-import com.tokeninc.sardis.application_template.data.model.card.ICCCard
-import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
-import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
-import com.tokeninc.sardis.application_template.utils.ExtraKeys
-import com.tokeninc.sardis.application_template.data.model.type.PaymentType
+import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
-import com.tokeninc.sardis.application_template.data.model.type.SlipType
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.type.CardReadType
+import com.tokeninc.sardis.application_template.data.model.type.PaymentType
+import com.tokeninc.sardis.application_template.data.model.type.SlipType
+import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
 import kotlinx.coroutines.CoroutineScope
@@ -324,7 +324,35 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
                 valueOf(PaymentType.OTHER) -> paymentType = PaymentType.OTHER.type
             }
         }
-        //onSaleResponseRetrieved(amount, code, true, slipType, "1234 **** **** 7890", "OWNER NAME", paymentType)
+        onSaleResponseRetrieved(amount, code, slipType, paymentType)
+    }
+
+    /**
+     * This method for only dummy sale that did in Sale UI (success, error, declined)
+     */
+    private fun onSaleResponseRetrieved(
+        price: Int,
+        code: ResponseCode,
+        slipType: SlipType,
+        paymentType: Int
+    ) {
+        transactionViewModel.prepareDummyResponse(
+           price, code, slipType, paymentType)
+        transactionViewModel.getLiveIntent().observe(viewLifecycleOwner) { resultIntent ->
+            if (code === ResponseCode.SUCCESS) {
+                mainActivity.showInfoDialog(
+                    InfoDialog.InfoType.Confirmed,
+                    getString(R.string.trans_successful),
+                    false
+                )
+                Handler(Looper.getMainLooper()).postDelayed({
+                    mainActivity.setResult(Activity.RESULT_OK, resultIntent)
+                    mainActivity.finish()
+                }, 2000)
+            } else {
+                mainActivity.responseMessage(code, "",resultIntent)
+            }
+        }
     }
 
     fun setAmount(amount:Int){
