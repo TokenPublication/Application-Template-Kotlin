@@ -140,6 +140,7 @@ class CardRepository @Inject constructor() :
             obj.put("zeroAmount", 0)
             obj.put("showAmount", 1)
             obj.put("emvProcessType", EmvProcessType.CONTINUE_EMV.ordinal)
+            isApprove = false // to unbind CardService
             getCard(amount, obj.toString())
         } catch (e: java.lang.Exception) {
             setCallBackMessage(ResponseCode.ERROR)
@@ -174,6 +175,10 @@ class CardRepository @Inject constructor() :
             mutableCardData.postValue(card)
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
+        }
+        if (!isApprove){
+            cardServiceBinding!!.unBind()
+            isCardServiceConnected.postValue(false)
         }
     }
 
