@@ -56,7 +56,6 @@ class CheckSaleReceiver : BroadcastReceiver() {
                 bundle.putBoolean("IsSlip", true)
             } else { // When PGW reboot on sale screen without any sale attempt it ensures to not giving an error
                 Log.i("Check Sale Receiver","Transaction is null")
-                bundle.putInt("ResponseCode", ResponseCode.ERROR.ordinal)
             }
             resultIntent.action = "check_sale_result"
             resultIntent.putExtras(bundle)
