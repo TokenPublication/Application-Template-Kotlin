@@ -465,6 +465,7 @@ class MainActivity : TimeOutActivity() {
             else -> showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.declined), true)
         }
         Handler(Looper.getMainLooper()).postDelayed({
+            var activityResult = Activity.RESULT_CANCELED
             bundle.putInt("ResponseCode", responseCode.ordinal)
             if (resultIntent != null){
                 val resBundle = resultIntent.extras
@@ -472,6 +473,7 @@ class MainActivity : TimeOutActivity() {
                 val resCode = resBundle.getInt("ResponseCode")
                 val slipType = resBundle.getInt("SlipType")
                 val paymentType = resBundle.getInt("PaymentType")
+                activityResult = Activity.RESULT_OK
                 bundle.putInt("Amount",amount)
                 bundle.putInt("ResponseCode",resCode)
                 bundle.putInt("SlipType",slipType)
@@ -480,7 +482,7 @@ class MainActivity : TimeOutActivity() {
             }
             intent.putExtras(bundle)
             setResult(intent)
-            setResult(Activity.RESULT_CANCELED)
+            setResult(activityResult)
         }, 2000)
     }
 
