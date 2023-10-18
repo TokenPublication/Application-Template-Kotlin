@@ -339,8 +339,9 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         slipType: SlipType,
         paymentType: Int
     ) {
+
         transactionViewModel.prepareDummyResponse(
-           price, code, slipType, paymentType)
+           price, code, slipType, paymentType,activationViewModel.merchantID(),activationViewModel.terminalID(),mainActivity)
         transactionViewModel.getLiveIntent().observe(viewLifecycleOwner) { resultIntent ->
             if (code === ResponseCode.SUCCESS) {
                 mainActivity.showInfoDialog(

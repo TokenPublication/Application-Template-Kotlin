@@ -22,6 +22,7 @@ import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.objects.SampleReceipt
 import com.tokeninc.sardis.application_template.utils.printHelpers.DateUtil
+import com.tokeninc.sardis.application_template.utils.printHelpers.PrintHelper
 import com.tokeninc.sardis.application_template.utils.printHelpers.TransactionPrintHelper
 import org.json.JSONException
 import org.json.JSONObject
@@ -276,7 +277,10 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         price: Int,
         code: ResponseCode,
         slipType: SlipType,
-        paymentType: Int
+        paymentType: Int,
+        MID: String?,
+        TID: String?,
+        mainActivity: MainActivity
     ): Intent {
         val resultIntent = Intent()
         val bundle = Bundle()
@@ -284,6 +288,18 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         bundle.putInt("ResponseCode", code.ordinal)
         bundle.putInt("SlipType", slipType.value)
         bundle.putInt("PaymentType", paymentType)
+        val message = when (code){
+            ResponseCode.SUCCESS -> "İşlem Başarılı"
+            ResponseCode.ERROR -> "İşlemde hata ile karşılaşıldı"
+            ResponseCode.CANCELED -> "İşlem iptal Edildi"
+            ResponseCode.ONLINE_DECLINE -> "İşlem online reddedildi"
+            ResponseCode.OFFLINE_DECLINE -> "İşlem offline Reddedildi"
+            ResponseCode.UNABLE_DECLINE -> "Unable Decline"
+        }
+        val slipData = PrintHelper().printDummyResponse(price,MID,TID,message)
+        bundle.putString("customerSlipData", slipData)
+        bundle.putString("merchantSlipData", slipData)
+        //print(slipData, mainActivity) //app temp can print slip if needed
         resultIntent.putExtras(bundle)
         return resultIntent
     }

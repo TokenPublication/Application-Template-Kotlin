@@ -455,34 +455,23 @@ class MainActivity : TimeOutActivity() {
         when (responseCode) {
             ResponseCode.ERROR -> {
                 if (message != "") {
-                    showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.error) + ": " + message, true)
+                    showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.error) + ": " + message, false)
                 } else {
-                    showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.error), true)
+                    showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.error), false)
                 }
             }
-            ResponseCode.CANCELED -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.cancelled), true)
+            ResponseCode.CANCELED -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.cancelled), false)
             ResponseCode.OFFLINE_DECLINE -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.offline_decline), true)
-            else -> showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.declined), true)
+            else -> showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.declined), false)
         }
         Handler(Looper.getMainLooper()).postDelayed({
-            var activityResult = Activity.RESULT_CANCELED
-            bundle.putInt("ResponseCode", responseCode.ordinal)
             if (resultIntent != null){
-                val resBundle = resultIntent.extras
-                val amount = resBundle!!.getInt("Amount")
-                val resCode = resBundle.getInt("ResponseCode")
-                val slipType = resBundle.getInt("SlipType")
-                val paymentType = resBundle.getInt("PaymentType")
-                activityResult = Activity.RESULT_OK
-                bundle.putInt("Amount",amount)
-                bundle.putInt("ResponseCode",resCode)
-                bundle.putInt("SlipType",slipType)
-                bundle.putInt("PaymentType",paymentType)
-                Log.i("Dummy Response","Amount: $amount, ResponseCode: $resCode, SlipType: $slipType, PaymentType: $paymentType")
+                setResult(resultIntent)
+            } else{
+                bundle.putInt("ResponseCode", responseCode.ordinal)
+                intent.putExtras(bundle)
+                setResult(intent)
             }
-            intent.putExtras(bundle)
-            setResult(intent)
-            setResult(activityResult)
         }, 2000)
     }
 
