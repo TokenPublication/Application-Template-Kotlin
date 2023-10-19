@@ -294,14 +294,19 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         if (code == ResponseCode.SUCCESS ){
             resultIntent = prepareDummySuccessIntent(price, code, slipType, paymentType, MID, TID, batchViewModel)
         }
-        val slipData = PrintHelper().printDummyResponse(price,MID,TID,message)
+        val customerSlipData = PrintHelper().printDummyResponse(price,MID,TID,message,false)
+        val merchantSlipData = PrintHelper().printDummyResponse(price,MID,TID,message,true)
         if (slipType === SlipType.CARDHOLDER_SLIP || slipType === SlipType.BOTH_SLIPS) {
-            bundle.putString("customerSlipData", slipData)
-           // print(slipData, mainActivity) //app temp can print slip if needed
+            bundle.putString("customerSlipData", customerSlipData) //pgw print
+            if (code != ResponseCode.SUCCESS){
+                print(customerSlipData, mainActivity) // app temp print
+            }
         }
         if (slipType === SlipType.MERCHANT_SLIP || slipType === SlipType.BOTH_SLIPS){
-            bundle.putString("merchantSlipData", slipData)
-           // print(slipData, mainActivity) //app temp can print slip if needed
+            bundle.putString("merchantSlipData", merchantSlipData)
+            if (code != ResponseCode.SUCCESS){
+                print(merchantSlipData, mainActivity)
+            }
         }
         resultIntent.putExtras(bundle)
         return resultIntent

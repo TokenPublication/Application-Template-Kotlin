@@ -101,8 +101,13 @@ class PrintHelper: BasePrintHelper() {
         styledText.print(PrinterService.getService(context))
     }
 
-    fun printDummyResponse(totalAmount: Int, MID: String?, TID: String?,message: String?): String {
+    fun printDummyResponse(totalAmount: Int, MID: String?, TID: String?,message: String?,isMerchant: Boolean): String {
         val styledText = StyledString()
+        if (isMerchant){
+            addTextToNewLine(styledText, "İŞ YERİ NÜSHASI", PrinterDefinitions.Alignment.Center)
+        } else{
+            addTextToNewLine(styledText, "MÜŞTERİ NÜSHASI", PrinterDefinitions.Alignment.Center)
+        }
         addTextToNewLine(styledText, "TOKEN", PrinterDefinitions.Alignment.Center)
         addTextToNewLine(styledText, "FINTECH", PrinterDefinitions.Alignment.Center)
         styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)
@@ -119,6 +124,7 @@ class PrintHelper: BasePrintHelper() {
         styledText.newLine()
         addText(styledText, message, PrinterDefinitions.Alignment.Center)
         styledText.newLine()
+        styledText.addSpace(80)
         return styledText.toString()
     }
 

@@ -461,7 +461,7 @@ class MainActivity : TimeOutActivity() {
                 }
             }
             ResponseCode.CANCELED -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.cancelled), false)
-            ResponseCode.OFFLINE_DECLINE -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.offline_decline), true)
+            ResponseCode.OFFLINE_DECLINE -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.offline_decline), false)
             else -> showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.declined), false)
         }
         Handler(Looper.getMainLooper()).postDelayed({
