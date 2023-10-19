@@ -297,13 +297,12 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         val slipData = PrintHelper().printDummyResponse(price,MID,TID,message)
         if (slipType === SlipType.CARDHOLDER_SLIP || slipType === SlipType.BOTH_SLIPS) {
             bundle.putString("customerSlipData", slipData)
-            print(slipData, mainActivity) //app temp can print slip if needed
+           // print(slipData, mainActivity) //app temp can print slip if needed
         }
         if (slipType === SlipType.MERCHANT_SLIP || slipType === SlipType.BOTH_SLIPS){
             bundle.putString("merchantSlipData", slipData)
-            print(slipData, mainActivity) //app temp can print slip if needed
+           // print(slipData, mainActivity) //app temp can print slip if needed
         }
-        //print(slipData, mainActivity) //app temp can print slip if needed
         resultIntent.putExtras(bundle)
         return resultIntent
     }
