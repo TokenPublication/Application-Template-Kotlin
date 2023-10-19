@@ -26,7 +26,8 @@ class CheckSaleReceiver : BroadcastReceiver() {
      */
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.hasExtra("UUID")) {
-            Log.d("UUID", intent.extras!!.getString("UUID")!!)
+            Log.i("Check Sale Receiver","Entered")
+            Log.i("UUID", intent.extras!!.getString("UUID")!!)
             val uuid = intent.extras!!.getString("UUID")
             val db: AppTempDB = AppTempDB.getInstance(context)
             val activationRepository = ActivationRepository(db.activationDao)
@@ -53,11 +54,11 @@ class CheckSaleReceiver : BroadcastReceiver() {
                 bundle.putInt("TxnNo", transaction.Col_GUP_SN)
                 bundle.putInt("SlipType", SlipType.BOTH_SLIPS.value)
                 bundle.putBoolean("IsSlip", true)
-                resultIntent.putExtras(bundle)
             } else { // When PGW reboot on sale screen without any sale attempt it ensures to not giving an error
-                bundle.putInt("ResponseCode", ResponseCode.ERROR.ordinal)
+                Log.i("Check Sale Receiver","Transaction is null")
             }
             resultIntent.action = "check_sale_result"
+            resultIntent.putExtras(bundle)
             resultIntent.setPackage("com.tokeninc.sardis.paymentgateway")
             Log.d("intent_control", resultIntent.toString())
             context.sendBroadcast(resultIntent)

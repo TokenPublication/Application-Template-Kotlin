@@ -191,10 +191,8 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         transactionViewModel.getUiState().observe(mainActivity) { state ->
             when (state) {
                 is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
-                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,"Connecting % ${state.data}")
-                is TransactionViewModel.UIState.Success -> mainActivity.showDialog(
-                    InfoDialog.newInstance(
-                        InfoDialog.InfoType.Progress,getStrings(R.string.printing_the_receipt),true))
+                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,getStrings(R.string.connecting)+" %"+state.data)
+                is TransactionViewModel.UIState.Success -> dialog.update(InfoDialog.InfoType.Confirmed, getStrings(R.string.confirmation_code)+": "+state.message)
             }
         }
         transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->

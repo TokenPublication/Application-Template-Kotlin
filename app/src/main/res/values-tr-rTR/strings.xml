@@ -36,7 +36,7 @@
     <string name="tran_date">İşlem Tarihi</string>
     <string name="tran_date_invalid">İşlem Tarihi Hatalı</string>
 
-    <string name="connecting">Bağlantı Kuruluyor…</string>
+    <string name="connecting">Bağlantı Kuruluyor</string>
     <string name="connect_failed">Kart Servis Hatası</string>
     <string name="trans_successful">İşlem Başarılı</string>
     <string name="printing_the_receipt">Slip Basılıyor</string>

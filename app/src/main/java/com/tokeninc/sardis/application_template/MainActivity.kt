@@ -449,26 +449,29 @@ class MainActivity : TimeOutActivity() {
      * finish with intent contains response code. Also with message parameter, the
      * error messages can seen at screen.
      */
-    fun responseMessage(responseCode: ResponseCode, message: String) {
+    fun responseMessage(responseCode: ResponseCode, message: String, resultIntent: Intent? = null) {
         val bundle = Bundle()
         val intent = Intent()
         when (responseCode) {
             ResponseCode.ERROR -> {
                 if (message != "") {
-                    showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.error) + ": " + message, true)
+                    showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.error) + ": " + message, false)
                 } else {
-                    showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.error), true)
+                    showInfoDialog(InfoDialog.InfoType.Error, getString(R.string.error), false)
                 }
             }
-            ResponseCode.CANCELED -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.cancelled), true)
-            ResponseCode.OFFLINE_DECLINE -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.offline_decline), true)
-            else -> showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.declined), true)
+            ResponseCode.CANCELED -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.cancelled), false)
+            ResponseCode.OFFLINE_DECLINE -> showInfoDialog(InfoDialog.InfoType.Warning, getString(R.string.offline_decline), false)
+            else -> showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.declined), false)
         }
         Handler(Looper.getMainLooper()).postDelayed({
-            bundle.putInt("ResponseCode", responseCode.ordinal)
-            intent.putExtras(bundle)
-            setResult(intent)
-            setResult(Activity.RESULT_CANCELED)
+            if (resultIntent != null){
+                setResult(resultIntent)
+            } else{
+                bundle.putInt("ResponseCode", responseCode.ordinal)
+                intent.putExtras(bundle)
+                setResult(intent)
+            }
         }, 2000)
     }
 

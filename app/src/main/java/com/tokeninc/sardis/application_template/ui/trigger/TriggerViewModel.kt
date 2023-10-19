@@ -67,7 +67,8 @@ class TriggerViewModel: ViewModel() {
                         "{\"cardRangeStart\":\"3333330000000\",\"cardRangeEnd\":\"3333339999999\",\"OwnerShip\":\"BRAND\",\"CardType\":\"C\"}]"
             bundle.putString("BINS", bins)
             bundle.putString("AllowedOperations", "{" + "\"QrAllowed\"" + ":" + "1" + "," + "\"KeyInAllowed\"" + ":" + "1" + "}")
-            bundle.putString("SupportedAIDs", "[A0000000031010, A0000000041010, A0000000032010]")
+            bundle.putString("SupportedAIDs", "[A0000000031010, A0000000041010, A0000000032010, A0000000043060, A0000006723010, A0000006723020, A000000152301091, A000000152301092, A000000333010101, A000000333010102]")
+
             resultIntent.putExtras(bundle)
             withContext(Dispatchers.Main){
                 triggerUiState.postValue(TriggerUIState.Success) // update the ui as an success
