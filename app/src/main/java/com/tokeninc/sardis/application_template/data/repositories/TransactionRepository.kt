@@ -17,6 +17,7 @@ import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCo
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.data.model.type.PaymentType
 import com.tokeninc.sardis.application_template.data.model.type.SlipType
+import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.utils.ContentValHelper
 import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import com.tokeninc.sardis.application_template.utils.StringHelper
@@ -273,16 +274,10 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         styledText.print(PrinterService.getService(mainActivity.applicationContext))
     }
 
-    fun prepareDummyResponse(
-        price: Int,
-        code: ResponseCode,
-        slipType: SlipType,
-        paymentType: Int,
-        MID: String?,
-        TID: String?,
-        mainActivity: MainActivity
+    fun prepareDummyResponse(price: Int, code: ResponseCode, slipType: SlipType,
+        paymentType: Int, MID: String?, TID: String?, mainActivity: MainActivity, batchViewModel: BatchViewModel
     ): Intent {
-        val resultIntent = Intent()
+        var resultIntent = Intent()
         val bundle = Bundle()
         bundle.putInt("Amount",price)
         bundle.putInt("ResponseCode", code.ordinal)
@@ -296,11 +291,68 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
             ResponseCode.OFFLINE_DECLINE -> "İşlem offline Reddedildi"
             ResponseCode.UNABLE_DECLINE -> "Unable Decline"
         }
+        if (code == ResponseCode.SUCCESS ){
+            resultIntent = prepareDummySuccessIntent(price, code, slipType, paymentType, MID, TID, batchViewModel)
+        }
         val slipData = PrintHelper().printDummyResponse(price,MID,TID,message)
-        bundle.putString("customerSlipData", slipData)
-        bundle.putString("merchantSlipData", slipData)
+        if (slipType === SlipType.CARDHOLDER_SLIP || slipType === SlipType.BOTH_SLIPS) {
+            bundle.putString("customerSlipData", slipData)
+            print(slipData, mainActivity) //app temp can print slip if needed
+        }
+        if (slipType === SlipType.MERCHANT_SLIP || slipType === SlipType.BOTH_SLIPS){
+            bundle.putString("merchantSlipData", slipData)
+            print(slipData, mainActivity) //app temp can print slip if needed
+        }
         //print(slipData, mainActivity) //app temp can print slip if needed
         resultIntent.putExtras(bundle)
         return resultIntent
+    }
+
+    private fun prepareDummySuccessIntent(price: Int, code: ResponseCode, slipType: SlipType,
+                                          paymentType: Int, MID: String?, TID: String? ,batchViewModel: BatchViewModel): Intent{
+        val resultIntent = Intent()
+        val bundle = Bundle()
+        val dummyCardNo = "1234 **** **** 7890"
+        val refNo = StringHelper().addZeros((0..999999999).random().toString(),10)
+        val authCode = StringHelper().addZeros((0..99999).random().toString(),6)
+        bundle.putInt("ResponseCode", code.ordinal) // #1 Response Code
+        bundle.putString("CardOwner", "OWNER NAME") // Optional
+        bundle.putString("CardNumber", dummyCardNo) // Optional, Card No can be masked
+        bundle.putInt("PaymentStatus", 0) // #2 Payment Status
+        bundle.putInt("Amount", price) // #3 Amount
+        bundle.putInt("Amount2", price)
+        bundle.putBoolean("IsSlip", true)
+        bundle.putInt("BatchNo", batchViewModel.getBatchNo())
+        bundle.putString("CardNo", StringHelper().maskTheCardNo(dummyCardNo)) //#5 Card No "MASKED"
+        bundle.putString("MID", MID) //#6 Merchant ID
+        bundle.putString("TID", TID) //#7 Terminal ID
+        bundle.putInt("TxnNo", batchViewModel.getGroupSN())
+        bundle.putInt("SlipType", slipType.value)
+        bundle.putString("RefundInfo", getDummyRefundInfo(dummyCardNo,batchViewModel.getBatchNo(),batchViewModel.getGroupSN(),price,MID, TID,refNo,authCode))
+        bundle.putString("RefNo", refNo)
+        bundle.putString("AuthCode", authCode)
+        bundle.putInt("PaymentType", paymentType)
+        resultIntent.putExtras(bundle)
+        return resultIntent
+    }
+
+    private fun getDummyRefundInfo(cardNo: String, batchNo: Int, groupSn: Int, amount:Int, MID: String?,TID: String?, refNo: String, authCode:String
+    ): String {
+        val json = JSONObject()
+        try {
+            json.put("BatchNo", batchNo)
+            json.put("TxnNo", groupSn)
+            json.put("Amount", amount)
+            json.put("MID",MID)
+            json.put("TID",TID)
+            json.put("CardNo",cardNo)
+            json.put("RefNo", refNo)
+            json.put("AuthCode", authCode)
+            json.put("TranDate", "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}")
+            json.put("InstCount", 0)
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+        return json.toString()
     }
 }
