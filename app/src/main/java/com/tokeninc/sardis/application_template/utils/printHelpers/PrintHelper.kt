@@ -124,7 +124,7 @@ class PrintHelper: BasePrintHelper() {
         styledText.newLine()
         addText(styledText, message, PrinterDefinitions.Alignment.Center)
         styledText.newLine()
-        styledText.addSpace(80)
+        styledText.addSpace(100)
         return styledText.toString()
     }
 

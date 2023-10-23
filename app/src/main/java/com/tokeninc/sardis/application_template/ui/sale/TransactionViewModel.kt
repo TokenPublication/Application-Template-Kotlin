@@ -204,8 +204,8 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
 
 
     fun prepareDummyResponse(price: Int, code: ResponseCode, slipType: SlipType, paymentType: Int,
-        MID: String?, TID: String?, mainActivity: MainActivity, batchViewModel: BatchViewModel) {
-        val intent = transactionRepository.prepareDummyResponse(price, code,slipType,paymentType,MID,TID,mainActivity,batchViewModel)
+        MID: String?, TID: String?, batchViewModel: BatchViewModel) {
+        val intent = transactionRepository.prepareDummyResponse(price, code,slipType,paymentType,MID,TID,batchViewModel)
         liveIntent.postValue(intent)
     }
 
