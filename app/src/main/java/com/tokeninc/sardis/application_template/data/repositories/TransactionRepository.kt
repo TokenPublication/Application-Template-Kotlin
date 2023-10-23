@@ -275,13 +275,14 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
     }
 
     fun prepareDummyResponse(price: Int, code: ResponseCode, slipType: SlipType,
-        paymentType: Int, MID: String?, TID: String?, mainActivity: MainActivity, batchViewModel: BatchViewModel
+        paymentType: Int, MID: String?, TID: String?, batchViewModel: BatchViewModel
     ): Intent {
         var resultIntent = Intent()
         val bundle = Bundle()
         bundle.putInt("Amount",price)
         bundle.putInt("ResponseCode", code.ordinal)
         bundle.putInt("SlipType", slipType.value)
+        bundle.putBoolean("IsSlip", true)
         bundle.putInt("PaymentType", paymentType)
         val message = when (code){
             ResponseCode.SUCCESS -> "İşlem Başarılı"
@@ -298,15 +299,9 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         val merchantSlipData = PrintHelper().printDummyResponse(price,MID,TID,message,true)
         if (slipType === SlipType.CARDHOLDER_SLIP || slipType === SlipType.BOTH_SLIPS) {
             bundle.putString("customerSlipData", customerSlipData) //pgw print
-            if (code != ResponseCode.SUCCESS){
-                print(customerSlipData, mainActivity) // app temp print
-            }
         }
         if (slipType === SlipType.MERCHANT_SLIP || slipType === SlipType.BOTH_SLIPS){
             bundle.putString("merchantSlipData", merchantSlipData)
-            if (code != ResponseCode.SUCCESS){
-                print(merchantSlipData, mainActivity)
-            }
         }
         resultIntent.putExtras(bundle)
         return resultIntent
