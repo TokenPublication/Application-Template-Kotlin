@@ -146,6 +146,9 @@ dependencies {
 
     // qr sale
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+
+    // ui Components
+    implementation 'com.airbnb.android:lottie:4.2.0'
 }
 
 // Allow references to generated code
