@@ -78,14 +78,14 @@ class TransactionPrintHelper:BasePrintHelper() {
         }
 
         val sdf: SimpleDateFormat
-        = if (slipType === SlipType.CARDHOLDER_SLIP && (context.applicationContext as AppTemp).getCurrentDeviceMode() == (DeviceInfo.PosModeEnum.GIB.name)
+                = if (slipType === SlipType.CARDHOLDER_SLIP && (context.applicationContext as AppTemp).getCurrentDeviceMode() == (DeviceInfo.PosModeEnum.GIB.name)
             || slipType === SlipType.MERCHANT_SLIP) {
             SimpleDateFormat("dd-MM-yy HH:mm:ss", Locale.getDefault())
         } else{
             SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         }
-        val dateTime = sdf.format(Calendar.getInstance().time)
-        var lineTime = dateTime
+
+        var lineTime = receipt.tranDate
 
         if (slipType == SlipType.CARDHOLDER_SLIP){
             lineTime += if (receipt.isOffline == 1) " C OFFLINE" else " C ONLINE"
