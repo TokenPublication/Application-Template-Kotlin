@@ -9,6 +9,7 @@ import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.AppTemp
 import com.tokeninc.sardis.application_template.data.database.transaction.TransactionCols
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
+import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.data.model.type.SlipType
 import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import com.tokeninc.sardis.application_template.utils.StringHelper
@@ -174,8 +175,10 @@ class TransactionPrintHelper:BasePrintHelper() {
             if (slipType === SlipType.CARDHOLDER_SLIP) {
                 styledText.addTextToLine("KARŞILIĞI MAL/HİZM ALDIM", PrinterDefinitions.Alignment.Center)
             } else {
-                styledText.addTextToLine("İşlem Şifre Girilerek Yapılmıştır", PrinterDefinitions.Alignment.Center)
-                styledText.newLine()
+                if (receipt.cardType == CardReadType.ICC.type || receipt.cardType == CardReadType.MSR.type || receipt.cardType == CardReadType.ICC2MSR.type){
+                    styledText.addTextToLine("İşlem Şifre Girilerek Yapılmıştır", PrinterDefinitions.Alignment.Center)
+                    styledText.newLine()
+                }
                 styledText.addTextToLine("İMZAYA GEREK YOKTUR", PrinterDefinitions.Alignment.Center)
             }
         }
