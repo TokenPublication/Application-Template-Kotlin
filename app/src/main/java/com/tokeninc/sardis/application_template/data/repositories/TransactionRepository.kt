@@ -267,6 +267,30 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         print(merchantSlipData,mainActivity)
     }
 
+    /**
+     * It prepares and prints the customer slip.
+     */
+    fun prepareCopyCustomerSlip(receipt: SampleReceipt, mainActivity: MainActivity, transaction: Transaction,
+                        transactionCode: Int) {
+        val transactionPrintHelper = TransactionPrintHelper()
+        val contentValHelper = ContentValHelper()
+        val customerSlipData: String = transactionPrintHelper.getFormattedText(receipt,SlipType.CARDHOLDER_SLIP,contentValHelper.getContentVal(transaction),
+            transactionCode,mainActivity,transaction.ZNO,transaction.Col_ReceiptNo,true)
+        print(customerSlipData,mainActivity)
+    }
+
+    /**
+     * It prepares and prints the merchant slip.
+     */
+    fun prepareCopyMerchantSlip(receipt: SampleReceipt, mainActivity: MainActivity, transaction: Transaction,
+                        transactionCode: Int) {
+        val transactionPrintHelper = TransactionPrintHelper()
+        val contentValHelper = ContentValHelper()
+        val merchantSlipData: String = transactionPrintHelper.getFormattedText(receipt,SlipType.MERCHANT_SLIP,contentValHelper.getContentVal(transaction),
+            transactionCode,mainActivity,transaction.ZNO,transaction.Col_ReceiptNo,true)
+        print(merchantSlipData,mainActivity)
+    }
+
     private fun print(printText: String?, mainActivity: MainActivity) {
         val styledText = StyledString()
         styledText.addStyledText(printText)

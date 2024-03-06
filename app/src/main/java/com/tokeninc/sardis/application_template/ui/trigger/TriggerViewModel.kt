@@ -168,6 +168,7 @@ class TriggerViewModel: ViewModel() {
                         "{\"cardRangeStart\":\"6768270000000\",\"cardRangeEnd\":\"6768279999999\",\"OwnerShip\":\"ISSUER\",\"CardType\":\"B\"}," +
                         "{\"cardRangeStart\":\"9792050000000\",\"cardRangeEnd\":\"9792059999999\",\"OwnerShip\":\"ISSUER\",\"CardType\":\"A\"}," +
                         "{\"cardRangeStart\":\"9792290000000\",\"cardRangeEnd\":\"9792299999999\",\"OwnerShip\":\"ISSUER\",\"CardType\":\"A\"}," +
+                        "{\"cardRangeStart\":\"9792990000000\",\"cardRangeEnd\":\"9792999999999\",\"OwnerShip\":\"ISSUER\",\"CardType\":\"A\"}," +
                         "{\"cardRangeStart\":\"9792360000000\",\"cardRangeEnd\":\"9792369999999\",\"OwnerShip\":\"ISSUER\",\"CardType\":\"A\"}]"
 
             val allowedOperations = "{" + "\"QrAllowed\"" + ":" + "0" + "," + "\"KeyInAllowed\"" + ":" + "1" + "}"

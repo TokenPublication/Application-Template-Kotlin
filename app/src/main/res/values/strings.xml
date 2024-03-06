@@ -45,6 +45,8 @@
     <string name="connect_failed">Connect Failed</string>
     <string name="trans_successful">Transaction Successful</string>
     <string name="printing_the_receipt">Printing the Receipt</string>
+    <string name="printing_the_customer_receipt">Printing the Customer Receipt</string>
+    <string name="printing_the_merchant_receipt">Printing the Merchant Receipt</string>
     <string name="preparing_the_receipt">Preparing the Receipt</string>
     <string name="batch_close_success">Batch Closing Successfully</string>
     <string name="activating_template">You must activate the application template!</string>

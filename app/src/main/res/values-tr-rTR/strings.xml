@@ -39,7 +39,9 @@
     <string name="connecting">Bağlantı Kuruluyor</string>
     <string name="connect_failed">Kart Servis Hatası</string>
     <string name="trans_successful">İşlem Başarılı</string>
-    <string name="printing_the_receipt">Slip Basılıyor</string>
+    <string name="printing_the_receipt">Slip Yazdırılıyor</string>
+    <string name="printing_the_customer_receipt">Müşteri Nüshası Yazdırılıyor</string>
+    <string name="printing_the_merchant_receipt">İş Yeri Nüshası Yazdırılıyor</string>
     <string name="preparing_the_receipt">Slip Hazırlanıyor</string>
     <string name="batch_close_success">Grup Kapama Başarılı</string>
     <string name="activating_template">Application Template Aktif Edilmeli!</string>
