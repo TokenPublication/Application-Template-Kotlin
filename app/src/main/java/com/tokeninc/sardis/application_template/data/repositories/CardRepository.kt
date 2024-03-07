@@ -1,5 +1,7 @@
 package com.tokeninc.sardis.application_template.data.repositories
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -7,7 +9,6 @@ import com.google.gson.Gson
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
 import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
 import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
@@ -56,6 +57,7 @@ class CardRepository @Inject constructor() :
     //for UI updating they don't have to be a LiveData
     var gibSale = false
     private var isApprove = false //this is a flag for checking whether it is ICC sale (for implementing continue emv)
+    private var takePin = false
 
     private var cardServiceBinding: CardServiceBinding? = null
 
@@ -77,6 +79,7 @@ class CardRepository @Inject constructor() :
         isCardServiceConnected = MutableLiveData(false)
         gibSale = false
         isApprove = false
+        takePin = false
     }
 
     /**
@@ -141,6 +144,7 @@ class CardRepository @Inject constructor() :
             obj.put("showAmount", 1)
             obj.put("emvProcessType", EmvProcessType.CONTINUE_EMV.ordinal)
             isApprove = false // to unbind CardService
+            takePin = true // make this true for completeEmvTxn
             getCard(amount, obj.toString())
         } catch (e: java.lang.Exception) {
             setCallBackMessage(ResponseCode.ERROR)
@@ -176,7 +180,9 @@ class CardRepository @Inject constructor() :
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
-        if (!isApprove){
+        if (!isApprove || takePin){
+            val action = 0x01.toByte()
+            val emvResult = cardServiceBinding!!.completeEmvTxn(action, byteArrayOf(0, 0), byteArrayOf(0, 0), 0, byteArrayOf(0, 0), 0) // this is for 330TR ICC
             cardServiceBinding!!.unBind()
             isCardServiceConnected.postValue(false)
         }
