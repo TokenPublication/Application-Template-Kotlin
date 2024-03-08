@@ -54,21 +54,24 @@ android {
             manifestPlaceholders = [
                     APP_LABEL:"Application Template",
                     MODEL_NAME:"330TR",
-                    APP_NAME:"BNK_000_TMPLT"
+                    APP_NAME:"BNK_000_TMPLT",
+                    VERSION: "1"
             ]
         }
         TR400{
             manifestPlaceholders = [
                     APP_LABEL:"Application Template",
                     MODEL_NAME:"400TR",
-                    APP_NAME:"BNK_000_TMPLT"
+                    APP_NAME:"BNK_000_TMPLT",
+                    VERSION: "4001"
             ]
         }
         TR1000{
             manifestPlaceholders = [
                     APP_LABEL:"Application Template",
                     MODEL_NAME:"1000TR",
-                    APP_NAME:"BNK_000_TMPLT"
+                    APP_NAME:"BNK_000_TMPLT",
+                    VERSION: "10001"
             ]
         }
     }

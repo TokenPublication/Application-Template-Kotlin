@@ -72,7 +72,7 @@
         </receiver>
         <meta-data
             android:name="app_version"
-            android:value="1" />
+            android:value="${VERSION}" />
         <meta-data
             android:name="app_model_type"
             android:value="${MODEL_NAME}"/>
