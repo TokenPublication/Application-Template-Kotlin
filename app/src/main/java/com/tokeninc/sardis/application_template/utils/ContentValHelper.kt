@@ -84,7 +84,7 @@ class ContentValHelper {
         val colKeySequenceNumber = contentVal.getAsString(TransactionCols.Col_KeySequenceNumber)
         val colIsPinByPass = contentVal.getAsString(TransactionCols.Col_isPinByPass).toInt()
         val colIsOffline = contentVal.getAsString(TransactionCols.Col_isOffline).toInt()
-        val colIsOnlinePIN = contentVal.getAsString(TransactionCols.Col_is_onlinePIN).toInt()
+        val colIsOnlinePIN = contentVal.getAsString(TransactionCols.Col_is_onlinePIN)?.toInt()
         val colAC = contentVal.getAsString(TransactionCols.Col_AC)
         val colCID = contentVal.getAsString(TransactionCols.Col_CID)
         val colATC = contentVal.getAsString(TransactionCols.Col_ATC)
@@ -97,11 +97,50 @@ class ContentValHelper {
         val colIAD = contentVal.getAsString(TransactionCols.Col_IAD)
         val colSID = contentVal.getAsString(TransactionCols.Col_SID)
         val colExtRefundDateTime = contentVal.getAsString(TransactionCols.Col_Ext_RefundDateTime)
-        return Transaction(colUUID,colulSTN,colGUPSN,colBatchNo,colReceiptNo,colZNo,colCardReadType,colPAN,
-            colCardSequenceNumber, colTransCode, colAmount, colAmount2, colExpDate, colTrack2,
-            colCustName, colIsVoid, colInstCnt, colTranDate, colHostLogKey, colVoidDateTime, colChipData, colIsSignature,
-            colAuthCode, colAid, colAidLabel, colTextPrintCode1, colDisplayData,
-            colKeySequenceNumber, colIsPinByPass, colIsOffline, colIsOnlinePIN, colAC, colCID, colATC, colTVR, colTSI,
-            colAIP, colCVM, colAID2, colUN, colIAD, colSID, colExtRefundDateTime)
+        return Transaction(
+            colUUID,
+            colulSTN,
+            colGUPSN,
+            colBatchNo,
+            colReceiptNo,
+            colZNo,
+            colCardReadType,
+            colPAN,
+            colCardSequenceNumber,
+            colTransCode,
+            colAmount,
+            colAmount2,
+            colExpDate,
+            colTrack2,
+            colCustName,
+            colIsVoid,
+            colInstCnt,
+            colTranDate,
+            colHostLogKey,
+            colVoidDateTime,
+            colChipData,
+            colIsSignature,
+            colAuthCode,
+            colAid,
+            colAidLabel,
+            colTextPrintCode1,
+            colDisplayData,
+            colKeySequenceNumber,
+            colIsPinByPass,
+            colIsOffline,
+            colIsOnlinePIN,
+            colAC,
+            colCID,
+            colATC,
+            colTVR,
+            colTSI,
+            colAIP,
+            colCVM,
+            colAID2,
+            colUN,
+            colIAD,
+            colSID,
+            colExtRefundDateTime
+        )
     }
 }
