@@ -20,6 +20,7 @@ class SampleReceipt(
     var aid = transaction.Col_Aid
     var aidLabel = transaction.Col_AidLabel
     var cardNo = StringHelper().maskCardNumber(transaction.Col_PAN)
+    var cardType = transaction.Col_CardReadType
     var amount = StringHelper().getAmount(transaction.Col_Amount)
     var authCode = if (onlineTransactionResponse == null) transaction.Col_AuthCode else onlineTransactionResponse.mAuthCode
     var refNo = if(onlineTransactionResponse == null)  transaction.Col_RefNo else onlineTransactionResponse.mRefNo

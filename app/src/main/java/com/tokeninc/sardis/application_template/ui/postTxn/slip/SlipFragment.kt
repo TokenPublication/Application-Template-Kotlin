@@ -7,7 +7,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import com.token.uicomponents.infodialog.InfoDialog
+import com.token.uicomponents.infodialog.InfoDialogListener
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.database.transaction.Transaction
@@ -80,14 +82,68 @@ private val transactionViewModel: TransactionViewModel, private val batchViewMod
         }
     }
 
+    /**
+     * It shows info dialog for printing customer slip, then asks user to print merchant slip
+     * If it will be printed call printing merchant slip function, else finish the function
+     */
+
+    private lateinit var observer: Observer<Boolean>
     fun prepareSlip(transaction: Transaction) {
         var transactionCode = transaction.Col_TransCode
         if (transaction.Col_IsVoid == 1) {
             transactionCode = TransactionCode.VOID.type
         }
-        val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Progress, mainActivity.getString(R.string.printing_the_receipt), false)
-        transactionViewModel.prepareCopySlip(transaction,transactionCode,activationViewModel.activationRepository,mainActivity)
-        transactionViewModel.getIsPrinted().observe(mainActivity){ infoDialog!!.dismiss()}
+        val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Progress, mainActivity.getString(R.string.printing_the_customer_receipt), true)
+        transactionViewModel.prepareCopyCustomerSlip(transaction,transactionCode,activationViewModel.activationRepository,mainActivity)
+        observer = Observer{ isPrinted ->
+            if (isPrinted) {
+                infoDialog?.dismiss()
+                mainActivity.showConfirmationDialog(
+                    InfoDialog.InfoType.Info,
+                    mainActivity.getString(R.string.preparing_the_receipt),
+                    mainActivity.getString(R.string.printing_the_merchant_receipt),
+                    InfoDialog.InfoDialogButtons.Both, 1,
+                    object : InfoDialogListener {
+                        override fun confirmed(i: Int) {
+                            prepareMerchantSlip(transaction, transactionCode)
+                        }
+
+                        override fun canceled(i: Int) {
+                            initSlipLiveData()
+                        }
+                    })
+                transactionViewModel.getIsCustomerPrinted().removeObserver(observer) // not observe twice, when prepareSlip is called again
+            }
+        }
+        transactionViewModel.getIsCustomerPrinted().observe(mainActivity, observer)
+    }
+
+    private lateinit var merchantObserver: Observer<Boolean>
+
+
+    /**
+     * It prints merchant slip
+     */
+    private fun prepareMerchantSlip(transaction: Transaction, transactionCode: Int){
+        val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Progress, mainActivity.getString(R.string.printing_the_merchant_receipt), true)
+        transactionViewModel.prepareCopyMerchantSlip(transaction,transactionCode,activationViewModel.activationRepository,mainActivity)
+        merchantObserver = Observer {
+            if (it) {
+                infoDialog?.dismiss()
+                initSlipLiveData()
+                transactionViewModel.getIsPrinted().removeObserver(merchantObserver)
+            }
+        }
+        transactionViewModel.getIsPrinted().observe(mainActivity,merchantObserver)
+    }
+
+    /**
+     * It initializes slip live data in transaction view model for preventing multiple slip copying operations
+     */
+    private fun initSlipLiveData(){
+        Handler(Looper.getMainLooper()).postDelayed({
+            transactionViewModel.initSlipLiveData()
+        }, 400)
     }
 
 }

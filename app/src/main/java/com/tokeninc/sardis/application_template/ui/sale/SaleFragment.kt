@@ -190,7 +190,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
 
         mainActivity.readCard(amount,transactionCode)
         cardViewModel.getCardLiveData().observe(mainActivity) { cardData -> //firstly observing cardData
-            if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
+            if (cardData != null && cardData.resultCode == CardServiceResult.SUCCESS.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
                 Log.d("CardResult", cardData.mCardNumber.toString())
                 this.card = cardData
                 if (isGib){ // if gibSale

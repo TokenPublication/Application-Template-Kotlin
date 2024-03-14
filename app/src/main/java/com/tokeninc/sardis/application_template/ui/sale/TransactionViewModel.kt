@@ -210,7 +210,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     }
 
 
-    private val isPrinted = MutableLiveData<Boolean>(false)
+    private val isPrinted = MutableLiveData<Boolean>()
     fun getIsPrinted(): LiveData<Boolean> = isPrinted
 
     fun prepareCopySlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
@@ -220,4 +220,33 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             isPrinted.postValue(true)
         }
     }
+
+    private val isCustomerPrinted = MutableLiveData<Boolean>()
+    fun getIsCustomerPrinted(): LiveData<Boolean> = isCustomerPrinted
+
+    fun prepareCopyCustomerSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
+        viewModelScope.launch(Dispatchers.IO){
+            val receipt = SampleReceipt(transaction,activationRepository)
+            transactionRepository.prepareCopyCustomerSlip(receipt,mainActivity,transaction,transactionCode)
+            isCustomerPrinted.postValue(true)
+        }
+    }
+
+    fun prepareCopyMerchantSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
+        viewModelScope.launch(Dispatchers.IO){
+            val receipt = SampleReceipt(transaction,activationRepository)
+            transactionRepository.prepareCopyMerchantSlip(receipt,mainActivity,transaction,transactionCode)
+            isPrinted.postValue(true)
+        }
+    }
+
+    /**
+     * This is for preventing for cases when user want multiple slip data, because at first liveData has value next time their value is preserved in viewModel
+     * In this method, their values will be destroyed to prevent unwanted cases.
+     */
+    fun initSlipLiveData(){
+        isCustomerPrinted.postValue(false)
+        isPrinted.postValue(false)
+    }
+
 }
