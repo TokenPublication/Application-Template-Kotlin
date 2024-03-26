@@ -281,9 +281,16 @@ class MainActivity : TimeOutActivity() {
         // when sale operation is called from pgw which has multi bank and app temp is the only issuer of this card
         if (!isGIB && cardData != null && cardData != "CardData" && cardData != " ") {
             //replaceFragment(saleFragment)
-            Handler(Looper.getMainLooper()).postDelayed({
-                saleFragment.doSale(cardData)
-            }, 500)
+            val cardReadType = intent.extras!!.getInt("CardReadType")
+            // if it is card redirection flow
+            if (cardReadType == CardReadType.CLCard.type) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    saleFragment.doSale(cardData)
+                }, 500)
+            } else{
+                // in this way it requests password in ICC cases
+                saleFragment.cardReader(false)
+            }
         }
 
         // when sale request comes from GIB
