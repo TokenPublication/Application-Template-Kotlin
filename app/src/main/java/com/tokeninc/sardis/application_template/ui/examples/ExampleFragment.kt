@@ -44,7 +44,7 @@ class ExampleFragment(val mainActivity: MainActivity, private val cardViewModel:
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prepareData()
-        val fragment = ListMenuFragment.newInstance(menuItems, getStrings(R.string.examples), false, R.drawable.token_logo_png)
+        val fragment = ListMenuFragment.newInstance(menuItems, getStrings(R.string.examples), true, R.drawable.token_logo_png)
         mainActivity.replaceFragment(fragment as Fragment)
     }
 

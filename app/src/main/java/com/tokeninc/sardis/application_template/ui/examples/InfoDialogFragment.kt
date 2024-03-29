@@ -48,7 +48,7 @@ class InfoDialogFragment(private val exampleFragment: ExampleFragment) : Fragmen
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prepareData()
-        val fragment = ListMenuFragment.newInstance(menuItems, exampleFragment.getStrings(R.string.info_dialog), false, R.drawable.token_logo_png)
+        val fragment = ListMenuFragment.newInstance(menuItems, exampleFragment.getStrings(R.string.info_dialog), true, R.drawable.token_logo_png)
         exampleFragment.mainActivity.replaceFragment(fragment as Fragment)
     }
 

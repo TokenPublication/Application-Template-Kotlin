@@ -225,9 +225,10 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             dialog!!.setQr("QR Code Test", getStrings(R.string.waiting_qr_read)) // Shows the same QR on Info Dialog
             Handler(Looper.getMainLooper()).postDelayed({
                 if (qrSuccess) {
+                    dialog.dismiss()
                     mainActivity.showInfoDialog(
                         InfoDialog.InfoType.Confirmed,
-                        "QR " + getString(R.string.trans_successful),
+                        "QR " + mainActivity.getString(R.string.trans_successful),
                         false
                     )
                     isCancelable = false
