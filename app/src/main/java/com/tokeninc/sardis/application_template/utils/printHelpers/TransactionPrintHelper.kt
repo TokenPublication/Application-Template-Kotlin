@@ -2,7 +2,6 @@ package com.tokeninc.sardis.application_template.utils.printHelpers
 
 import android.content.ContentValues
 import android.content.Context
-import android.os.Bundle
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
@@ -11,11 +10,9 @@ import com.tokeninc.sardis.application_template.data.database.transaction.Transa
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.data.model.type.SlipType
-import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.objects.SampleReceipt
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Locale
 
 /**
@@ -178,8 +175,8 @@ class TransactionPrintHelper:BasePrintHelper() {
                 if (receipt.cardType == CardReadType.ICC.type || receipt.cardType == CardReadType.MSR.type || receipt.cardType == CardReadType.ICC2MSR.type){
                     styledText.addTextToLine("İşlem Şifre Girilerek Yapılmıştır", PrinterDefinitions.Alignment.Center)
                     styledText.newLine()
+                    styledText.addTextToLine("İMZAYA GEREK YOKTUR", PrinterDefinitions.Alignment.Center)
                 }
-                styledText.addTextToLine("İMZAYA GEREK YOKTUR", PrinterDefinitions.Alignment.Center)
             }
         }
 
