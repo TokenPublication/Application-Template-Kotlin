@@ -102,7 +102,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         val isInstallment = true
         val isLoyalty = true
         val isCampaign = true
-        if (isInstallment) menuItemList.add(MenuItem(getStrings(R.string.installment_sale), {
+        if (isInstallment && amount > 50000) menuItemList.add(MenuItem(getStrings(R.string.installment_sale), {
             showInstallments()
         }))
         if (isLoyalty) menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))
