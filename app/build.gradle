@@ -16,6 +16,7 @@ android {
     compileSdk 33
     // I added this for binding
     buildFeatures {
+        buildConfig true
         viewBinding = true
         dataBinding true
         aidl true
@@ -63,7 +64,7 @@ android {
                     APP_LABEL:"Application Template",
                     MODEL_NAME:"400TR",
                     APP_NAME:"BNK_000_TMPLT",
-                    VERSION: "4001"
+                    VERSION: "4001" //
             ]
         }
         TR1000{

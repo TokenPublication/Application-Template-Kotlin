@@ -2,6 +2,7 @@ package com.tokeninc.sardis.application_template
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
@@ -12,6 +13,7 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import com.token.printerlib.PrinterService
@@ -19,13 +21,14 @@ import com.token.printerlib.StyledString
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
-import com.tokeninc.cardservicebinding.BuildConfig
-import com.tokeninc.cardservicebinding.CardServiceBinding
+// import com.tokeninc.cardservicebinding.BuildConfig //TODO you shouldn't import it, it doesnt give an error when compiling it finds the buildConfig from gradle
+import com.tokeninc.sardis.application_template.BuildConfig
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.*
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.data.model.type.CardReadType
+import com.tokeninc.sardis.application_template.data.model.type.DeviceModel
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.ui.*
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
@@ -149,19 +152,14 @@ class MainActivity : TimeOutActivity() {
     Firstly, added TR1000 and TR400 configurations to build.gradle file. After that,
     related to Build Variant (400TRDebug or 1000TRDebug) the manifest file created with apk
     and the app name in manifest file will be 1000TR or 400TR.
+     Storing the device model into shared preferences
      */
     private fun buildConfigs() {
-        when (BuildConfig.FLAVOR) {
-            "TR1000" -> {
-                Log.i("TR1000 APP", "Application Template for 1000TR")
-            }
-            "TR400" -> {
-                Log.i("TR400 APP", "Application Template for 400TR")
-            }
-            "330" -> {
-                Log.i("TR330 APP", "Application Template for 330TR")
-            }
-        }
+        Log.i("Device_Model: ", BuildConfig.FLAVOR)
+        val sharedPreference = getSharedPreferences("myprefs", Context.MODE_PRIVATE)
+        val editor = sharedPreference.edit()
+        editor.putString("Device_Model", BuildConfig.FLAVOR)
+        editor.apply()
     }
 
     /**
@@ -492,4 +490,13 @@ class MainActivity : TimeOutActivity() {
         cardViewModel.onDestroyed()
         super.onDestroy()
     }
+
+    @SuppressLint("CommitPrefEdits")
+    fun getDeviceModel(): String{
+        val sharedPreference = getSharedPreferences("myprefs", Context.MODE_PRIVATE)
+        val editor = sharedPreference.edit()
+        val deviceModel = sharedPreference.getString("Device_Model", DeviceModel.TR400.name)
+        return deviceModel!!
+    }
+
 }

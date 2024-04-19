@@ -1,16 +1,17 @@
 package com.tokeninc.sardis.application_template.ui.examples
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.token.printerlib.PrinterService
-import com.token.printerlib.StyledString
 import com.token.uicomponents.ListMenuFragment.IListMenuItem
 import com.token.uicomponents.ListMenuFragment.ListMenuFragment
+import com.token.uicomponents.components330.qr_screen_330.QrScreen330
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.numpad.NumPadDialog
@@ -18,6 +19,7 @@ import com.token.uicomponents.numpad.NumPadListener
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
+import com.tokeninc.sardis.application_template.data.model.type.DeviceModel
 import com.tokeninc.sardis.application_template.databinding.FragmentExampleBinding
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.utils.StringHelper
@@ -125,18 +127,33 @@ class ExampleFragment(val mainActivity: MainActivity, private val cardViewModel:
             dialog.show(mainActivity.supportFragmentManager, "Num Pad")
         }))
         menuItems.add(MenuItem(getStrings(R.string.show_qr), {
-            val dialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Progress, getStrings(R.string.qr_loading), true)
-            // For detailed usage; SaleActivity
-            cardViewModel.initializeCardServiceBinding(mainActivity)
-            cardViewModel.getCardServiceConnected().observe(mainActivity) { isConnected ->
-                // cardService is connected before 10 seconds (which is the limit of the timer)
-                if (isConnected) {
-                    cardViewModel.getCardServiceBinding()!!.showQR(getStrings(R.string.please_read_qr),
-                        StringHelper().getAmount(qrAmount),
-                        qrString)
+            val deviceModel = mainActivity.getDeviceModel()
+            Log.i("Example QR","device model: $deviceModel")
+            if (deviceModel == DeviceModel.TR330.name) {
+                val qrScreen330 = QrScreen330.newInstance(
+                    StringHelper().getAmount(qrAmount),
+                    "",
+                    getString(R.string.waiting_qr_read),
+                    qrString
+                )
+                mainActivity.replaceFragment(qrScreen330)
+            } else{
+                val dialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Progress, getStrings(R.string.qr_loading), true)
+                // For detailed usage; SaleActivity
+                cardViewModel.initializeCardServiceBinding(mainActivity)
+                cardViewModel.getCardServiceConnected().observe(mainActivity) { isConnected ->
+                    // cardService is connected before 10 seconds (which is the limit of the timer)
+                    if (isConnected) {
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            cardViewModel.getCardServiceBinding()!!.showQR(getString(R.string.please_read_qr),
+                                    StringHelper().getAmount(qrAmount), qrString) // Shows QR on the back screen
+                            dialog!!.setQr(qrString, getString(R.string.waiting_qr_read))
+                        }, 2000)
+                    }
                 }
             }
-            dialog!!.setQr(qrString, getStrings(R.string.waiting_qr_read)) // Shows the same QR on Info Dialog
+
+
         }))
         val subListPrint = mutableListOf<IListMenuItem>()
         subListPrint.add(MenuItem(getStrings(R.string.print_success), {
@@ -171,4 +188,5 @@ class ExampleFragment(val mainActivity: MainActivity, private val cardViewModel:
     fun getStrings(resID: Int): String{
         return mainActivity.getString(resID)
     }
+
 }

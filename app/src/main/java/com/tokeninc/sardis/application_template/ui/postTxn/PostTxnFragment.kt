@@ -50,7 +50,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
     }
 
     override fun onDestroyView() {
-        Log.d("PostTxnDestroying","HEY")
+        Log.d("PostTxnDestroying","true")
         super.onDestroyView()
     }
     /**
