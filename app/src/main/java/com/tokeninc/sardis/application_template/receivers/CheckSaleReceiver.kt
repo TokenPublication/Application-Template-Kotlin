@@ -40,7 +40,7 @@ class CheckSaleReceiver : BroadcastReceiver() {
                 bundle.putInt("ResponseCode", ResponseCode.SUCCESS.ordinal)
                 bundle.putInt("PaymentStatus", 0)
                 bundle.putInt("Amount", transaction.Col_Amount)
-                val sampleReceipt = SampleReceipt(transaction,activationRepository)
+                val sampleReceipt = SampleReceipt(transaction.Col_CardReadType,transaction,activationRepository)
                 bundle.putString("customerSlipData",
                     printHelper.getFormattedText(sampleReceipt,
                         SlipType.CARDHOLDER_SLIP,ContentValHelper().getContentVal(transaction),

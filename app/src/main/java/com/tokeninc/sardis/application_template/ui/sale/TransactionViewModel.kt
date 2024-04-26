@@ -189,7 +189,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 } else {
                     ContentValHelper().getTransaction(transactionResponse.contentVal!!)
                 }
-            val receipt = SampleReceipt(transaction,activationRepository,onlineTransactionResponse)
+            val receipt = SampleReceipt(card.mCardReadType,transaction,activationRepository,onlineTransactionResponse)
             val intent: Intent =
                 if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
                     transactionRepository.prepareSaleIntent(transactionResponse, card, mainActivity, receipt, transaction.ZNO, transaction.Col_ReceiptNo)
@@ -215,7 +215,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
 
     fun prepareCopySlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
         viewModelScope.launch(Dispatchers.IO){
-            val receipt = SampleReceipt(transaction,activationRepository)
+            val receipt = SampleReceipt(transaction.Col_CardReadType,transaction,activationRepository)
             transactionRepository.prepareCopySlip(receipt,mainActivity,transaction,transactionCode)
             isPrinted.postValue(true)
         }
@@ -226,7 +226,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
 
     fun prepareCopyCustomerSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
         viewModelScope.launch(Dispatchers.IO){
-            val receipt = SampleReceipt(transaction,activationRepository)
+            val receipt = SampleReceipt(transaction.Col_CardReadType,transaction,activationRepository)
             transactionRepository.prepareCopyCustomerSlip(receipt,mainActivity,transaction,transactionCode)
             isCustomerPrinted.postValue(true)
         }
@@ -234,7 +234,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
 
     fun prepareCopyMerchantSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
         viewModelScope.launch(Dispatchers.IO){
-            val receipt = SampleReceipt(transaction,activationRepository)
+            val receipt = SampleReceipt(transaction.Col_CardReadType,transaction,activationRepository)
             transactionRepository.prepareCopyMerchantSlip(receipt,mainActivity,transaction,transactionCode)
             isPrinted.postValue(true)
         }

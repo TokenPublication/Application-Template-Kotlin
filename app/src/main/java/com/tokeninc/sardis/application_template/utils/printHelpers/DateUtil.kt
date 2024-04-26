@@ -28,6 +28,13 @@ class DateUtil {
         return "$day-$month-$year"
     }
 
+    fun getFormattedDateKeyIn(dateText: String): String {
+        val year = dateText.substring(0, 4)
+        val month = dateText.substring(5, 7)
+        val day = dateText.substring(8, 10)
+        return "$day-$month-$year"
+    }
+
     fun getCashRefundDate(dateText: String): String {
         Log.i("getCashRefundDate",dateText)
         val year = dateText.substring(0, 4)
