@@ -26,7 +26,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         val stringHelper = StringHelper()
 
         if (slipType === SlipType.CARDHOLDER_SLIP) {
-            if ((context.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.GIB.name)  {
+            if ((context.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.GIB.name){
                 printSlipHeader(styledText, receipt)
             }
         } else {
@@ -176,6 +176,13 @@ class TransactionPrintHelper:BasePrintHelper() {
                     styledText.addTextToLine("İşlem Şifre Girilerek Yapılmıştır", PrinterDefinitions.Alignment.Center)
                     styledText.newLine()
                     styledText.addTextToLine("İMZAYA GEREK YOKTUR", PrinterDefinitions.Alignment.Center)
+                }
+                else if (receipt.cardReadType == CardReadType.KeyIn.type){
+                    styledText.newLine()
+                    val signature = "İMZA: _ _ _ _ _ _ _ _ _ _ _ _ _ _"
+                    styledText.addTextToLine(signature,PrinterDefinitions.Alignment.Center)
+                    styledText.newLine()
+                    styledText.newLine()
                 }
             }
         }
