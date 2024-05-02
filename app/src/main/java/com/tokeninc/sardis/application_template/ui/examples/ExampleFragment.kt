@@ -1,5 +1,6 @@
 package com.tokeninc.sardis.application_template.ui.examples
 
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -127,9 +128,11 @@ class ExampleFragment(val mainActivity: MainActivity, private val cardViewModel:
             dialog.show(mainActivity.supportFragmentManager, "Num Pad")
         }))
         menuItems.add(MenuItem(getStrings(R.string.show_qr), {
-            val deviceModel = mainActivity.getDeviceModel()
+            //val deviceModel = mainActivity.getDeviceModel()
+            //if (deviceModel == DeviceModel.TR330.name) {
+            val deviceModel = Build.MODEL
             Log.i("Example QR","device model: $deviceModel")
-            if (deviceModel == DeviceModel.TR330.name) {
+            if (Build.MODEL.equals("330TRS")|| Build.MODEL.equals("330TR")){
                 val qrScreen330 = QrScreen330.newInstance(
                     StringHelper().getAmount(qrAmount),
                     "",

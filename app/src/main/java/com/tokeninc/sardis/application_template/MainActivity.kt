@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
@@ -155,10 +156,10 @@ class MainActivity : TimeOutActivity() {
      Storing the device model into shared preferences
      */
     private fun buildConfigs() {
-        Log.i("Device_Model: ", BuildConfig.FLAVOR)
+        Log.i("Device_Model: ", Build.MODEL)
         val sharedPreference = getSharedPreferences("myprefs", Context.MODE_PRIVATE)
         val editor = sharedPreference.edit()
-        editor.putString("Device_Model", BuildConfig.FLAVOR)
+        editor.putString("Device_Model", Build.MODEL)
         editor.apply()
     }
 
