@@ -1,7 +1,6 @@
 package com.tokeninc.sardis.application_template
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -14,11 +13,8 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
-import com.token.printerlib.PrinterService
-import com.token.printerlib.StyledString
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
@@ -63,10 +59,9 @@ class MainActivity : TimeOutActivity() {
     private lateinit var transactionViewModel: TransactionViewModel
     private lateinit var cardViewModel: CardViewModel
     private lateinit var serviceViewModel: ServiceViewModel
-    private lateinit var settingsFragment: SettingsFragment
     private lateinit var saleFragment: SaleFragment
-    private lateinit var triggerFragment: TriggerFragment
-    private lateinit var postTxnFragment: PostTxnFragment
+
+    private val tag = "mainActivity"
 
     /**
      * This function is overwritten to continue the activity where it was left when
@@ -106,10 +101,7 @@ class MainActivity : TimeOutActivity() {
         val getServiceViewModel: ServiceViewModel by viewModels()
         serviceViewModel = getServiceViewModel
 
-        saleFragment = SaleFragment(this)
-        settingsFragment = SettingsFragment(this, activationViewModel,cardViewModel)
-        triggerFragment = TriggerFragment(this)
-        postTxnFragment = PostTxnFragment(this, transactionViewModel, batchViewModel, cardViewModel, activationViewModel)
+        saleFragment = SaleFragment(transactionViewModel, this, batchViewModel, cardViewModel, activationViewModel)
 
         buildConfigs()
         connectServices()
@@ -168,6 +160,7 @@ class MainActivity : TimeOutActivity() {
      * If it couldn't connect to the card service after 10 seconds, it shows a dialog and finishes to the mainActivity.
      */
     fun connectCardService(fromActivation: Boolean = false) {
+        Log.i(tag, "connectCardService")
         var isCancelled = false
         //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
         val timer: CountDownTimer = object : CountDownTimer(30000, 1000) {
@@ -216,9 +209,9 @@ class MainActivity : TimeOutActivity() {
             activationWarning((activationViewModel.merchantID() == null || activationViewModel.terminalID() == null),false)
         }
         when (action) {
-            getString(R.string.PosTxn_Action) -> replaceFragment(postTxnFragment)
+            getString(R.string.PosTxn_Action) -> replaceFragment(PostTxnFragment())
             getString(R.string.Sale_Action) -> saleActionReceived()
-            getString(R.string.Settings_Action) -> replaceFragment(settingsFragment)
+            getString(R.string.Settings_Action) -> replaceFragment(SettingsFragment(intent))
             getString(R.string.BatchClose_Action) -> {
                 if (transactionViewModel.allTransactions().isNullOrEmpty()) { //if it is empty just show no transaction dialog
                     val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning,getString(R.string.batch_close_not_found),false)
@@ -227,13 +220,13 @@ class MainActivity : TimeOutActivity() {
                         responseMessage(ResponseCode.ERROR,getString(R.string.batch_close_not_found))
                     }, 2000)
                 } else { //else implementing batch closing and finish that activity
-                    postTxnFragment.doBatchClose()
+                    replaceFragment(PostTxnFragment(true))
                 }
             }
 
-            getString(R.string.Parameter_Action) -> replaceFragment(triggerFragment)
+            getString(R.string.Parameter_Action) -> replaceFragment(TriggerFragment())
             getString(R.string.Refund_Action) -> refundActionReceived()
-            else -> replaceFragment(settingsFragment)
+            else -> replaceFragment(PostTxnFragment())
         }
     }
 
@@ -316,22 +309,24 @@ class MainActivity : TimeOutActivity() {
      * It reads card, if it couldn't connect cardService before, first connect the cardService then reads card
      */
     fun readCard(amount: Int, transactionCode: Int) {
-        if (cardViewModel.getCardServiceBinding() != null) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                cardViewModel.readCard(amount,transactionCode)
-            }, 500)
-            //when read card is cancelled (on back pressed) finish the main activity
-            cardViewModel.getCallBackMessage().observe(this) { responseCode ->
-                Log.d("Card Result Code with call back message", responseCode.name)
-                if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.ERROR) { //if it is canceled
-                    responseMessage(responseCode,"")
-                }
-            }
-        } else{
+        if (cardViewModel.getCardServiceBinding() == null){
             connectCardService()
-            Handler(Looper.getMainLooper()).postDelayed({
-                readCard(amount,transactionCode) // wait for connecting cardService, if it doesn't wait it enters recursive loop
-            }, 400)
+        }
+        // it observes whether it's connected
+        cardViewModel.getCardServiceConnected().observe(this){
+            if (it){
+                Log.i(tag, "readCard getCardServiceConnected connected")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    cardViewModel.readCard(amount,transactionCode)
+                }, 500)
+            }
+        }
+        // it observes whether it has message
+        cardViewModel.getCallBackMessage().observe(this) { responseCode ->
+            Log.d("Card Result Code with call back message", responseCode.name)
+            if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.ERROR) { //if it is canceled
+                responseMessage(responseCode,"")
+            }
         }
     }
 
@@ -353,7 +348,7 @@ class MainActivity : TimeOutActivity() {
             val currentBatchNo = batchViewModel.getBatchNo()
             if (transactionBatchNo == currentBatchNo) { // GIB Void Operation
                 readCard(amount,TransactionCode.VOID.type)
-                val voidFragment = VoidFragment(this,transactionViewModel,batchViewModel,cardViewModel,activationViewModel,true)
+                val voidFragment = VoidFragment(true)
                 replaceFragment(voidFragment)
             } else{ // GIB Refund Operation (because refund request is received after closing batch
                 val authCode = json.getString("AuthCode")
@@ -367,7 +362,7 @@ class MainActivity : TimeOutActivity() {
                 refundBundle.putString(ExtraKeys.AUTH_CODE.name, authCode)
                 refundBundle.putString(ExtraKeys.CARD_NO.name, cardNo)
                 readCard(amount,TransactionCode.MATCHED_REFUND.type)
-                val refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel, activationViewModel)
+                val refundFragment = RefundFragment()
                 refundFragment.refundAfterReadCard(null,refundBundle)
             }
         }

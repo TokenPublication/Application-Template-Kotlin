@@ -115,7 +115,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
      * @param extraContent is null if it is sale, refund inputs if it is refund, the whole transaction if it is void type transaction.
      */
     suspend fun transactionRoutine( card: ICCCard, transactionCode: Int, bundle: Bundle, extraContent: ContentValues,
-                                    batchViewModel: BatchViewModel, mainActivity:MainActivity, activationRepository: ActivationRepository) {
+                                    batchViewModel: BatchViewModel, activity:FragmentActivity, activationRepository: ActivationRepository) {
         var downloadNumber = 0
         coroutineScope.launch(Dispatchers.Main){//firstly updating the UI as loading
             uiState.postValue(UIState.Loading)
@@ -135,7 +135,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                         val onlineTransactionResponse = transactionRepository.parseResponse()
                         batchViewModel.updateSTN() //update STN since it communicates with host
                         finishTransaction( card,transactionCode, bundle, extraContent,
-                            onlineTransactionResponse,batchViewModel,mainActivity,activationRepository)
+                            onlineTransactionResponse,batchViewModel,activity,activationRepository)
                     }
                 }
             }
@@ -147,7 +147,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
      * Update dialog with success message if database operations result without an error.
      */
     private fun finishTransaction (card: ICCCard, transactionCode: Int, bundle:Bundle, extraContent: ContentValues?, onlineTransactionResponse: OnlineTransactionResponse
-                                   , batchViewModel: BatchViewModel, mainActivity: MainActivity, activationRepository: ActivationRepository
+                                   , batchViewModel: BatchViewModel, activity: FragmentActivity, activationRepository: ActivationRepository
     ) {
         val transactionResponse: TransactionResponse?
         val batchNo = batchViewModel.getBatchNo()
@@ -193,10 +193,10 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
             val receipt = SampleReceipt(card.mCardReadType,transaction,activationRepository,onlineTransactionResponse)
             val intent: Intent =
                 if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
-                    transactionRepository.prepareSaleIntent(transactionResponse, card, mainActivity, receipt, transaction.ZNO, transaction.Col_ReceiptNo)
+                    transactionRepository.prepareSaleIntent(transactionResponse, card, activity, receipt, transaction.ZNO, transaction.Col_ReceiptNo)
                 }
                 else{
-                    transactionRepository.prepareRefundVoidIntent(transactionResponse,mainActivity,receipt,transaction.ZNO, transaction.Col_ReceiptNo)
+                    transactionRepository.prepareRefundVoidIntent(transactionResponse,activity,receipt,transaction.ZNO, transaction.Col_ReceiptNo)
                 }
             Log.i("finishTransaction","Intent sending")
             liveIntent.postValue(intent)

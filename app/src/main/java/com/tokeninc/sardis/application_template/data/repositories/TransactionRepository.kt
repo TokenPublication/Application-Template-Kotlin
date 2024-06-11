@@ -157,7 +157,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
     /** This method puts required values to bundle (something like contentValues for data transferring).
      * After that, an intent will be created with this bundle to provide communication between GiB and Application Template via IPC
      */
-    fun prepareSaleIntent(transactionResponse: TransactionResponse, card: ICCCard, mainActivity: MainActivity, receipt: SampleReceipt, zNO: String?, receiptNo: Int?)
+    fun prepareSaleIntent(transactionResponse: TransactionResponse, card: ICCCard, activity: FragmentActivity, receipt: SampleReceipt, zNO: String?, receiptNo: Int?)
             : Intent{
         Log.i("Transaction/Response","responseCode:${transactionResponse.responseCode} ContentValues: ${transactionResponse.contentVal}")
         val responseCode = transactionResponse.responseCode
@@ -189,9 +189,9 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
                 if (transactionResponse.responseCode == ResponseCode.SUCCESS){
                     val printHelper = TransactionPrintHelper()
                     bundle.putString("customerSlipData", printHelper.getFormattedText( receipt,
-                        SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false))
+                        SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, activity,zNO, receiptNo,false))
                     bundle.putString("merchantSlipData", printHelper.getFormattedText( receipt,
-                        SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false))
+                        SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, activity,zNO, receiptNo,false))
                     bundle.putString("RefundInfo", getRefundInfo(ContentValHelper().getTransaction(transactionResponse.contentVal!!),card.mCardNumber,receipt))
                     if(transactionResponse.contentVal != null) {
                         bundle.putString("RefNo", transactionResponse.contentVal!!.getAsString(
@@ -237,14 +237,14 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
     /**
      * It prepares refund intent both for gib and normal refund and also print the slip
      */
-    fun prepareRefundVoidIntent(transactionResponse: TransactionResponse, mainActivity: MainActivity, receipt: SampleReceipt,
+    fun prepareRefundVoidIntent(transactionResponse: TransactionResponse, activity: FragmentActivity, receipt: SampleReceipt,
                                 zNO: String?, receiptNo: Int?): Intent{
         Log.d("TransactionResponse/Refund", "responseCode:${transactionResponse.responseCode} ContentValues: ${transactionResponse.contentVal}")
         val printHelper = TransactionPrintHelper()
-        val customerSlip = printHelper.getFormattedText(receipt, SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false)
-        val merchantSlip = printHelper.getFormattedText(receipt, SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, mainActivity,zNO, receiptNo,false)
-        print(customerSlip, mainActivity)
-        print(merchantSlip, mainActivity)
+        val customerSlip = printHelper.getFormattedText(receipt, SlipType.CARDHOLDER_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, activity,zNO, receiptNo,false)
+        val merchantSlip = printHelper.getFormattedText(receipt, SlipType.MERCHANT_SLIP,transactionResponse.contentVal!!, transactionResponse.transactionCode, activity,zNO, receiptNo,false)
+        print(customerSlip, activity)
+        print(merchantSlip, activity)
         val responseCode = transactionResponse.responseCode
         val intent = Intent()
         val bundle = Bundle()

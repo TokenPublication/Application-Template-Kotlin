@@ -56,12 +56,12 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
      * @param batchCloseResponse
      * and passes the response code as a liveData intent which is observed from its fragment and finishes the mainActivity
      */
-    fun prepareBatchIntent(batchCloseResponse: BatchCloseResponse, mainActivity: MainActivity, slip: String): Intent {
+    fun prepareBatchIntent(batchCloseResponse: BatchCloseResponse, activity: FragmentActivity, slip: String): Intent {
         Log.d("finishBatch","${batchCloseResponse.batchResult}")
         val responseCode = batchCloseResponse.batchResult
         val intent = Intent()
         val bundle = Bundle()
-        print(slip,mainActivity)
+        print(slip,activity)
         bundle.putInt("ResponseCode", responseCode.ordinal)
         intent.putExtras(bundle)
         return intent

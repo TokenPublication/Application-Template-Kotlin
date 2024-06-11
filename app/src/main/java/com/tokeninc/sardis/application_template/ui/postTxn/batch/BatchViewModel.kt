@@ -89,7 +89,7 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
     /** It runs functions in parallel while ui updating dynamically in main thread with UI States
      * It also calls finishBatchClose functions in parallel in IO coroutine thread.
      */
-    suspend fun batchCloseRoutine(mainActivity: MainActivity, transactionViewModel: TransactionViewModel, activationViewModel: ActivationViewModel){
+    suspend fun batchCloseRoutine(activity: FragmentActivity, transactionViewModel: TransactionViewModel, activationViewModel: ActivationViewModel){
         var downloadNumber = 0
         coroutineScope.launch(Dispatchers.Main){//firstly updating the UI as loading
             uiState.postValue(UIState.Loading)
@@ -105,7 +105,7 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
                 downloadNumber++
             }
             coroutineScope.launch(Dispatchers.IO) {
-                finishBatchClose(mainActivity,transactionViewModel,activationViewModel)
+                finishBatchClose(activity,transactionViewModel,activationViewModel)
             }
         }.join()
     }
@@ -114,17 +114,17 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
      * Lastly insert this slip to database, to print it again in next day. If it inserts it successfully, ui is updating
      * with Success Message. Finally, update Batch number and resets group number and delete all transactions from Transaction Table.
      */
-    private fun finishBatchClose(mainActivity: MainActivity, transactionViewModel: TransactionViewModel,activationViewModel: ActivationViewModel) {
+    private fun finishBatchClose(activity: FragmentActivity, transactionViewModel: TransactionViewModel,activationViewModel: ActivationViewModel) {
         val transactions = transactionViewModel.allTransactions() //get all transactions from viewModel
-        val copySlip = batchRepository.prepareSlip(mainActivity,activationViewModel,transactions,true)
+        val copySlip = batchRepository.prepareSlip(activity,activationViewModel,transactions,true)
         updateBatchSlip(copySlip) //update the batch slip for previous day
-        val slip = batchRepository.prepareSlip(mainActivity,activationViewModel,transactions,false)
+        val slip = batchRepository.prepareSlip(activity,activationViewModel,transactions,false)
         updateBatchNo() //update the batch number
         transactionViewModel.deleteAll() //delete all the transactions
         val batchCloseResponse = batchRepository.prepareResponse(BatchResult.SUCCESS)
-        val intent = batchRepository.prepareBatchIntent(batchCloseResponse,mainActivity,slip) //prepare intent and print slip
+        val intent = batchRepository.prepareBatchIntent(batchCloseResponse,activity,slip) //prepare intent and print slip
         coroutineScope.launch(Dispatchers.Main) {
-            uiState.postValue(UIState.Success(mainActivity.getString(R.string.batch_close_success)))
+            uiState.postValue(UIState.Success(activity.getString(R.string.batch_close_success)))
         }
         liveIntent.postValue(intent)
     }

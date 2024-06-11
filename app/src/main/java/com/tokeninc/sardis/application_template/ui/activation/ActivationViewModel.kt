@@ -1,5 +1,6 @@
 package com.tokeninc.sardis.application_template.ui.activation
 
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -72,16 +73,16 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
     /** It runs functions in parallel while ui updating dynamically in main thread
      * Additionally, in IO coroutine thread make setEMVConfiguration method
      */
-    suspend fun setupRoutine(cardViewModel: CardViewModel,mainActivity: MainActivity,terminalId: String?,merchantId: String?) {
+    suspend fun setupRoutine(cardViewModel: CardViewModel,activity: FragmentActivity,terminalId: String?,merchantId: String?) {
         coroutineScope.launch {
             updateUIState(UIState.Starting)
-            setEMVConfiguration(cardViewModel, mainActivity)
+            setEMVConfiguration(cardViewModel)
             updateUIState(UIState.ParameterUploading)
             updateUIState(UIState.MemberActCompleted)
             updateUIState(UIState.RKLLoading)
             updateUIState(UIState.RKLLoaded)
             updateUIState(UIState.KeyBlockLoading)
-            setDeviceInfoParams(mainActivity, terminalId, merchantId)
+            setDeviceInfoParams(activity, terminalId, merchantId)
             updateUIState(UIState.ActivationCompleted)
             uiState.postValue(UIState.Finished)
         }.join() //wait that job to finish to return it
@@ -92,11 +93,9 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
      * else It tries to connect cardService, whenever it connects it tries to set emv configuration
      * If it sets it before, it won't set it again (checks from sharedPref)
      */
-    private fun setEMVConfiguration(cardViewModel: CardViewModel, mainActivity: MainActivity) {
+    private fun setEMVConfiguration(cardViewModel: CardViewModel) {
         if (cardViewModel.getCardServiceBinding() != null) { // if it connects cardService before
             cardViewModel.setEMVConfiguration()
-        } else {
-            mainActivity.connectCardService(true)
         }
     }
 
@@ -105,14 +104,14 @@ class ActivationViewModel @Inject constructor(val activationRepository: Activati
      *  It tries to connect deviceInfo. If it connects then set terminal ID and merchant ID into device Info and
      *  print success slip else print error slip
      */
-    private suspend fun setDeviceInfoParams(mainActivity: MainActivity,terminalId: String?,merchantId: String?){
+    private suspend fun setDeviceInfoParams(activity: FragmentActivity,terminalId: String?,merchantId: String?){
         withContext(Dispatchers.Main) {
-            val deviceInfo = DeviceInfo(mainActivity)
+            val deviceInfo = DeviceInfo(activity)
             deviceInfo.setAppParams({ success -> //it informs atms with new terminal and merchant ID
                 if (success) {
-                    PrintHelper().printSuccess(mainActivity.applicationContext)
+                    PrintHelper().printSuccess(activity.applicationContext)
                 } else {
-                    PrintHelper().printError(mainActivity.applicationContext)
+                    PrintHelper().printError(activity.applicationContext)
                 }
                 deviceInfo.unbind()
             }, terminalId, merchantId)

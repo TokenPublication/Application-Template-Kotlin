@@ -27,7 +27,7 @@ abstract class BaseFragment : Fragment() {
 
     //This function is for initializing requireActivity to observe liveData
     protected val safeActivity: FragmentActivity by lazy { requireActivity() }
-    private lateinit var appCompatActivity: AppCompatActivity
+    protected lateinit var appCompatActivity: AppCompatActivity
     protected lateinit var activationViewModel: ActivationViewModel
     protected lateinit var transactionViewModel: TransactionViewModel
     protected lateinit var batchViewModel: BatchViewModel
@@ -55,12 +55,17 @@ abstract class BaseFragment : Fragment() {
     }
 
     protected fun replaceFragment(fragment: Fragment, addToBackStack: Boolean = false) {
-        parentFragmentManager.beginTransaction().apply {
-            replace(R.id.container, fragment)
-            if (addToBackStack) {
+        if (addToBackStack){
+            parentFragmentManager.beginTransaction().apply {
+                replace(R.id.container, fragment)
                 addToBackStack(null)
+                commit()
             }
-            commit()
+        } else{
+            childFragmentManager.beginTransaction().apply {
+                replace(R.id.container, fragment)
+                commit()
+            }
         }
     }
 
@@ -85,6 +90,14 @@ abstract class BaseFragment : Fragment() {
         safeActivity.finish()
     }
 
+    /**
+     * This method gives the result code, then finishes the activity
+     */
+    protected fun setResult(resultCode: Int) {
+        safeActivity.setResult(resultCode)
+        safeActivity.finish()
+    }
+
     protected fun popFragment() {
         parentFragmentManager.popBackStack()
     }
@@ -104,12 +117,12 @@ abstract class BaseFragment : Fragment() {
     protected fun initializeViewModels(){
         val getTransactionViewModel: TransactionViewModel by viewModels()
         transactionViewModel = getTransactionViewModel
+        val getCardViewModel: CardViewModel by viewModels()
+        cardViewModel = getCardViewModel
         val getBatchViewModel: BatchViewModel by viewModels()
         batchViewModel = getBatchViewModel
         val getActivationViewModel: ActivationViewModel by viewModels()
         activationViewModel = getActivationViewModel
-        val getCardViewModel: CardViewModel by viewModels()
-        cardViewModel = getCardViewModel
     }
 
     /**
@@ -118,13 +131,17 @@ abstract class BaseFragment : Fragment() {
     protected fun readCard(amount: Int, transactionCode: Int) {
         // if binding is null (not connected) connect to the service first
         if (cardViewModel.getCardServiceBinding() == null){
+            Log.i(tag, "connectCardService")
             connectCardService()
         }
         // it observes whether it's connected
         cardViewModel.getCardServiceConnected().observe(safeActivity){
-            Handler(Looper.getMainLooper()).postDelayed({
-                cardViewModel.readCard(amount,transactionCode)
-            }, 500)
+            if (it){
+                Log.i(tag, "getCardServiceConnected connected")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    cardViewModel.readCard(amount,transactionCode)
+                }, 500)
+            }
         }
         // it observes whether it has message
         cardViewModel.getCallBackMessage().observe(safeActivity) { responseCode ->
@@ -147,7 +164,7 @@ abstract class BaseFragment : Fragment() {
 
             override fun onFinish() { //when it's finished, (after 10 seconds)
                 isCancelled = true // make isCancelled true (because cardService couldn't be connected)
-                Log.i("CardService","Not connected")
+                Log.i(tag, "CardService Not connected")
                 val infoDialog = showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.card_service_error), false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     infoDialog.dismiss()
@@ -171,8 +188,7 @@ abstract class BaseFragment : Fragment() {
                         Toast.makeText(safeActivity,getString(R.string.config_updated), Toast.LENGTH_LONG).show()
                     }
                 }
-
-                Log.i("Connected","CardService")
+                Log.i(tag, "Connected CardService")
             }
         }
     }
@@ -183,6 +199,7 @@ abstract class BaseFragment : Fragment() {
     protected fun responseMessage(responseCode: ResponseCode, message: String, resultIntent: Intent? = null) {
         val bundle = Bundle()
         val intent = Intent()
+        Log.i(tag, "responseMessage: $responseCode, message: $message")
         when (responseCode) {
             ResponseCode.ERROR -> {
                 if (message != "") {
