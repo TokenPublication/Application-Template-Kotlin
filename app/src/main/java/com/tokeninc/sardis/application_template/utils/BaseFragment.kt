@@ -102,6 +102,11 @@ abstract class BaseFragment : Fragment() {
         parentFragmentManager.popBackStack()
     }
 
+    /**
+     * Shows a dialog to the user which asks for a confirmation.
+     * Dialog will be dismissed automatically when user taps on to confirm/cancel button.
+     * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, String, InfoDialog.InfoDialogButtons, int, InfoDialogListener)}
+     */
     fun showConfirmationDialog(type: InfoDialog.InfoType, title: String, info: String,
                                buttons: InfoDialog.InfoDialogButtons, arg: Int, listener: InfoDialogListener
     ): InfoDialog? {

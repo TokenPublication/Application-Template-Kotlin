@@ -41,7 +41,7 @@ import java.util.*
  * This is the fragment for the Refund actions. Refund operation methods are defined here.
  */
 @AndroidEntryPoint
-class RefundFragment() : BaseFragment() {
+class RefundFragment(private val refundBundleMain: Bundle? = null) : BaseFragment() {
 
     private var _binding: FragmentRefundBinding? = null
     private val binding get() = _binding!!
@@ -64,7 +64,14 @@ class RefundFragment() : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initializeViewModels()
-        showMenu()
+        // check whether it comes from gib
+        if (refundBundleMain == null){
+            showMenu()
+        } else{
+            refundAfterReadCard(null, refundBundleMain)
+        }
+
+
     }
 
     /**

@@ -159,7 +159,7 @@ class MainActivity : TimeOutActivity() {
      * This function is called whenever cardService is required.
      * If it couldn't connect to the card service after 10 seconds, it shows a dialog and finishes to the mainActivity.
      */
-    fun connectCardService(fromActivation: Boolean = false) {
+    private fun connectCardService(fromActivation: Boolean = false) {
         Log.i(tag, "connectCardService")
         var isCancelled = false
         //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
@@ -168,7 +168,7 @@ class MainActivity : TimeOutActivity() {
 
             override fun onFinish() { //when it's finished, (after 10 seconds)
                 isCancelled = true // make isCancelled true (because cardService couldn't be connected)
-                Log.i("CardService","Not connected")
+                Log.i(tag,"CardService Not connected")
                 val infoDialog = showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.card_service_error), false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     infoDialog?.dismiss()
@@ -193,7 +193,7 @@ class MainActivity : TimeOutActivity() {
                     }
                 }
 
-                Log.i("Connected","CardService")
+                Log.i(tag,"Connected CardService")
             }
         }
     }
@@ -362,8 +362,8 @@ class MainActivity : TimeOutActivity() {
                 refundBundle.putString(ExtraKeys.AUTH_CODE.name, authCode)
                 refundBundle.putString(ExtraKeys.CARD_NO.name, cardNo)
                 readCard(amount,TransactionCode.MATCHED_REFUND.type)
-                val refundFragment = RefundFragment()
-                refundFragment.refundAfterReadCard(null,refundBundle)
+                val refundFragment = RefundFragment(refundBundle)
+                replaceFragment(refundFragment)
             }
         }
     }
@@ -384,17 +384,6 @@ class MainActivity : TimeOutActivity() {
         infoDialog.show(supportFragmentManager, "")
     }
 
-    /**
-     * Shows a dialog to the user which asks for a confirmation.
-     * Dialog will be dismissed automatically when user taps on to confirm/cancel button.
-     * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, String, InfoDialog.InfoDialogButtons, int, InfoDialogListener)}
-     */
-    fun showConfirmationDialog(type: InfoDialog.InfoType, title: String, info: String,
-                               buttons: InfoDialog.InfoDialogButtons, arg: Int, listener: InfoDialogListener): InfoDialog? {
-        val dialog = InfoDialog.newInstance(type, title, info, buttons, arg, listener)  //created a dialog with InfoDialog newInstance method
-        dialog.show(supportFragmentManager, "")
-        return dialog
-    }
 
     /**
      * Returns time out value in seconds for activities which extend
@@ -406,16 +395,6 @@ class MainActivity : TimeOutActivity() {
      */
     override fun getTimeOutSec(): Int {
         return 60
-    }
-
-    /** This adds fragments to the back stack, in this way user can return this fragment after the view has been changed.
-     * and replace fragment.
-     */
-    fun addFragment(fragment: Fragment) {
-        val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.container, fragment)
-        ft.addToBackStack(null)
-        ft.commit()
     }
 
     /**
