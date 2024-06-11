@@ -106,7 +106,7 @@ class MainActivity : TimeOutActivity() {
         val getServiceViewModel: ServiceViewModel by viewModels()
         serviceViewModel = getServiceViewModel
 
-        saleFragment = SaleFragment(transactionViewModel, this, batchViewModel, cardViewModel, activationViewModel)
+        saleFragment = SaleFragment(this)
         settingsFragment = SettingsFragment(this, activationViewModel,cardViewModel)
         triggerFragment = TriggerFragment(this)
         postTxnFragment = PostTxnFragment(this, transactionViewModel, batchViewModel, cardViewModel, activationViewModel)

@@ -3,6 +3,7 @@ package com.tokeninc.sardis.application_template.data.repositories
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import com.token.printerlib.PrinterService
 import com.token.printerlib.StyledString
@@ -41,8 +42,8 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
         batchDao.updateSTN()
     }
 
-    fun prepareSlip(mainActivity: MainActivity, activationViewModel: ActivationViewModel, transactionList: List<Transaction?>?, isCopy: Boolean, isBatch: Boolean = true): String {
-        return BatchClosePrintHelper().batchText(getBatchNo().toString(),transactionList!!, mainActivity, activationViewModel, isCopy, isBatch)
+    fun prepareSlip(activity: FragmentActivity, activationViewModel: ActivationViewModel, transactionList: List<Transaction?>?, isCopy: Boolean, isBatch: Boolean = true): String {
+        return BatchClosePrintHelper().batchText(getBatchNo().toString(),transactionList!!, activity, activationViewModel, isCopy, isBatch)
     }
 
     fun prepareResponse(batchResult: BatchResult): BatchCloseResponse{
@@ -66,10 +67,10 @@ class BatchRepository @Inject constructor(private val batchDao: BatchDao) {
         return intent
     }
 
-    fun print(printText: String?, mainActivity: MainActivity) {
+    fun print(printText: String?, activity: FragmentActivity) {
         val styledText = StyledString()
         styledText.addStyledText(printText)
         styledText.finishPrintingProcedure()
-        styledText.print(PrinterService.getService(mainActivity.applicationContext))
+        styledText.print(PrinterService.getService(activity.applicationContext))
     }
 }

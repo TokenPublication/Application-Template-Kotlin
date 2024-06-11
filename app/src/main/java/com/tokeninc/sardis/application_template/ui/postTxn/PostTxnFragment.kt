@@ -90,7 +90,7 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             mainActivity.addFragment(exampleFragment)
         }))
         menuItems.add(MenuItem(getStrings(R.string.slip_menu),{
-            val slipFragment = SlipFragment(mainActivity,activationViewModel,transactionViewModel,batchViewModel)
+            val slipFragment = SlipFragment()
             mainActivity.addFragment(slipFragment)
         }))
         menuItems.add(MenuItem(getString(R.string.demo_mode), {

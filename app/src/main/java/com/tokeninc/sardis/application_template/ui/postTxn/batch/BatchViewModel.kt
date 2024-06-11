@@ -1,6 +1,7 @@
 package com.tokeninc.sardis.application_template.ui.postTxn.batch
 
 import android.content.Intent
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -134,10 +135,10 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
     /**
      * It prepares and prints current transaction List
      */
-    fun printTransactionListSlip(mainActivity: MainActivity, activationViewModel: ActivationViewModel, transactions: List<Transaction?>?){
+    fun printTransactionListSlip(activity: FragmentActivity, activationViewModel: ActivationViewModel, transactions: List<Transaction?>?){
         viewModelScope.launch(Dispatchers.IO) {
-            val transactionListSlip = batchRepository.prepareSlip(mainActivity, activationViewModel, transactions, false, false)
-            batchRepository.print(transactionListSlip, mainActivity)
+            val transactionListSlip = batchRepository.prepareSlip(activity, activationViewModel, transactions, false, false)
+            batchRepository.print(transactionListSlip, activity)
             isPrinted.postValue(true)
         }
     }
@@ -145,9 +146,9 @@ class BatchViewModel @Inject constructor(private val batchRepository: BatchRepos
     /**
      * It prints previous batchSlip
      */
-    fun printPreviousBatchSlip(mainActivity: MainActivity, batchSlip: String?){
+    fun printPreviousBatchSlip(activity: FragmentActivity, batchSlip: String?){
         viewModelScope.launch(Dispatchers.IO){
-            batchRepository.print(batchSlip,mainActivity)
+            batchRepository.print(batchSlip,activity)
             isPrinted.postValue(true)
         }
     }

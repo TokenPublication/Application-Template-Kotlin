@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -224,18 +225,18 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     private val isCustomerPrinted = MutableLiveData<Boolean>()
     fun getIsCustomerPrinted(): LiveData<Boolean> = isCustomerPrinted
 
-    fun prepareCopyCustomerSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
+    fun prepareCopyCustomerSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, activity: FragmentActivity){
         viewModelScope.launch(Dispatchers.IO){
             val receipt = SampleReceipt(transaction.Col_CardReadType,transaction,activationRepository)
-            transactionRepository.prepareCopyCustomerSlip(receipt,mainActivity,transaction,transactionCode)
+            transactionRepository.prepareCopyCustomerSlip(receipt,activity,transaction,transactionCode)
             isCustomerPrinted.postValue(true)
         }
     }
 
-    fun prepareCopyMerchantSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
+    fun prepareCopyMerchantSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, activity: FragmentActivity){
         viewModelScope.launch(Dispatchers.IO){
             val receipt = SampleReceipt(transaction.Col_CardReadType,transaction,activationRepository)
-            transactionRepository.prepareCopyMerchantSlip(receipt,mainActivity,transaction,transactionCode)
+            transactionRepository.prepareCopyMerchantSlip(receipt,activity,transaction,transactionCode)
             isPrinted.postValue(true)
         }
     }

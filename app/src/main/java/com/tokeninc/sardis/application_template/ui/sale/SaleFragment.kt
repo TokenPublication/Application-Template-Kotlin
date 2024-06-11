@@ -31,6 +31,7 @@ import com.tokeninc.sardis.application_template.data.model.type.SlipType
 import com.tokeninc.sardis.application_template.databinding.FragmentDummySaleBinding
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
+import com.tokeninc.sardis.application_template.utils.BaseFragment
 import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
@@ -43,9 +44,7 @@ import java.lang.String.valueOf
  * This Class is for Sale operations, it depends on Transaction View Model
  * It has dummy sale layout, which is the only view that we created. Other ui elements come from ui library
  */
-class SaleFragment(private val transactionViewModel: TransactionViewModel, private val mainActivity: MainActivity,
-                   private val batchViewModel: BatchViewModel, private val cardViewModel: CardViewModel,
-                   private val activationViewModel: ActivationViewModel) : Fragment() {
+class SaleFragment(private val mainActivity: MainActivity) : BaseFragment() {
 
     private var _binding: FragmentDummySaleBinding? = null
     private val binding get() = _binding!!
@@ -109,7 +108,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         if (isCampaign) menuItemList.add(MenuItem(getStrings(R.string.campaign_sale), { }))
         val listMenuFragment = ListMenuFragment.newInstance(menuItemList,
             getStrings(R.string.sale_type), false, R.drawable.token_logo_png)
-        mainActivity.replaceFragment(listMenuFragment as Fragment)
+        replaceFragment(listMenuFragment as Fragment)
     }
 
     /**
@@ -119,7 +118,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         val listener = MenuItemClickListener { menuItem: MenuItem? ->
             val itemName = menuItem!!.name.split(" ")
             installmentCount = itemName[0].toInt()
-            mainActivity.popFragment()
+            popFragment()
             cardReader(false)
         }
         val maxInst = 12
@@ -134,7 +133,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             true,
             R.drawable.token_logo_png
         )
-        mainActivity.replaceFragment(instFragment as Fragment)
+        replaceFragment(instFragment as Fragment)
     }
 
     /**
@@ -151,7 +150,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             valueOf(PaymentType.OTHER)
         )
         val adapter: ArrayAdapter<String> =
-            ArrayAdapter<String>(mainActivity, R.layout.spinner_item, items)
+            ArrayAdapter<String>(safeActivity, R.layout.spinner_item, items)
         adapter.setDropDownViewResource(R.layout.spinner_drop_down)
         spinner.adapter = adapter
         spinner.onItemSelectedListener = listener
@@ -369,10 +368,5 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         _binding = null
     }
 
-    /**
-     * Fragment couldn't use getString from res > values > strings, therefore this method call that string from mainActivity.
-     */
-    private fun getStrings(resID: Int): String{
-        return mainActivity.getString(resID)
-    }
+
 }

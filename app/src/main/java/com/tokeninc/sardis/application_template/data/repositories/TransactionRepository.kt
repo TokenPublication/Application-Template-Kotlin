@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.fragment.app.FragmentActivity
 import com.token.printerlib.PrinterService
 import com.token.printerlib.StyledString
 import com.tokeninc.sardis.application_template.MainActivity
@@ -68,7 +69,7 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
         onlineTransactionResponse.mResponseCode = ResponseCode.SUCCESS //TODO Developer change it in cases it can connect host
         onlineTransactionResponse.mTextPrintCode = "Test Print"
         onlineTransactionResponse.mAuthCode = stringHelper.addZeros((0..99999).random().toString(),6)
-        onlineTransactionResponse.mRefNo = stringHelper.addZeros((0..999999999).random().toString(),10)
+        onlineTransactionResponse.mRefNo = stringHelper.addZeros((0..       999999999).random().toString(),10)
         onlineTransactionResponse.mDisplayData = "Display Data"
         onlineTransactionResponse.mKeySequenceNumber = "3"
         onlineTransactionResponse.dateTime = "${DateUtil().getDate("yyyy-MM-dd")} ${DateUtil().getTime("HH:mm:ss")}"
@@ -270,32 +271,32 @@ class TransactionRepository @Inject constructor(private val transactionDao: Tran
     /**
      * It prepares and prints the customer slip.
      */
-    fun prepareCopyCustomerSlip(receipt: SampleReceipt, mainActivity: MainActivity, transaction: Transaction,
+    fun prepareCopyCustomerSlip(receipt: SampleReceipt, activity: FragmentActivity, transaction: Transaction,
                         transactionCode: Int) {
         val transactionPrintHelper = TransactionPrintHelper()
         val contentValHelper = ContentValHelper()
         val customerSlipData: String = transactionPrintHelper.getFormattedText(receipt,SlipType.CARDHOLDER_SLIP,contentValHelper.getContentVal(transaction),
-            transactionCode,mainActivity,transaction.ZNO,transaction.Col_ReceiptNo,true)
-        print(customerSlipData,mainActivity)
+            transactionCode,activity,transaction.ZNO,transaction.Col_ReceiptNo,true)
+        print(customerSlipData,activity)
     }
 
     /**
      * It prepares and prints the merchant slip.
      */
-    fun prepareCopyMerchantSlip(receipt: SampleReceipt, mainActivity: MainActivity, transaction: Transaction,
+    fun prepareCopyMerchantSlip(receipt: SampleReceipt, activity: FragmentActivity, transaction: Transaction,
                         transactionCode: Int) {
         val transactionPrintHelper = TransactionPrintHelper()
         val contentValHelper = ContentValHelper()
         val merchantSlipData: String = transactionPrintHelper.getFormattedText(receipt,SlipType.MERCHANT_SLIP,contentValHelper.getContentVal(transaction),
-            transactionCode,mainActivity,transaction.ZNO,transaction.Col_ReceiptNo,true)
-        print(merchantSlipData,mainActivity)
+            transactionCode,activity,transaction.ZNO,transaction.Col_ReceiptNo,true)
+        print(merchantSlipData,activity)
     }
 
-    private fun print(printText: String?, mainActivity: MainActivity) {
+    private fun print(printText: String?, activity: FragmentActivity) {
         val styledText = StyledString()
         styledText.addStyledText(printText)
         styledText.finishPrintingProcedure()
-        styledText.print(PrinterService.getService(mainActivity.applicationContext))
+        styledText.print(PrinterService.getService(activity.applicationContext))
     }
 
     fun prepareDummyResponse(price: Int, code: ResponseCode, slipType: SlipType,
