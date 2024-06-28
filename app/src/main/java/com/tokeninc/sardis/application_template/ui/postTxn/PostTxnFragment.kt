@@ -24,7 +24,9 @@ import com.tokeninc.sardis.application_template.ui.postTxn.slip.SlipFragment
 import com.tokeninc.sardis.application_template.ui.postTxn.void_operation.VoidFragment
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
+import com.tokeninc.sardis.application_template.utils.BaseFragment
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,9 +34,8 @@ import kotlinx.coroutines.launch
 /**
  * This is the class for Post Transaction Methods.
  */
-class PostTxnFragment(private val mainActivity: MainActivity, private val transactionViewModel: TransactionViewModel,
-                      private val batchViewModel: BatchViewModel, private val cardViewModel: CardViewModel,
-                      private val activationViewModel: ActivationViewModel) : Fragment() {
+@AndroidEntryPoint
+class PostTxnFragment(private val isBatch: Boolean = false) : BaseFragment() {
 
     private var _binding: FragmentPostTxnBinding? = null
     private val binding get() = _binding!!
@@ -46,11 +47,16 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        showMenu()
+        initializeViewModels()
+        if (isBatch){
+            doBatchClose()
+        } else{
+            showMenu()
+        }
     }
 
     override fun onDestroyView() {
-        Log.d("PostTxnDestroying","HEY")
+        Log.d("PostTxnDestroying","true")
         super.onDestroyView()
     }
     /**
@@ -59,22 +65,22 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
         menuItems.add(MenuItem(getStrings(R.string.void_transaction), {
-            val voidFragment = VoidFragment(mainActivity,transactionViewModel,batchViewModel,cardViewModel,activationViewModel,false)
-            mainActivity.replaceFragment(voidFragment)
+            val voidFragment = VoidFragment(false)
+            replaceFragment(voidFragment)
         }))
         menuItems.add(MenuItem(getStrings(R.string.refund), {
-            val refundFragment = RefundFragment(mainActivity, cardViewModel, transactionViewModel, batchViewModel, activationViewModel)
-            mainActivity.addFragment(refundFragment)
+            val refundFragment = RefundFragment()
+            replaceFragment(refundFragment, true)
         }))
         menuItems.add(MenuItem(getStrings(R.string.batch_close), {
             if (transactionViewModel.allTransactions().isNullOrEmpty()){
-                val infoDialog = mainActivity.showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_close_not_found),false)
+                val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning,getStrings(R.string.batch_close_not_found),false)
                 Handler(Looper.getMainLooper()).postDelayed({
-                    infoDialog!!.dismiss()
+                    infoDialog.dismiss()
                 }, 2000)
             }
             else{
-                mainActivity.showConfirmationDialog(InfoDialog.InfoType.Info,getStrings(R.string.batch_close),getStrings(
+                showConfirmationDialog(InfoDialog.InfoType.Info,getStrings(R.string.batch_close),getStrings(
                     R.string.batch_close_will_be_done
                 ),InfoDialog.InfoDialogButtons.Both,1,
                     object : InfoDialogListener {
@@ -86,20 +92,20 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
             }
         }))
         menuItems.add(MenuItem(getStrings(R.string.examples), {
-            val exampleFragment = ExampleFragment(mainActivity,cardViewModel)
-            mainActivity.addFragment(exampleFragment)
+            val exampleFragment = ExampleFragment()
+            replaceFragment(exampleFragment, true)
         }))
         menuItems.add(MenuItem(getStrings(R.string.slip_menu),{
-            val slipFragment = SlipFragment(mainActivity,activationViewModel,transactionViewModel,batchViewModel)
-            mainActivity.addFragment(slipFragment)
+            val slipFragment = SlipFragment()
+            replaceFragment(slipFragment, true)
         }))
         menuItems.add(MenuItem(getString(R.string.demo_mode), {
-            val demoFragment = DemoFragment(mainActivity)
-            mainActivity.addFragment(demoFragment)
+            val demoFragment = DemoFragment()
+            replaceFragment(demoFragment, true)
         }))
 
         val menuFragment = ListMenuFragment.newInstance(menuItems,"PostTxn", true, R.drawable.token_logo_png)
-        mainActivity.replaceFragment(menuFragment as Fragment)
+        replaceFragment(menuFragment as Fragment)
     }
 
     /**
@@ -108,25 +114,19 @@ class PostTxnFragment(private val mainActivity: MainActivity, private val transa
      */
     fun doBatchClose() {
         CoroutineScope(Dispatchers.Default).launch {
-            batchViewModel.batchCloseRoutine(mainActivity,transactionViewModel,activationViewModel)
+            batchViewModel.batchCloseRoutine(safeActivity,transactionViewModel,activationViewModel)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
-        batchViewModel.getUiState().observe(mainActivity) { state ->
+        batchViewModel.getUiState().observe(safeActivity) { state ->
             when (state) {
-                is BatchViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
+                is BatchViewModel.UIState.Loading -> showDialog(dialog)
                 is BatchViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress, getStrings(R.string.preparing_the_receipt) + "% ${state.data}")
-                is BatchViewModel.UIState.Success -> mainActivity.showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Confirmed,getStrings(R.string.batch_close_success),true))
+                is BatchViewModel.UIState.Success -> showDialog(InfoDialog.newInstance(InfoDialog.InfoType.Confirmed,getStrings(R.string.batch_close_success),true))
             }
         }
-        batchViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
-            mainActivity.setResult(liveIntent)
+        batchViewModel.getLiveIntent().observe(safeActivity){liveIntent ->
+            setResult(liveIntent)
         }
     }
 
-    /**
-     * Fragment couldn't use getString from res > values > strings, therefore this method call that string from mainActivity.
-     */
-    private fun getStrings(resID: Int): String{
-        return mainActivity.getString(resID)
-    }
 }

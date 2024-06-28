@@ -16,6 +16,7 @@ android {
     compileSdk 33
     // I added this for binding
     buildFeatures {
+        buildConfig true
         viewBinding = true
         dataBinding true
         aidl true
@@ -63,7 +64,7 @@ android {
                     APP_LABEL:"Application Template",
                     MODEL_NAME:"400TR",
                     APP_NAME:"BNK_000_TMPLT",
-                    VERSION: "4001"
+                    VERSION: "4001" //
             ]
         }
         TR1000{
@@ -149,6 +150,9 @@ dependencies {
 
     // ui Components
     implementation 'com.airbnb.android:lottie:4.2.0'
+
+    // asynclayoutinflater for settings bank error
+    implementation 'androidx.asynclayoutinflater:asynclayoutinflater:1.0.0'
 }
 
 // Allow references to generated code

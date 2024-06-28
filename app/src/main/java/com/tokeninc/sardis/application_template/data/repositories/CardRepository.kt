@@ -3,6 +3,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
@@ -32,7 +33,7 @@ class CardRepository @Inject constructor() :
     private var transactionCode = 0
 
     private var callBackMessage = MutableLiveData<ResponseCode>()
-    private lateinit var mainActivity: MainActivity
+    private lateinit var mainActivity: AppCompatActivity
     fun getCallBackMessage(): LiveData<ResponseCode> {
         return callBackMessage
     }
@@ -61,7 +62,7 @@ class CardRepository @Inject constructor() :
 
     private var cardServiceBinding: CardServiceBinding? = null
 
-    fun cardServiceBinder(activity: MainActivity) {
+    fun cardServiceBinder(activity: AppCompatActivity) {
         Log.i("cardLogs","enter cardServiceBinder")
         mainActivity = activity
         cardServiceBinding = CardServiceBinding(activity, this)

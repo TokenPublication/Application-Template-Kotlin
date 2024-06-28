@@ -1,10 +1,11 @@
 package com.tokeninc.sardis.application_template
 
 import android.annotation.SuppressLint
-import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
@@ -14,18 +15,17 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
-import com.token.printerlib.PrinterService
-import com.token.printerlib.StyledString
 import com.token.uicomponents.infodialog.InfoDialog
 import com.token.uicomponents.infodialog.InfoDialogListener
 import com.token.uicomponents.timeoutmanager.TimeOutActivity
-import com.tokeninc.cardservicebinding.BuildConfig
-import com.tokeninc.cardservicebinding.CardServiceBinding
+// import com.tokeninc.cardservicebinding.BuildConfig //TODO you shouldn't import it, it doesnt give an error when compiling it finds the buildConfig from gradle
+import com.tokeninc.sardis.application_template.BuildConfig
 import com.tokeninc.deviceinfo.DeviceInfo
 import com.tokeninc.sardis.application_template.*
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.data.model.type.CardReadType
+import com.tokeninc.sardis.application_template.data.model.type.DeviceModel
 import com.tokeninc.sardis.application_template.databinding.ActivityMainBinding
 import com.tokeninc.sardis.application_template.ui.*
 import com.tokeninc.sardis.application_template.ui.activation.ActivationViewModel
@@ -59,10 +59,9 @@ class MainActivity : TimeOutActivity() {
     private lateinit var transactionViewModel: TransactionViewModel
     private lateinit var cardViewModel: CardViewModel
     private lateinit var serviceViewModel: ServiceViewModel
-    private lateinit var settingsFragment: SettingsFragment
     private lateinit var saleFragment: SaleFragment
-    private lateinit var triggerFragment: TriggerFragment
-    private lateinit var postTxnFragment: PostTxnFragment
+
+    private val tag = "mainActivity"
 
     /**
      * This function is overwritten to continue the activity where it was left when
@@ -103,9 +102,6 @@ class MainActivity : TimeOutActivity() {
         serviceViewModel = getServiceViewModel
 
         saleFragment = SaleFragment(transactionViewModel, this, batchViewModel, cardViewModel, activationViewModel)
-        settingsFragment = SettingsFragment(this, activationViewModel,cardViewModel)
-        triggerFragment = TriggerFragment(this)
-        postTxnFragment = PostTxnFragment(this, transactionViewModel, batchViewModel, cardViewModel, activationViewModel)
 
         buildConfigs()
         connectServices()
@@ -149,26 +145,22 @@ class MainActivity : TimeOutActivity() {
     Firstly, added TR1000 and TR400 configurations to build.gradle file. After that,
     related to Build Variant (400TRDebug or 1000TRDebug) the manifest file created with apk
     and the app name in manifest file will be 1000TR or 400TR.
+     Storing the device model into shared preferences
      */
     private fun buildConfigs() {
-        when (BuildConfig.FLAVOR) {
-            "TR1000" -> {
-                Log.i("TR1000 APP", "Application Template for 1000TR")
-            }
-            "TR400" -> {
-                Log.i("TR400 APP", "Application Template for 400TR")
-            }
-            "330" -> {
-                Log.i("TR330 APP", "Application Template for 330TR")
-            }
-        }
+        Log.i("Device_Model: ", Build.MODEL)
+        val sharedPreference = getSharedPreferences("myprefs", Context.MODE_PRIVATE)
+        val editor = sharedPreference.edit()
+        editor.putString("Device_Model", Build.MODEL)
+        editor.apply()
     }
 
     /**
      * This function is called whenever cardService is required.
      * If it couldn't connect to the card service after 10 seconds, it shows a dialog and finishes to the mainActivity.
      */
-    fun connectCardService(fromActivation: Boolean = false) {
+    private fun connectCardService(fromActivation: Boolean = false) {
+        Log.i(tag, "connectCardService")
         var isCancelled = false
         //first create an Info dialog for processing, when this is showing a 10 seconds timer starts
         val timer: CountDownTimer = object : CountDownTimer(30000, 1000) {
@@ -176,7 +168,7 @@ class MainActivity : TimeOutActivity() {
 
             override fun onFinish() { //when it's finished, (after 10 seconds)
                 isCancelled = true // make isCancelled true (because cardService couldn't be connected)
-                Log.i("CardService","Not connected")
+                Log.i(tag,"CardService Not connected")
                 val infoDialog = showInfoDialog(InfoDialog.InfoType.Declined, getString(R.string.card_service_error), false)
                 Handler(Looper.getMainLooper()).postDelayed({
                     infoDialog?.dismiss()
@@ -201,7 +193,7 @@ class MainActivity : TimeOutActivity() {
                     }
                 }
 
-                Log.i("Connected","CardService")
+                Log.i(tag,"Connected CardService")
             }
         }
     }
@@ -217,9 +209,9 @@ class MainActivity : TimeOutActivity() {
             activationWarning((activationViewModel.merchantID() == null || activationViewModel.terminalID() == null),false)
         }
         when (action) {
-            getString(R.string.PosTxn_Action) -> replaceFragment(postTxnFragment)
+            getString(R.string.PosTxn_Action) -> replaceFragment(PostTxnFragment())
             getString(R.string.Sale_Action) -> saleActionReceived()
-            getString(R.string.Settings_Action) -> replaceFragment(settingsFragment)
+            getString(R.string.Settings_Action) -> replaceFragment(SettingsFragment(intent))
             getString(R.string.BatchClose_Action) -> {
                 if (transactionViewModel.allTransactions().isNullOrEmpty()) { //if it is empty just show no transaction dialog
                     val infoDialog = showInfoDialog(InfoDialog.InfoType.Warning,getString(R.string.batch_close_not_found),false)
@@ -228,13 +220,13 @@ class MainActivity : TimeOutActivity() {
                         responseMessage(ResponseCode.ERROR,getString(R.string.batch_close_not_found))
                     }, 2000)
                 } else { //else implementing batch closing and finish that activity
-                    postTxnFragment.doBatchClose()
+                    replaceFragment(PostTxnFragment(true))
                 }
             }
 
-            getString(R.string.Parameter_Action) -> replaceFragment(triggerFragment)
+            getString(R.string.Parameter_Action) -> replaceFragment(TriggerFragment())
             getString(R.string.Refund_Action) -> refundActionReceived()
-            else -> replaceFragment(settingsFragment)
+            else -> replaceFragment(PostTxnFragment())
         }
     }
 
@@ -317,22 +309,24 @@ class MainActivity : TimeOutActivity() {
      * It reads card, if it couldn't connect cardService before, first connect the cardService then reads card
      */
     fun readCard(amount: Int, transactionCode: Int) {
-        if (cardViewModel.getCardServiceBinding() != null) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                cardViewModel.readCard(amount,transactionCode)
-            }, 500)
-            //when read card is cancelled (on back pressed) finish the main activity
-            cardViewModel.getCallBackMessage().observe(this) { responseCode ->
-                Log.d("Card Result Code with call back message", responseCode.name)
-                if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.ERROR) { //if it is canceled
-                    responseMessage(responseCode,"")
-                }
-            }
-        } else{
+        if (cardViewModel.getCardServiceBinding() == null){
             connectCardService()
-            Handler(Looper.getMainLooper()).postDelayed({
-                readCard(amount,transactionCode) // wait for connecting cardService, if it doesn't wait it enters recursive loop
-            }, 400)
+        }
+        // it observes whether it's connected
+        cardViewModel.getCardServiceConnected().observe(this){
+            if (it){
+                Log.i(tag, "readCard getCardServiceConnected connected")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    cardViewModel.readCard(amount,transactionCode)
+                }, 500)
+            }
+        }
+        // it observes whether it has message
+        cardViewModel.getCallBackMessage().observe(this) { responseCode ->
+            Log.d("Card Result Code with call back message", responseCode.name)
+            if (responseCode == ResponseCode.CANCELED || responseCode == ResponseCode.ERROR) { //if it is canceled
+                responseMessage(responseCode,"")
+            }
         }
     }
 
@@ -354,7 +348,7 @@ class MainActivity : TimeOutActivity() {
             val currentBatchNo = batchViewModel.getBatchNo()
             if (transactionBatchNo == currentBatchNo) { // GIB Void Operation
                 readCard(amount,TransactionCode.VOID.type)
-                val voidFragment = VoidFragment(this,transactionViewModel,batchViewModel,cardViewModel,activationViewModel,true)
+                val voidFragment = VoidFragment(true)
                 replaceFragment(voidFragment)
             } else{ // GIB Refund Operation (because refund request is received after closing batch
                 val authCode = json.getString("AuthCode")
@@ -368,8 +362,8 @@ class MainActivity : TimeOutActivity() {
                 refundBundle.putString(ExtraKeys.AUTH_CODE.name, authCode)
                 refundBundle.putString(ExtraKeys.CARD_NO.name, cardNo)
                 readCard(amount,TransactionCode.MATCHED_REFUND.type)
-                val refundFragment = RefundFragment(this, cardViewModel, transactionViewModel, batchViewModel, activationViewModel)
-                refundFragment.refundAfterReadCard(null,refundBundle)
+                val refundFragment = RefundFragment(refundBundle)
+                replaceFragment(refundFragment)
             }
         }
     }
@@ -390,17 +384,6 @@ class MainActivity : TimeOutActivity() {
         infoDialog.show(supportFragmentManager, "")
     }
 
-    /**
-     * Shows a dialog to the user which asks for a confirmation.
-     * Dialog will be dismissed automatically when user taps on to confirm/cancel button.
-     * See {@link InfoDialog#newInstance(InfoDialog.InfoType, String, String, InfoDialog.InfoDialogButtons, int, InfoDialogListener)}
-     */
-    fun showConfirmationDialog(type: InfoDialog.InfoType, title: String, info: String,
-                               buttons: InfoDialog.InfoDialogButtons, arg: Int, listener: InfoDialogListener): InfoDialog? {
-        val dialog = InfoDialog.newInstance(type, title, info, buttons, arg, listener)  //created a dialog with InfoDialog newInstance method
-        dialog.show(supportFragmentManager, "")
-        return dialog
-    }
 
     /**
      * Returns time out value in seconds for activities which extend
@@ -412,16 +395,6 @@ class MainActivity : TimeOutActivity() {
      */
     override fun getTimeOutSec(): Int {
         return 60
-    }
-
-    /** This adds fragments to the back stack, in this way user can return this fragment after the view has been changed.
-     * and replace fragment.
-     */
-    fun addFragment(fragment: Fragment) {
-        val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.container, fragment)
-        ft.addToBackStack(null)
-        ft.commit()
     }
 
     /**
@@ -492,4 +465,13 @@ class MainActivity : TimeOutActivity() {
         cardViewModel.onDestroyed()
         super.onDestroy()
     }
+
+    @SuppressLint("CommitPrefEdits")
+    fun getDeviceModel(): String{
+        val sharedPreference = getSharedPreferences("myprefs", Context.MODE_PRIVATE)
+        val editor = sharedPreference.edit()
+        val deviceModel = sharedPreference.getString("Device_Model", DeviceModel.TR400.name)
+        return deviceModel!!
+    }
+
 }

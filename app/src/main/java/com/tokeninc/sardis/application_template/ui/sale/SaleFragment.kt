@@ -102,7 +102,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
         val isInstallment = true
         val isLoyalty = true
         val isCampaign = true
-        if (isInstallment) menuItemList.add(MenuItem(getStrings(R.string.installment_sale), {
+        if (isInstallment && amount > 50000) menuItemList.add(MenuItem(getStrings(R.string.installment_sale), {
             showInstallments()
         }))
         if (isLoyalty) menuItemList.add(MenuItem(getStrings(R.string.loyalty_sale), { }))
@@ -225,9 +225,10 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
             dialog!!.setQr("QR Code Test", getStrings(R.string.waiting_qr_read)) // Shows the same QR on Info Dialog
             Handler(Looper.getMainLooper()).postDelayed({
                 if (qrSuccess) {
+                    dialog.dismiss()
                     mainActivity.showInfoDialog(
                         InfoDialog.InfoType.Confirmed,
-                        "QR " + getString(R.string.trans_successful),
+                        "QR " + mainActivity.getString(R.string.trans_successful),
                         false
                     )
                     isCancelable = false
@@ -341,7 +342,7 @@ class SaleFragment(private val transactionViewModel: TransactionViewModel, priva
     ) {
 
         transactionViewModel.prepareDummyResponse(
-           price, code, slipType, paymentType,activationViewModel.merchantID(),activationViewModel.terminalID(),batchViewModel)
+            price, code, slipType, paymentType,activationViewModel.merchantID(),activationViewModel.terminalID(),batchViewModel)
         transactionViewModel.getLiveIntent().observe(viewLifecycleOwner) { resultIntent ->
             if (code === ResponseCode.SUCCESS) {
                 mainActivity.showInfoDialog(

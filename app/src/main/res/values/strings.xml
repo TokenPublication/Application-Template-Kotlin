@@ -15,7 +15,7 @@
     <string name="show_qr">Show QR</string>
     <string name="enter_pin">Please enter PIN</string>
     <string name="print_success">Print Success</string>
-    <string name="print_error">Please Error</string>
+    <string name="print_error">Print Error</string>
 
     <string name="void_transaction">Void</string>
 

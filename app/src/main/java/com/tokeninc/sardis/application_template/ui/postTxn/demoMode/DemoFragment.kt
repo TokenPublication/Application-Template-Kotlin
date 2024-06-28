@@ -13,8 +13,9 @@ import androidx.fragment.app.Fragment
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentDemoBinding
+import com.tokeninc.sardis.application_template.utils.BaseFragment
 
-class DemoFragment(private val mainActivity: MainActivity) : Fragment() {
+class DemoFragment() : BaseFragment() {
 
     private lateinit var binding: FragmentDemoBinding
 
@@ -26,7 +27,7 @@ class DemoFragment(private val mainActivity: MainActivity) : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val sharedPreferences = mainActivity.getSharedPreferences("myprefs", Context.MODE_PRIVATE)
+        val sharedPreferences = safeActivity.getSharedPreferences("myprefs", Context.MODE_PRIVATE)
         val isEnabled = sharedPreferences.getBoolean("demo_mode", false)
         val demoStatus: SwitchCompat = binding.demoSwitch
         demoStatus.isChecked = isEnabled

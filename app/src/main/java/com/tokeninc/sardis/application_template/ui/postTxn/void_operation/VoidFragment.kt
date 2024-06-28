@@ -23,7 +23,9 @@ import com.tokeninc.sardis.application_template.ui.activation.ActivationViewMode
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
+import com.tokeninc.sardis.application_template.utils.BaseFragment
 import com.tokeninc.sardis.application_template.utils.ContentValHelper
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,10 +33,8 @@ import kotlinx.coroutines.launch
 /**
  * This is the Fragment that holds all the Void transactions in recyclerView, transactions one by one are set in TransactionAdapter
  */
-class VoidFragment(private val mainActivity: MainActivity, private val transactionViewModel: TransactionViewModel,
-                   private val batchViewModel: BatchViewModel, private val cardViewModel: CardViewModel,
-                   private val activationViewModel: ActivationViewModel, private val isGib: Boolean
-) : Fragment() {
+@AndroidEntryPoint
+class VoidFragment(private val isGib: Boolean) : BaseFragment() {
 
     private lateinit var adapter: TransactionAdapter
     private lateinit var binding: FragmentVoidBinding
@@ -49,16 +49,21 @@ class VoidFragment(private val mainActivity: MainActivity, private val transacti
         savedInstanceState: Bundle?
     ): View {
         binding =FragmentVoidBinding.inflate(inflater,container,false)
-        cardReader()
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initializeViewModels()
+        cardReader()
     }
 
     /**
      * It reads the card and show some dialogs or go some function with respect to result of reading card
      */
     private fun cardReader(){
-        mainActivity.readCard(0,TransactionCode.VOID.type)
-        cardViewModel.getCardLiveData().observe(mainActivity) { cardData ->
+        readCard(0,TransactionCode.VOID.type)
+        cardViewModel.getCardLiveData().observe(safeActivity) { cardData ->
             if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) {
                 Log.d("Card Read", cardData.mCardNumber.toString())
                 val transactionList = transactionViewModel.getTransactionsByCardNo(cardData.mCardNumber.toString())
@@ -81,15 +86,14 @@ class VoidFragment(private val mainActivity: MainActivity, private val transacti
      * It shows no transaction found dialog then finishes the mainActivity
      */
     private fun showNoTransaction(){
-        val infoDialog = mainActivity.showInfoDialog(
+        val infoDialog = showInfoDialog(
             InfoDialog.InfoType.Info,
-            getString(R.string.no_trans_found),
+            getStrings(R.string.no_trans_found),
             false
         )
         Handler(Looper.getMainLooper()).postDelayed({
-            infoDialog?.dismiss()
-            mainActivity.setResult(Activity.RESULT_CANCELED)
-            mainActivity.finish()
+            infoDialog.dismiss()
+            setResult(Activity.RESULT_CANCELED)
         }, 2000)
     }
 
@@ -114,16 +118,16 @@ class VoidFragment(private val mainActivity: MainActivity, private val transacti
         val refNo = transactionViewModel.refNo
         val transactionList = transactionViewModel.getTransactionsByRefNo(refNo)
         val transaction = if (transactionList != null) transactionList[0] else null
-        Log.d("Void Gib", mainActivity.getString(R.string.void_transaction)+" $transaction")
+        Log.d("Void Gib", getStrings(R.string.void_transaction)+" $transaction")
         if (transaction != null) {
             if (mCard.mCardNumber == transaction.Col_PAN) {
                 this.card = mCard
                 doVoid(transaction)
             } else {
-                mainActivity.responseMessage(ResponseCode.OFFLINE_DECLINE,"")
+                responseMessage(ResponseCode.OFFLINE_DECLINE,"")
             }
         }else{
-            mainActivity.responseMessage(ResponseCode.ERROR,getString(R.string.no_trans_found))
+            responseMessage(ResponseCode.ERROR,getStrings(R.string.no_trans_found))
         }
     }
 
@@ -136,18 +140,18 @@ class VoidFragment(private val mainActivity: MainActivity, private val transacti
         val contentValHelper = ContentValHelper()
         CoroutineScope(Dispatchers.Default).launch {
             transactionViewModel.transactionRoutine(card, TransactionCode.VOID.type,  Bundle(),
-                contentValHelper.getContentVal(transaction),batchViewModel, mainActivity, activationViewModel.activationRepository)
+                contentValHelper.getContentVal(transaction),batchViewModel, safeActivity, activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Connecting to the Server",false)
-        transactionViewModel.getUiState().observe(mainActivity) { state ->
+        transactionViewModel.getUiState().observe(safeActivity) { state ->
             when (state) {
-                is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
-                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,mainActivity.getString(R.string.connecting)+" %"+state.data)
-                is TransactionViewModel.UIState.Success -> dialog.update(InfoDialog.InfoType.Confirmed, mainActivity.getString(R.string.confirmation_code)+": "+state.message)
+                is TransactionViewModel.UIState.Loading -> showDialog(dialog)
+                is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,getStrings(R.string.connecting)+" %"+state.data)
+                is TransactionViewModel.UIState.Success -> dialog.update(InfoDialog.InfoType.Confirmed, getStrings(R.string.confirmation_code)+": "+state.message)
             }
         }
-        transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
-            mainActivity.setResult(liveIntent)
+        transactionViewModel.getLiveIntent().observe(safeActivity){liveIntent ->
+            setResult(liveIntent)
         }
     }
 

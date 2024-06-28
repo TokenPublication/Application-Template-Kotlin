@@ -2,7 +2,6 @@ package com.tokeninc.sardis.application_template.utils.printHelpers
 
 import android.content.ContentValues
 import android.content.Context
-import android.os.Bundle
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
@@ -11,11 +10,9 @@ import com.tokeninc.sardis.application_template.data.database.transaction.Transa
 import com.tokeninc.sardis.application_template.data.model.resultCode.TransactionCode
 import com.tokeninc.sardis.application_template.data.model.type.CardReadType
 import com.tokeninc.sardis.application_template.data.model.type.SlipType
-import com.tokeninc.sardis.application_template.utils.ExtraKeys
 import com.tokeninc.sardis.application_template.utils.StringHelper
 import com.tokeninc.sardis.application_template.utils.objects.SampleReceipt
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Locale
 
 /**
@@ -29,7 +26,7 @@ class TransactionPrintHelper:BasePrintHelper() {
         val stringHelper = StringHelper()
 
         if (slipType === SlipType.CARDHOLDER_SLIP) {
-            if ((context.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.GIB.name)  {
+            if ((context.applicationContext as AppTemp).getCurrentDeviceMode() == DeviceInfo.PosModeEnum.GIB.name){
                 printSlipHeader(styledText, receipt)
             }
         } else {
@@ -106,8 +103,13 @@ class TransactionPrintHelper:BasePrintHelper() {
 
         if (transactionCode == TransactionCode.VOID.type && !receipt.tranDate.isNullOrEmpty()) {
             styledText.newLine()
-            styledText.addTextToLine(DateUtil().getFormattedDate(receipt.tranDate!!.substring(0, 8)))
-            styledText.addTextToLine(DateUtil().getFormattedTime(receipt.tranDate!!.substring(8)), PrinterDefinitions.Alignment.Right)
+            if (receipt.cardReadType == CardReadType.KeyIn.type || receipt.cardReadType == CardReadType.QrPay.type){
+                styledText.addTextToLine(DateUtil().getFormattedDateKeyIn(receipt.tranDate!!.substring(0, 10)))
+                styledText.addTextToLine(receipt.tranDate!!.substring(11), PrinterDefinitions.Alignment.Right)
+            } else{
+                styledText.addTextToLine(DateUtil().getFormattedDate(receipt.tranDate!!.substring(0, 8)))
+                styledText.addTextToLine(DateUtil().getFormattedTime(receipt.tranDate!!.substring(8)), PrinterDefinitions.Alignment.Right)
+            }
         }
 
         styledText.setLineSpacing(1f)
@@ -137,11 +139,6 @@ class TransactionPrintHelper:BasePrintHelper() {
         if (transactionCode == TransactionCode.VOID.type){
             styledText.addTextToLine("İPTAL EDİLMİŞTİR", PrinterDefinitions.Alignment.Center)
             styledText.newLine()
-            styledText.addTextToLine("===========================",PrinterDefinitions.Alignment.Center)
-            styledText.newLine()
-            styledText.addTextToLine("İŞLEM TEMASSIZ TAMAMLANMIŞTIR", PrinterDefinitions.Alignment.Center)
-            styledText.newLine()
-            styledText.addTextToLine("MASTERCARD CONTACTLESS", PrinterDefinitions.Alignment.Center)
             if (slipType === SlipType.CARDHOLDER_SLIP) {
                 styledText.newLine()
                 val signature = "İŞ YERİ İMZA: _ _ _ _ _ _ _ _ _ _ _ _ _ _"
@@ -175,11 +172,18 @@ class TransactionPrintHelper:BasePrintHelper() {
             if (slipType === SlipType.CARDHOLDER_SLIP) {
                 styledText.addTextToLine("KARŞILIĞI MAL/HİZM ALDIM", PrinterDefinitions.Alignment.Center)
             } else {
-                if (receipt.cardType == CardReadType.ICC.type || receipt.cardType == CardReadType.MSR.type || receipt.cardType == CardReadType.ICC2MSR.type){
+                if (receipt.cardReadType == CardReadType.ICC.type || receipt.cardReadType == CardReadType.MSR.type || receipt.cardReadType == CardReadType.ICC2MSR.type){
                     styledText.addTextToLine("İşlem Şifre Girilerek Yapılmıştır", PrinterDefinitions.Alignment.Center)
                     styledText.newLine()
+                    styledText.addTextToLine("İMZAYA GEREK YOKTUR", PrinterDefinitions.Alignment.Center)
                 }
-                styledText.addTextToLine("İMZAYA GEREK YOKTUR", PrinterDefinitions.Alignment.Center)
+                else if (receipt.cardReadType == CardReadType.KeyIn.type){
+                    styledText.newLine()
+                    val signature = "İMZA: _ _ _ _ _ _ _ _ _ _ _ _ _ _"
+                    styledText.addTextToLine(signature,PrinterDefinitions.Alignment.Center)
+                    styledText.newLine()
+                    styledText.newLine()
+                }
             }
         }
 

@@ -28,7 +28,9 @@ import com.tokeninc.sardis.application_template.ui.activation.ActivationViewMode
 import com.tokeninc.sardis.application_template.ui.postTxn.batch.BatchViewModel
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
 import com.tokeninc.sardis.application_template.ui.sale.TransactionViewModel
+import com.tokeninc.sardis.application_template.utils.BaseFragment
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,9 +40,8 @@ import java.util.*
 /**
  * This is the fragment for the Refund actions. Refund operation methods are defined here.
  */
-class RefundFragment(private val mainActivity: MainActivity, private val cardViewModel: CardViewModel,
-                     private val transactionViewModel: TransactionViewModel, private val batchViewModel: BatchViewModel,
-private val activationViewModel: ActivationViewModel) : Fragment() {
+@AndroidEntryPoint
+class RefundFragment(private val refundBundleMain: Bundle? = null) : BaseFragment() {
 
     private var _binding: FragmentRefundBinding? = null
     private val binding get() = _binding!!
@@ -62,7 +63,15 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        showMenu()
+        initializeViewModels()
+        // check whether it comes from gib
+        if (refundBundleMain == null){
+            showMenu()
+        } else{
+            refundAfterReadCard(null, refundBundleMain)
+        }
+
+
     }
 
     /**
@@ -82,7 +91,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         menuItems.add(MenuItem(getStrings(R.string.loyalty_refund), {}))
         val menuFragment = ListMenuFragment.newInstance(menuItems,"Refund",
             true, R.drawable.token_logo_png)
-        mainActivity.replaceFragment(menuFragment as Fragment)
+        replaceFragment(menuFragment as Fragment)
     }
 
     /**
@@ -129,7 +138,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
             menuItems.add(menuItem)
         }
         val instFragment = ListMenuFragment.newInstance(menuItems, getStrings(R.string.installment_refund), true, R.drawable.token_logo_png)
-        mainActivity.addFragment(instFragment as Fragment)
+        replaceFragment(instFragment as Fragment, true)
     }
 
     /**
@@ -141,10 +150,10 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
             val amount =
             if (transactionCode == TransactionCode.CASH_REFUND.type) inputList[0].text.toInt()
             else inputList[1].text.toInt()
-            mainActivity.readCard(amount, transactionCode)
+            readCard(amount, transactionCode)
             refundAfterReadCard(inputList, null)
         }
-        mainActivity.addFragment(fragment)
+        replaceFragment(fragment, true)
     }
 
     /**
@@ -160,7 +169,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         } else {
             refundBundle = generateRefundBundle(transactionCode,input_list!!)
         }
-        cardViewModel.getCardLiveData().observe(mainActivity){cardData ->
+        cardViewModel.getCardLiveData().observe(safeActivity){cardData ->
             if (cardData != null && cardData.resultCode != CardServiceResult.USER_CANCELLED.resultCode()) { //when the cardData is not null (it is updated after onCardDataReceived)
                 Log.d("Refund Card Number", cardData.mCardNumber.toString())
                 if (isGib){
@@ -168,7 +177,7 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
                         doRefund(cardData, TransactionCode.MATCHED_REFUND.type)
                     }
                     else{
-                        mainActivity.responseMessage(ResponseCode.OFFLINE_DECLINE,"")
+                        responseMessage(ResponseCode.OFFLINE_DECLINE,"")
                     }
                 } else{
                     doRefund(cardData,transactionCode)
@@ -185,18 +194,18 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
     private fun doRefund(card: ICCCard, transactionCode: Int){
         CoroutineScope(Dispatchers.Default).launch {
             transactionViewModel.transactionRoutine(card, transactionCode,refundBundle, ContentValues(),
-                 batchViewModel, mainActivity, activationViewModel.activationRepository)
+                 batchViewModel, safeActivity, activationViewModel.activationRepository)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,getStrings(R.string.connecting),false)
-        transactionViewModel.getUiState().observe(mainActivity) { state ->
+        transactionViewModel.getUiState().observe(safeActivity) { state ->
             when (state) {
-                is TransactionViewModel.UIState.Loading -> mainActivity.showDialog(dialog)
+                is TransactionViewModel.UIState.Loading -> showDialog(dialog)
                 is TransactionViewModel.UIState.Connecting -> dialog.update(InfoDialog.InfoType.Progress,getStrings(R.string.connecting)+" %"+state.data)
                 is TransactionViewModel.UIState.Success -> dialog.update(InfoDialog.InfoType.Confirmed, getStrings(R.string.confirmation_code)+": "+state.message)
             }
         }
-        transactionViewModel.getLiveIntent().observe(mainActivity){liveIntent ->
-            mainActivity.setResult(liveIntent)
+        transactionViewModel.getLiveIntent().observe(safeActivity){liveIntent ->
+            setResult(liveIntent)
         }
     }
 
@@ -311,10 +320,4 @@ private val activationViewModel: ActivationViewModel) : Fragment() {
         inputList.add(inputTranDate)
     }
 
-    /**
-     * this function needs for getting string from activity otherwise it causes an error because we update UI in mainActivity
-     */
-    private fun getStrings(resID: Int): String{
-        return mainActivity.getString(resID)
-    }
 }

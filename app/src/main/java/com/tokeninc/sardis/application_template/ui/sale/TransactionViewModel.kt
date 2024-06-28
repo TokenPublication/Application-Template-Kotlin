@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -114,7 +115,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
      * @param extraContent is null if it is sale, refund inputs if it is refund, the whole transaction if it is void type transaction.
      */
     suspend fun transactionRoutine( card: ICCCard, transactionCode: Int, bundle: Bundle, extraContent: ContentValues,
-                                    batchViewModel: BatchViewModel, mainActivity:MainActivity, activationRepository: ActivationRepository) {
+                                    batchViewModel: BatchViewModel, activity:FragmentActivity, activationRepository: ActivationRepository) {
         var downloadNumber = 0
         coroutineScope.launch(Dispatchers.Main){//firstly updating the UI as loading
             uiState.postValue(UIState.Loading)
@@ -134,7 +135,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                         val onlineTransactionResponse = transactionRepository.parseResponse()
                         batchViewModel.updateSTN() //update STN since it communicates with host
                         finishTransaction( card,transactionCode, bundle, extraContent,
-                            onlineTransactionResponse,batchViewModel,mainActivity,activationRepository)
+                            onlineTransactionResponse,batchViewModel,activity,activationRepository)
                     }
                 }
             }
@@ -146,7 +147,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
      * Update dialog with success message if database operations result without an error.
      */
     private fun finishTransaction (card: ICCCard, transactionCode: Int, bundle:Bundle, extraContent: ContentValues?, onlineTransactionResponse: OnlineTransactionResponse
-                                   , batchViewModel: BatchViewModel, mainActivity: MainActivity, activationRepository: ActivationRepository
+                                   , batchViewModel: BatchViewModel, activity: FragmentActivity, activationRepository: ActivationRepository
     ) {
         val transactionResponse: TransactionResponse?
         val batchNo = batchViewModel.getBatchNo()
@@ -189,13 +190,13 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
                 } else {
                     ContentValHelper().getTransaction(transactionResponse.contentVal!!)
                 }
-            val receipt = SampleReceipt(transaction,activationRepository,onlineTransactionResponse)
+            val receipt = SampleReceipt(card.mCardReadType,transaction,activationRepository,onlineTransactionResponse)
             val intent: Intent =
                 if (transactionCode == TransactionCode.SALE.type || transactionCode == TransactionCode.INSTALLMENT_SALE.type){
-                    transactionRepository.prepareSaleIntent(transactionResponse, card, mainActivity, receipt, transaction.ZNO, transaction.Col_ReceiptNo)
+                    transactionRepository.prepareSaleIntent(transactionResponse, card, activity, receipt, transaction.ZNO, transaction.Col_ReceiptNo)
                 }
                 else{
-                    transactionRepository.prepareRefundVoidIntent(transactionResponse,mainActivity,receipt,transaction.ZNO, transaction.Col_ReceiptNo)
+                    transactionRepository.prepareRefundVoidIntent(transactionResponse,activity,receipt,transaction.ZNO, transaction.Col_ReceiptNo)
                 }
             Log.i("finishTransaction","Intent sending")
             liveIntent.postValue(intent)
@@ -215,7 +216,7 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
 
     fun prepareCopySlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
         viewModelScope.launch(Dispatchers.IO){
-            val receipt = SampleReceipt(transaction,activationRepository)
+            val receipt = SampleReceipt(transaction.Col_CardReadType,transaction,activationRepository)
             transactionRepository.prepareCopySlip(receipt,mainActivity,transaction,transactionCode)
             isPrinted.postValue(true)
         }
@@ -224,18 +225,18 @@ class TransactionViewModel @Inject constructor(private val transactionRepository
     private val isCustomerPrinted = MutableLiveData<Boolean>()
     fun getIsCustomerPrinted(): LiveData<Boolean> = isCustomerPrinted
 
-    fun prepareCopyCustomerSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
+    fun prepareCopyCustomerSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, activity: FragmentActivity){
         viewModelScope.launch(Dispatchers.IO){
-            val receipt = SampleReceipt(transaction,activationRepository)
-            transactionRepository.prepareCopyCustomerSlip(receipt,mainActivity,transaction,transactionCode)
+            val receipt = SampleReceipt(transaction.Col_CardReadType,transaction,activationRepository)
+            transactionRepository.prepareCopyCustomerSlip(receipt,activity,transaction,transactionCode)
             isCustomerPrinted.postValue(true)
         }
     }
 
-    fun prepareCopyMerchantSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, mainActivity: MainActivity){
+    fun prepareCopyMerchantSlip(transaction: Transaction, transactionCode: Int, activationRepository: ActivationRepository, activity: FragmentActivity){
         viewModelScope.launch(Dispatchers.IO){
-            val receipt = SampleReceipt(transaction,activationRepository)
-            transactionRepository.prepareCopyMerchantSlip(receipt,mainActivity,transaction,transactionCode)
+            val receipt = SampleReceipt(transaction.Col_CardReadType,transaction,activationRepository)
+            transactionRepository.prepareCopyMerchantSlip(receipt,activity,transaction,transactionCode)
             isPrinted.postValue(true)
         }
     }
