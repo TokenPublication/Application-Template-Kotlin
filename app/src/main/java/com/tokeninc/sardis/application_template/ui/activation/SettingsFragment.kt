@@ -75,7 +75,7 @@ class SettingsFragment(private val mainIntent: Intent) : BaseFragment() {
         menuItems.add(MenuItem(getStrings(R.string.host_settings), {
             addIPFragment()
         }))
-        val menuFragment = ListMenuFragment.newInstance(menuItems,"Settings", true, R.drawable.token_logo_png)
+        val menuFragment = ListMenuFragment.newInstance(menuItems,"Settings", true, R.drawable.token_logo_png, )
         replaceFragment(menuFragment as Fragment)
     }
 
@@ -185,8 +185,7 @@ class SettingsFragment(private val mainIntent: Intent) : BaseFragment() {
 
         inputList[0].text = activationViewModel.merchantID()
         inputList[1].text = activationViewModel.terminalID()
-        val tidMidFragment = InputListFragment.newInstance(inputList, getStrings(R.string.save),
-            ){
+        val tidMidFragment = InputListFragment.newInstance(inputList, getStrings(R.string.save),{
             merchantId = inputList[0].text
             Log.d(getStrings(R.string.merchant_no),merchantId.toString())
             terminalId = inputList[1].text
@@ -194,7 +193,7 @@ class SettingsFragment(private val mainIntent: Intent) : BaseFragment() {
             activationViewModel.updateActivation(terminalId, merchantId)
             startActivation()
             popFragment()
-        }
+        },true)
         replaceFragment(tidMidFragment as Fragment, true)
     }
 }

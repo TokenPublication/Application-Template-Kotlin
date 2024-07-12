@@ -1,7 +1,5 @@
 package com.tokeninc.sardis.application_template.data.repositories
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
@@ -9,7 +7,6 @@ import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
-import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
 import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
@@ -151,6 +148,28 @@ class CardRepository @Inject constructor() :
             setCallBackMessage(ResponseCode.ERROR)
             e.printStackTrace()
         }
+
+
+        //TODO MSR ekle
+    }
+
+    private fun approveCardMSR(card: ICCCard){
+        val obj = JSONObject()
+        try {
+            obj.put("amount", amount)
+            obj.put("PAN", card.mCardNumber)
+            obj.put("kmsVersion", 2)
+            obj.put("keySet", 0)
+            //obj.put("keyIndex", VersionParams.tpk) //for banks have host (not for app temp)
+            obj.put("minLen", 4)
+            obj.put("maxLen", 12)
+            obj.put("timeout", 30)
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+
+        val conf = obj.toString()
+        cardServiceBinding!!.getOnlinePINEx(conf)
     }
 
     /**
@@ -176,6 +195,11 @@ class CardRepository @Inject constructor() :
             }
             if (card.mCardReadType == CardReadType.ICC.type && transactionCode == TransactionCode.SALE.type){
                 isApprove = true //make this flag true for the second reading for asking password with continue emv.
+            }
+            if (card.mCardReadType == CardReadType.MSR.type || card.mCardReadType == CardReadType.ICC2MSR.type){
+                if (card.isOnlinePin()){
+                    approveCardMSR(card)
+                }
             }
             mutableCardData.postValue(card)
         } catch (e: java.lang.Exception) {
@@ -273,5 +297,7 @@ class CardRepository @Inject constructor() :
             e.printStackTrace()
         }
     }
+
+
 
 }
