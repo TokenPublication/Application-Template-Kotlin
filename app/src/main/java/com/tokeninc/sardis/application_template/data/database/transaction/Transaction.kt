@@ -71,7 +71,7 @@ data class Transaction(
     @ColumnInfo(name = TransactionCols.Col_isOffline)
     var Col_isOffline: Int,
     @ColumnInfo(name = TransactionCols.Col_is_onlinePIN)
-    var isOnlinePIN: Int,
+    var isOnlinePIN: Int?,
     @ColumnInfo(name = TransactionCols.Col_AC)
     var Col_AC: String?,
     @ColumnInfo(name = TransactionCols.Col_CID)

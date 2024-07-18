@@ -1,6 +1,9 @@
 package com.tokeninc.sardis.application_template.ui.activation
 
+import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -17,7 +20,9 @@ import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.databinding.FragmentSettingsBinding
 import com.tokeninc.sardis.application_template.ui.sale.CardViewModel
+import com.tokeninc.sardis.application_template.utils.BaseFragment
 import com.tokeninc.sardis.application_template.utils.objects.MenuItem
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,9 +31,8 @@ import org.apache.commons.lang3.StringUtils
 /**
  * This fragment is for Setting Configuration, it depends on Activation Database
  */
-class SettingsFragment(private val mainActivity: MainActivity,
-                       private val activationViewModel: ActivationViewModel,
-                       private val cardViewModel: CardViewModel) : Fragment() {
+@AndroidEntryPoint
+class SettingsFragment(private val mainIntent: Intent) : BaseFragment() {
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
@@ -49,10 +53,11 @@ class SettingsFragment(private val mainActivity: MainActivity,
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        isBankActivateAction = mainActivity.intent.action != null && mainActivity.intent.action.equals("Activate_Bank")
+        initializeViewModels()
+        isBankActivateAction = mainIntent.action != null && mainIntent.action.equals("Activate_Bank")
         if (isBankActivateAction) {
-            terminalId = mainActivity.intent.getStringExtra("terminalID")
-            merchantId = mainActivity.intent.getStringExtra("merchantID")
+            terminalId = mainIntent.getStringExtra("terminalID")
+            merchantId = mainIntent.getStringExtra("merchantID")
         } else {
             showMenu()
         }
@@ -64,14 +69,14 @@ class SettingsFragment(private val mainActivity: MainActivity,
      */
     private fun showMenu(){
         val menuItems = mutableListOf<IListMenuItem>()
-        menuItems.add(MenuItem(mainActivity.getString(R.string.setup), {
+        menuItems.add(MenuItem(getStrings(R.string.setup), {
             addTidMidFragment()
         }))
-        menuItems.add(MenuItem(mainActivity.getString(R.string.host_settings), {
+        menuItems.add(MenuItem(getStrings(R.string.host_settings), {
             addIPFragment()
         }))
-        val menuFragment = ListMenuFragment.newInstance(menuItems,"Settings", true, R.drawable.token_logo_png)
-        mainActivity.replaceFragment(menuFragment as Fragment)
+        val menuFragment = ListMenuFragment.newInstance(menuItems,"Settings", true, R.drawable.token_logo_png, )
+        replaceFragment(menuFragment as Fragment)
     }
 
     /**
@@ -81,43 +86,61 @@ class SettingsFragment(private val mainActivity: MainActivity,
     private fun addIPFragment(){
 
         val inputList = mutableListOf<CustomInputFormat>()
-        inputList.add(CustomInputFormat(mainActivity.getString(R.string.ip),EditTextInputType.IpAddress,
-        null, mainActivity.getString(R.string.invalid_ip), InputValidator {
+        inputList.add(CustomInputFormat(getStrings(R.string.ip),EditTextInputType.IpAddress,
+        null, getStrings(R.string.invalid_ip), InputValidator {
                 validate(it)
             }))
 
         inputList.add(CustomInputFormat(
-            mainActivity.getString(R.string.port), EditTextInputType.Number, 4, mainActivity.getString(R.string.invalid_port)
+            getStrings(R.string.port), EditTextInputType.Number, 4, getStrings(R.string.invalid_port)
         ) { customInputFormat -> customInputFormat.text.length >= 2 && customInputFormat.text.toInt() > 0 })
 
         inputList[0].text = activationViewModel.hostIP()
         inputList[1].text = activationViewModel.hostPort()
 
-        val hostFragment = InputListFragment.newInstance(inputList, mainActivity.getString(R.string.save),
+        val hostFragment = InputListFragment.newInstance(inputList, getStrings(R.string.save),
             InputListFragment.ButtonListener{
                 val ipNo = inputList[0].text
                 val portNo = inputList[1].text
                 activationViewModel.updateConnection(ipNo, portNo)
-                mainActivity.popFragment()
+                popFragment()
             })
 
-        mainActivity.addFragment(hostFragment as Fragment)
+        replaceFragment(hostFragment as Fragment, true)
     }
+
+    /**
+     * This method is for activation, ui parameters are dummy, but it sets emv and call deviceInfo to sync with atms
+     */
     private fun startActivation(){
-        CoroutineScope(Dispatchers.Default).launch {
-            activationViewModel.setupRoutine(cardViewModel,mainActivity,terminalId,merchantId)
-        }
-        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Processing, mainActivity.getString(R.string.starting_activation), false)
-        activationViewModel.getUiState().observe(mainActivity) { state ->
+        activationRoutine()
+        val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Processing, getStrings(R.string.starting_activation), false)
+        activationViewModel.getUiState().observe(safeActivity) { state ->
             when (state) {
-                is ActivationViewModel.UIState.Starting -> mainActivity.showDialog(dialog)
-                is ActivationViewModel.UIState.ParameterUploading -> dialog.update(InfoDialog.InfoType.Progress,mainActivity.getString(R.string.parameter_loading))
-                is ActivationViewModel.UIState.MemberActCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,mainActivity.getString(R.string.member_act_completed))
-                is ActivationViewModel.UIState.RKLLoading -> dialog.update(InfoDialog.InfoType.Progress,mainActivity.getString(R.string.rkl_loading))
-                is ActivationViewModel.UIState.RKLLoaded -> dialog.update(InfoDialog.InfoType.Confirmed,mainActivity.getString(R.string.rkl_loaded))
-                is ActivationViewModel.UIState.KeyBlockLoading -> dialog.update(InfoDialog.InfoType.Progress,mainActivity.getString(R.string.key_block_loading))
-                is ActivationViewModel.UIState.ActivationCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,mainActivity.getString(R.string.activation_completed))
+                is ActivationViewModel.UIState.Starting -> showDialog(dialog)
+                is ActivationViewModel.UIState.ParameterUploading -> dialog.update(InfoDialog.InfoType.Progress,getStrings(R.string.parameter_loading))
+                is ActivationViewModel.UIState.MemberActCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,getStrings(R.string.member_act_completed))
+                is ActivationViewModel.UIState.RKLLoading -> dialog.update(InfoDialog.InfoType.Progress,getStrings(R.string.rkl_loading))
+                is ActivationViewModel.UIState.RKLLoaded -> dialog.update(InfoDialog.InfoType.Confirmed,getStrings(R.string.rkl_loaded))
+                is ActivationViewModel.UIState.KeyBlockLoading -> dialog.update(InfoDialog.InfoType.Progress,getStrings(R.string.key_block_loading))
+                is ActivationViewModel.UIState.ActivationCompleted -> dialog.update(InfoDialog.InfoType.Confirmed,getStrings(R.string.activation_completed))
                 is ActivationViewModel.UIState.Finished -> dialog.dismiss()
+            }
+        }
+    }
+
+    /**
+     * It first check whether it's connected to the cardService before starting the activation process
+     * It's starting to routine when it's connected
+     */
+    private fun activationRoutine(){
+        if (cardViewModel.getCardServiceBinding() == null){
+            connectCardService(true)
+        }
+        // when it's connected call setupRoutine
+        cardViewModel.getCardServiceConnected().observe(safeActivity){
+            CoroutineScope(Dispatchers.Default).launch {
+                activationViewModel.setupRoutine(cardViewModel,safeActivity,terminalId,merchantId)
             }
         }
     }
@@ -147,31 +170,30 @@ class SettingsFragment(private val mainActivity: MainActivity,
     private fun addTidMidFragment() {
         val inputList = mutableListOf<CustomInputFormat>()
         inputList.add(CustomInputFormat(
-            mainActivity.getString(R.string.merchant_no),
+            getStrings(R.string.merchant_no),
             EditTextInputType.Number,
             10,
-            mainActivity.getString(R.string.invalid_merchant_no)
+            getStrings(R.string.invalid_merchant_no)
         ) { input -> input.text.length == 10 })
 
         inputList.add(CustomInputFormat(
-            mainActivity.getString(R.string.terminal_no),
+            getStrings(R.string.terminal_no),
             EditTextInputType.Text,
             8,
-            mainActivity.getString(R.string.invalid_terminal_no)
+            getStrings(R.string.invalid_terminal_no)
         ) { input -> input.text.length == 8 })
 
         inputList[0].text = activationViewModel.merchantID()
         inputList[1].text = activationViewModel.terminalID()
-        val tidMidFragment = InputListFragment.newInstance(inputList, mainActivity.getString(R.string.save),
-            ){
+        val tidMidFragment = InputListFragment.newInstance(inputList, getStrings(R.string.save),{
             merchantId = inputList[0].text
-            Log.d(mainActivity.getString(R.string.merchant_no),merchantId.toString())
+            Log.d(getStrings(R.string.merchant_no),merchantId.toString())
             terminalId = inputList[1].text
-            Log.d(mainActivity.getString(R.string.terminal_no),terminalId.toString())
+            Log.d(getStrings(R.string.terminal_no),terminalId.toString())
             activationViewModel.updateActivation(terminalId, merchantId)
             startActivation()
-            mainActivity.popFragment()
-        }
-        mainActivity.addFragment(tidMidFragment as Fragment)
+            popFragment()
+        },true)
+        replaceFragment(tidMidFragment as Fragment, true)
     }
 }

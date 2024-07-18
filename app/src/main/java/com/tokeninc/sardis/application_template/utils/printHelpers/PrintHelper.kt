@@ -100,4 +100,32 @@ class PrintHelper: BasePrintHelper() {
         styledText.addSpace(100)
         styledText.print(PrinterService.getService(context))
     }
+
+    fun printDummyResponse(totalAmount: Int, MID: String?, TID: String?,message: String?,isMerchant: Boolean): String {
+        val styledText = StyledString()
+        if (isMerchant){
+            addTextToNewLine(styledText, "İŞ YERİ NÜSHASI", PrinterDefinitions.Alignment.Center)
+        } else{
+            addTextToNewLine(styledText, "MÜŞTERİ NÜSHASI", PrinterDefinitions.Alignment.Center)
+        }
+        addTextToNewLine(styledText, "TOKEN", PrinterDefinitions.Alignment.Center)
+        addTextToNewLine(styledText, "FINTECH", PrinterDefinitions.Alignment.Center)
+        styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Bold)
+        addTextToNewLine(styledText, "İŞYERİ NO: ", PrinterDefinitions.Alignment.Left)
+        addText(styledText, MID, PrinterDefinitions.Alignment.Right)
+        addTextToNewLine(styledText, "TERMİNAL NO: ", PrinterDefinitions.Alignment.Left)
+        addText(styledText, TID, PrinterDefinitions.Alignment.Right)
+        addTextToNewLine(styledText, "TUTAR: ", PrinterDefinitions.Alignment.Left)
+        addText(styledText, StringHelper().getAmount(totalAmount), PrinterDefinitions.Alignment.Right)
+        styledText.setFontFace(PrinterDefinitions.Font_E.Sans_Semi_Bold)
+        styledText.newLine()
+        addTextToNewLine(styledText, DateUtil().getDate("dd-MM-yy"), PrinterDefinitions.Alignment.Left)
+        addText(styledText, DateUtil().getTime("HH:mm:ss"), PrinterDefinitions.Alignment.Right)
+        styledText.newLine()
+        addText(styledText, message, PrinterDefinitions.Alignment.Center)
+        styledText.newLine()
+        styledText.addSpace(100)
+        return styledText.toString()
+    }
+
 }

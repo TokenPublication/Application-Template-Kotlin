@@ -9,5 +9,7 @@ class DatabaseInfo {
         const val ACTIVATION_TABLE: String = "ACTIVATION"
         const val TRANSACTION_TABLE: String = "TRANSACTIONS"
         const val BATCH_TABLE: String = "BATCH"
+        const val DATABASE_VERSION: Int = 1
+        const val MIGRATED_DATABASE_VERSION: Int = 2
     }
 }

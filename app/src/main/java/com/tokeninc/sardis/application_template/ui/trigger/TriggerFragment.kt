@@ -9,11 +9,12 @@ import androidx.lifecycle.ViewModelProvider
 import com.token.uicomponents.infodialog.InfoDialog
 import com.tokeninc.sardis.application_template.MainActivity
 import com.tokeninc.sardis.application_template.databinding.FragmentTriggerBinding
+import com.tokeninc.sardis.application_template.utils.BaseFragment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class TriggerFragment(val mainActivity: MainActivity) : Fragment() {
+class TriggerFragment() : BaseFragment() {
 
     private var _binding: FragmentTriggerBinding? = null
     private val binding get() = _binding!!
@@ -39,19 +40,19 @@ class TriggerFragment(val mainActivity: MainActivity) : Fragment() {
      * After parameters are uploaded successfully it sends the result with intents to finish the main activity.
      */
     private fun startDummyParameterUploading(){
-        val assetManager = mainActivity.assets
+        val assetManager = safeActivity.assets
         CoroutineScope(Dispatchers.Default).launch {
             viewModel.parameterRoutine(assetManager)
         }
         val dialog = InfoDialog.newInstance(InfoDialog.InfoType.Progress,"Parameters are uploading",false)
-        viewModel.getUiState().observe(mainActivity) { state ->
+        viewModel.getUiState().observe(safeActivity) { state ->
             when (state) {
-                is TriggerViewModel.TriggerUIState.Loading -> mainActivity.showDialog(dialog)
+                is TriggerViewModel.TriggerUIState.Loading -> showDialog(dialog)
                 is TriggerViewModel.TriggerUIState.Success -> dialog.update(InfoDialog.InfoType.Confirmed,"Parameters are uploaded successfully")
             }
         }
-        viewModel.getLiveIntent().observe(mainActivity){liveIntent ->
-            mainActivity.setResult(liveIntent)
+        viewModel.getLiveIntent().observe(safeActivity){liveIntent ->
+            setResult(liveIntent)
         }
     }
 

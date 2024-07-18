@@ -1,6 +1,7 @@
 package com.tokeninc.sardis.application_template.utils.printHelpers
 
 import android.util.Log
+import androidx.fragment.app.FragmentActivity
 import com.token.printerlib.PrinterDefinitions
 import com.token.printerlib.StyledString
 import com.tokeninc.deviceinfo.DeviceInfo
@@ -14,7 +15,7 @@ import com.tokeninc.sardis.application_template.utils.StringHelper
  * This class constructs Batch Close slip.
  */
 class BatchClosePrintHelper: BasePrintHelper() {
-    fun batchText(batch_no: String, transactions: List<Transaction?>, mainActivity: MainActivity,
+    fun batchText(batch_no: String, transactions: List<Transaction?>, activity: FragmentActivity,
                   activationViewModel: ActivationViewModel, isCopy: Boolean, isBatch: Boolean): String {
         val styledText = StyledString()
         val stringHelper = StringHelper()
@@ -77,7 +78,7 @@ class BatchClosePrintHelper: BasePrintHelper() {
         styledText.newLine()
         addTextToNewLine(styledText,"===========================",PrinterDefinitions.Alignment.Center)
         styledText.newLine()
-        styledText.printLogo(mainActivity)
+        styledText.printLogo(activity)
         styledText.addSpace(50)
 
         if (isBatch){
@@ -88,7 +89,7 @@ class BatchClosePrintHelper: BasePrintHelper() {
             addTextToNewLine(styledText, "---------------------------", PrinterDefinitions.Alignment.Center)
             addTextToNewLine(styledText, "BU BELGEYİ SAKLAYINIZ", PrinterDefinitions.Alignment.Center, 8)
             styledText.newLine()
-            styledText.printLogo(mainActivity)
+            styledText.printLogo(activity)
             styledText.addSpace(50)
         }
 

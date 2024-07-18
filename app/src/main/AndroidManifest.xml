@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:node="remove" tools:ignore="QueryAllPackagesPermission" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <application
         android:name=".AppTemp"
         android:usesCleartextTraffic="true"
@@ -72,7 +72,7 @@
         </receiver>
         <meta-data
             android:name="app_version"
-            android:value="1" />
+            android:value="${VERSION}" />
         <meta-data
             android:name="app_model_type"
             android:value="${MODEL_NAME}"/>

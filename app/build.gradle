@@ -16,6 +16,7 @@ android {
     compileSdk 33
     // I added this for binding
     buildFeatures {
+        buildConfig true
         viewBinding = true
         dataBinding true
         aidl true
@@ -54,21 +55,24 @@ android {
             manifestPlaceholders = [
                     APP_LABEL:"Application Template",
                     MODEL_NAME:"330TR",
-                    APP_NAME:"BNK_000_TMPLT"
+                    APP_NAME:"BNK_000_TMPLT",
+                    VERSION: "1"
             ]
         }
         TR400{
             manifestPlaceholders = [
                     APP_LABEL:"Application Template",
                     MODEL_NAME:"400TR",
-                    APP_NAME:"BNK_000_TMPLT"
+                    APP_NAME:"BNK_000_TMPLT",
+                    VERSION: "4001" //
             ]
         }
         TR1000{
             manifestPlaceholders = [
                     APP_LABEL:"Application Template",
                     MODEL_NAME:"1000TR",
-                    APP_NAME:"BNK_000_TMPLT"
+                    APP_NAME:"BNK_000_TMPLT",
+                    VERSION: "10001"
             ]
         }
     }
@@ -143,6 +147,12 @@ dependencies {
 
     // qr sale
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+
+    // ui Components
+    implementation 'com.airbnb.android:lottie:4.2.0'
+
+    // asynclayoutinflater for settings bank error
+    implementation 'androidx.asynclayoutinflater:asynclayoutinflater:1.0.0'
 }
 
 // Allow references to generated code

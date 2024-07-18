@@ -1,13 +1,12 @@
 package com.tokeninc.sardis.application_template.data.repositories
 import android.content.Context
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.tokeninc.cardservicebinding.CardServiceBinding
 import com.tokeninc.cardservicebinding.CardServiceListener
-import com.tokeninc.sardis.application_template.MainActivity
-import com.tokeninc.sardis.application_template.R
 import com.tokeninc.sardis.application_template.data.model.card.CardServiceResult
 import com.tokeninc.sardis.application_template.data.model.card.ICCCard
 import com.tokeninc.sardis.application_template.data.model.resultCode.ResponseCode
@@ -31,7 +30,7 @@ class CardRepository @Inject constructor() :
     private var transactionCode = 0
 
     private var callBackMessage = MutableLiveData<ResponseCode>()
-    private lateinit var mainActivity: MainActivity
+    private lateinit var mainActivity: AppCompatActivity
     fun getCallBackMessage(): LiveData<ResponseCode> {
         return callBackMessage
     }
@@ -56,10 +55,12 @@ class CardRepository @Inject constructor() :
     //for UI updating they don't have to be a LiveData
     var gibSale = false
     private var isApprove = false //this is a flag for checking whether it is ICC sale (for implementing continue emv)
+    private var takePin = false
 
     private var cardServiceBinding: CardServiceBinding? = null
 
-    fun cardServiceBinder(activity: MainActivity) {
+    fun cardServiceBinder(activity: AppCompatActivity) {
+        Log.i("cardLogs","enter cardServiceBinder")
         mainActivity = activity
         cardServiceBinding = CardServiceBinding(activity, this)
     }
@@ -76,6 +77,7 @@ class CardRepository @Inject constructor() :
         isCardServiceConnected = MutableLiveData(false)
         gibSale = false
         isApprove = false
+        takePin = false
     }
 
     /**
@@ -139,11 +141,35 @@ class CardRepository @Inject constructor() :
             obj.put("zeroAmount", 0)
             obj.put("showAmount", 1)
             obj.put("emvProcessType", EmvProcessType.CONTINUE_EMV.ordinal)
+            isApprove = false // to unbind CardService
+            takePin = true // make this true for completeEmvTxn
             getCard(amount, obj.toString())
         } catch (e: java.lang.Exception) {
             setCallBackMessage(ResponseCode.ERROR)
             e.printStackTrace()
         }
+
+
+        //TODO MSR ekle
+    }
+
+    private fun approveCardMSR(card: ICCCard){
+        val obj = JSONObject()
+        try {
+            obj.put("amount", amount)
+            obj.put("PAN", card.mCardNumber)
+            obj.put("kmsVersion", 2)
+            obj.put("keySet", 0)
+            //obj.put("keyIndex", VersionParams.tpk) //for banks have host (not for app temp)
+            obj.put("minLen", 4)
+            obj.put("maxLen", 12)
+            obj.put("timeout", 30)
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+
+        val conf = obj.toString()
+        cardServiceBinding!!.getOnlinePINEx(conf)
     }
 
     /**
@@ -170,9 +196,20 @@ class CardRepository @Inject constructor() :
             if (card.mCardReadType == CardReadType.ICC.type && transactionCode == TransactionCode.SALE.type){
                 isApprove = true //make this flag true for the second reading for asking password with continue emv.
             }
+            if (card.mCardReadType == CardReadType.MSR.type || card.mCardReadType == CardReadType.ICC2MSR.type){
+                if (card.isOnlinePin()){
+                    approveCardMSR(card)
+                }
+            }
             mutableCardData.postValue(card)
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
+        }
+        if (!isApprove || takePin){
+            val action = 0x01.toByte()
+            val emvResult = cardServiceBinding!!.completeEmvTxn(action, byteArrayOf(0, 0), byteArrayOf(0, 0), 0, byteArrayOf(0, 0), 0) // this is for 330TR ICC
+            cardServiceBinding!!.unBind()
+            isCardServiceConnected.postValue(false)
         }
     }
 
@@ -181,6 +218,7 @@ class CardRepository @Inject constructor() :
      * After that call setEMVConfiguration method, it checks whether the Setup is Done before, if it is do nothing, else set EMV
      */
     override fun onCardServiceConnected() {
+        Log.i("cardLogs","enter onCardServiceConnected")
         isCardServiceConnected.postValue(true)
         setEMVConfiguration()
     }
@@ -259,5 +297,7 @@ class CardRepository @Inject constructor() :
             e.printStackTrace()
         }
     }
+
+
 
 }
